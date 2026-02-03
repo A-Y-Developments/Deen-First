@@ -24,5 +24,7 @@ final class DIContainer {
         self.modelContainer = modelContainer
     }
 
-    // TODO: Add lazy var dependencies in future tasks
+    lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
+
+    lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
 }
