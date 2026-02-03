@@ -27,6 +27,14 @@ struct RootView: View {
             HomeView()
         case .quran:
             Text("Quran View - Coming Soon")
+                .navigationTitle("Quran")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Back") {
+                            router.navigateBack()
+                        }
+                    }
+                }
         }
     }
 }
