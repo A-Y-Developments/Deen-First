@@ -26,6 +26,7 @@ env:
 		echo "$(GREEN)✓ Environment variables loaded successfully$(NC)"; \
 		echo "Bundle ID: $$TUIST_COMPANY_ID"; \
 		echo "Team ID: $$TUIST_TEAM_ID"; \
+		echo "RevenueCat API Key: $$TUIST_REVENUECAT_API_KEY"; \
 	else \
 		echo "$(RED)Error: .env file not found$(NC)"; \
 		echo "$(YELLOW)Creating default .env file...$(NC)"; \
@@ -65,14 +66,14 @@ edit:
 .PHONY: build
 build:
 	@echo "$(BLUE)Building the app...$(NC)"
-	@xcodebuild -scheme mindcore -destination 'platform=iOS Simulator' build | xcpretty
+	@xcodebuild -scheme SurahFocus -destination 'platform=iOS Simulator' build | xcpretty
 	@echo "$(GREEN)✓ App built successfully$(NC)"
 
 # Run unit tests
 .PHONY: test
 test:
 	@echo "$(BLUE)Running unit tests...$(NC)"
-	@xcodebuild -scheme mindcoreTests -destination 'platform=iOS Simulator' test | xcpretty
+	@xcodebuild -scheme SurahFocus -destination 'platform=iOS Simulator' test | xcpretty
 	@echo "$(GREEN)✓ Unit tests completed successfully$(NC)"
 
 # Show help

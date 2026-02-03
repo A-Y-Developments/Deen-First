@@ -1,34 +1,48 @@
-//
-//  UserRepository.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
 import Foundation
 
 protocol UserRepository {
-    func getUser() async throws -> User?
     func createUser(_ user: User) async throws
-    func updateUser(_ apply: @escaping (User) -> Void) async throws
+    func getUser(byAppleUserId appleUserId: String) async throws -> User?
+    func getCurrentUser() async throws -> User?
+    func updateUser(_ user: User) async throws
+    func deleteCurrentUser() async throws
 }
 
-class UserRepositoryImpl: UserRepository {
-    private let localDataSource: LocalDataSource
+final class UserRepositoryImpl: UserRepository {
+    let localDataSource: LocalDataSource
 
     init(localDataSource: LocalDataSource) {
         self.localDataSource = localDataSource
     }
 
-    func getUser() async throws -> User? {
-        return try localDataSource.getUser()
-    }
-
     func createUser(_ user: User) async throws {
-        try localDataSource.saveUser(user)
+        try await MainActor.run {
+            try localDataSource.insertUser(user)
+        }
     }
 
-    func updateUser(_ apply: @escaping (User) -> Void) async throws {
-        try localDataSource.updateUser(apply)
+    func getUser(byAppleUserId appleUserId: String) async throws -> User? {
+        try await MainActor.run {
+            try localDataSource.getUser(byAppleUserId: appleUserId)
+        }
+    }
+
+    func getCurrentUser() async throws -> User? {
+        try await MainActor.run {
+            try localDataSource.getFirstUser()
+        }
+    }
+
+    func updateUser(_ user: User) async throws {
+        try await MainActor.run {
+            try localDataSource.updateUser(user)
+        }
+    }
+
+    func deleteCurrentUser() async throws {
+        try await MainActor.run {
+            guard let user = try localDataSource.getFirstUser() else { return }
+            try localDataSource.deleteUser(user)
+        }
     }
 }

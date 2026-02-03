@@ -1,29 +1,42 @@
-//
-//  session.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
 import Foundation
 import SwiftData
 
 @Model
-class Session {
-    var id: String
-    var date: Date
-    var duration: TimeInterval
-    var surahs: [String]
+final class Session {
+    @Attribute(.unique) var id: UUID
+    var userId: UUID
+    var type: SessionType
+    var surahNumbers: [Int]
+    var reciterId: Int?
+    var startTime: Date
+    var endTime: Date?
+    var durationSeconds: Int
+    var isCompleted: Bool
+
+    enum SessionType: String, Codable {
+        case reading
+        case listening
+    }
 
     init(
-        id: String = UUID().uuidString,
-        date: Date = Date(),
-        duration: TimeInterval = 0,
-        surahs: [String] = []
+        userId: UUID,
+        type: SessionType,
+        surahNumbers: [Int],
+        reciterId: Int? = nil
     ) {
-        self.id = id
-        self.date = date
-        self.duration = duration
-        self.surahs = surahs
+        self.id = UUID()
+        self.userId = userId
+        self.type = type
+        self.surahNumbers = surahNumbers
+        self.reciterId = reciterId
+        self.startTime = Date()
+        self.endTime = nil
+        self.durationSeconds = 0
+        self.isCompleted = false
+    }
+
+    // Helper computed property
+    var isValid: Bool {
+        return durationSeconds >= AppConstants.minSessionSeconds
     }
 }

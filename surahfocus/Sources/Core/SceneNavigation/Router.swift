@@ -1,19 +1,20 @@
-//
-//  Router.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
 import SwiftUI
-import Combine
 
-class Router: ObservableObject {
+@MainActor
+final class Router: ObservableObject {
     @Published var navigationPath = NavigationPath()
 
     enum Route: Hashable {
-        case home
-        case quran
+        case auth
+        case onboarding
+        case paywall
+        case screenTimePermission
+        case appSelection
+        case appLimitSetup
+        case downtimeSetup
+        case mainTabs
+        case surahDetail(surahId: Int)
+        case listenSession
     }
 
     func navigate(to route: Route) {
@@ -26,8 +27,17 @@ class Router: ObservableObject {
         }
     }
 
-    func replaceNavigationPath(with routes: [Route]) {
+    func replaceWith(_ route: Route) {
+        navigationPath = NavigationPath()
+        navigationPath.append(route)
+    }
+
+    func replaceWith(_ routes: [Route]) {
         navigationPath = NavigationPath()
         routes.forEach { navigationPath.append($0) }
+    }
+
+    func reset() {
+        navigationPath = NavigationPath()
     }
 }

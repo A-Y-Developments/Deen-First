@@ -278,34 +278,30 @@ Cannot stream audio without internet
 ```swift
 final class QuranAPIClient {
     private let baseURL = "https://quranapi.pages.dev/api"
-    private let session: URLSession
-    
-    init() {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 30
-        self.session = URLSession(configuration: config)
+    private let http: HTTPClient
+
+    init(http: HTTPClient = .shared) {
+        self.http = http
     }
-    
+
     // MARK: - Text Content
-    
+
     func fetchAllSurahs() async throws -> [Surah] {
         let url = URL(string: "\(baseURL)/surah")!
-        let (data, _) = try await session.data(from: url)
-        return try JSONDecoder().decode([Surah].self, from: data)
+        return try await http.fetch(url: url)
     }
-    
+
     func fetchSurah(id: Int, language: String = "en") async throws -> Surah {
-        let url = URL(string: "\(baseURL)/surah/\(id)?lang=\(language)")!
-        let (data, _) = try await session.data(from: url)
-        return try JSONDecoder().decode(Surah.self, from: data)
+        struct Query: Encodable { let lang: String }
+        let url = URL(string: "\(baseURL)/surah/\(id)")!
+        return try await http.fetch(url: url, parameters: Query(lang: language))
     }
     
     // MARK: - Audio
-    
+
     func fetchAudioURL(surahNumber: Int, reciterId: Int) async throws -> AudioResponse {
         let url = URL(string: "\(baseURL)/surah/\(surahNumber)/audio/\(reciterId)")!
-        let (data, _) = try await session.data(from: url)
-        return try JSONDecoder().decode(AudioResponse.self, from: data)
+        return try await http.fetch(url: url)
     }
 }
 

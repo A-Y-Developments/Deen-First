@@ -1,42 +1,104 @@
-//
-//  LocalDataSource.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
-import Foundation
 import SwiftData
+import Foundation
 
 final class LocalDataSource {
     let container: ModelContainer
-    let context: ModelContext
+
+    @MainActor
+    var context: ModelContext {
+        container.mainContext
+    }
 
     init(container: ModelContainer) {
         self.container = container
-        self.context = ModelContext(container)
     }
 
-    func getUser() throws -> User? {
-        let descriptor = FetchDescriptor<User>()
-        var users = try context.fetch(descriptor)
-        return users.first
-    }
+    // MARK: - User Operations
 
-    func saveUser(_ user: User) throws {
+    @MainActor
+    func insertUser(_ user: User) throws {
         context.insert(user)
         try context.save()
     }
 
-    func updateUser(_ apply: (User) -> Void) throws {
-        guard let user = try getUser() else {
-            throw LocalDataSourceError.userNotFound
-        }
-        apply(user)
+    @MainActor
+    func getUser(byAppleUserId appleUserId: String) throws -> User? {
+        let descriptor = FetchDescriptor<User>(
+            predicate: #Predicate { $0.appleUserId == appleUserId }
+        )
+        let users = try context.fetch(descriptor)
+        return users.first
+    }
+
+    @MainActor
+    func getFirstUser() throws -> User? {
+        let descriptor = FetchDescriptor<User>()
+        let users = try context.fetch(descriptor)
+        return users.first
+    }
+
+    @MainActor
+    func updateUser(_ user: User) throws {
         try context.save()
     }
-}
 
-enum LocalDataSourceError: Error {
-    case userNotFound
+    @MainActor
+    func deleteUser(_ user: User) throws {
+        context.delete(user)
+        try context.save()
+    }
+
+    @MainActor
+    func deleteAllUsers() throws {
+        let descriptor = FetchDescriptor<User>()
+        let users = try context.fetch(descriptor)
+        for user in users {
+            context.delete(user)
+        }
+        try context.save()
+    }
+
+    // MARK: - Session Operations
+
+    @MainActor
+    func insertSession(_ session: Session) throws {
+        context.insert(session)
+        try context.save()
+    }
+
+    @MainActor
+    func getActiveSession() throws -> Session? {
+        // A session is active if it has started but not ended
+        let descriptor = FetchDescriptor<Session>()
+        let sessions = try context.fetch(descriptor)
+
+        // Find sessions that have started but not ended
+        return sessions.first { $0.endTime == nil && !$0.isCompleted }
+    }
+
+    @MainActor
+    func deleteSession(_ session: Session) throws {
+        context.delete(session)
+        try context.save()
+    }
+
+    // MARK: - BlockedApp Operations
+
+    @MainActor
+    func insertBlockedApp(_ app: BlockedApp) throws {
+        context.insert(app)
+        try context.save()
+    }
+
+    @MainActor
+    func getAllBlockedApps() throws -> [BlockedApp] {
+        let descriptor = FetchDescriptor<BlockedApp>()
+        return try context.fetch(descriptor)
+    }
+
+    @MainActor
+    func deleteBlockedApp(_ app: BlockedApp) throws {
+        context.delete(app)
+        try context.save()
+    }
 }

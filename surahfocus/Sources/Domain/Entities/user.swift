@@ -1,56 +1,68 @@
-//
-//  user.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
 import Foundation
 import SwiftData
 
 @Model
-class User {
-    var id: String
-    var authProvider: String?
+final class User {
+    @Attribute(.unique) var id: UUID
+    var appleUserId: String
     var email: String?
     var name: String?
-    var createdAt: Date
-
     var hasCompletedOnboarding: Bool
     var isPremium: Bool
     var subscriptionExpiryDate: Date?
-
     var currentStreak: Int
     var longestStreak: Int
-    var lastEngagementDate: Date?
-
-    @Relationship(deleteRule: .cascade) var sessions: [Session]?
-    @Relationship(deleteRule: .cascade) var blockedApps: [BlockedApp]?
-    @Relationship(deleteRule: .cascade) var appTimeLimits: [AppTimeLimit]?
+    var createdAt: Date
+    var lastActiveDate: Date?
 
     init(
-        id: String = UUID().uuidString,
-        authProvider: String? = nil,
+        appleUserId: String,
         email: String? = nil,
-        name: String? = nil,
-        createdAt: Date = Date(),
-        hasCompletedOnboarding: Bool = false,
-        isPremium: Bool = false,
-        subscriptionExpiryDate: Date? = nil,
-        currentStreak: Int = 0,
-        longestStreak: Int = 0,
-        lastEngagementDate: Date? = nil
+        name: String? = nil
     ) {
-        self.id = id
-        self.authProvider = authProvider
+        self.id = UUID()
+        self.appleUserId = appleUserId
         self.email = email
         self.name = name
-        self.createdAt = createdAt
-        self.hasCompletedOnboarding = hasCompletedOnboarding
-        self.isPremium = isPremium
-        self.subscriptionExpiryDate = subscriptionExpiryDate
-        self.currentStreak = currentStreak
-        self.longestStreak = longestStreak
-        self.lastEngagementDate = lastEngagementDate
+        self.hasCompletedOnboarding = false
+        self.isPremium = false
+        self.subscriptionExpiryDate = nil
+        self.currentStreak = 0
+        self.longestStreak = 0
+        self.createdAt = Date()
+        self.lastActiveDate = nil
+    }
+
+    // Helper methods
+    func updateStreak(isActiveToday: Bool) {
+        if isActiveToday {
+            let calendar = Calendar.current
+            let today = calendar.startOfDay(for: Date())
+
+            if let lastActive = lastActiveDate {
+                let lastActiveDay = calendar.startOfDay(for: lastActive)
+                let daysDiff = calendar.dateComponents([.day], from: lastActiveDay, to: today).day ?? 0
+
+                if daysDiff == 0 {
+                    // Already active today
+                    return
+                } else if daysDiff == 1 {
+                    // Consecutive day
+                    currentStreak += 1
+                    if currentStreak > longestStreak {
+                        longestStreak = currentStreak
+                    }
+                } else {
+                    // Streak broken
+                    currentStreak = 1
+                }
+            } else {
+                // First activity
+                currentStreak = 1
+                longestStreak = 1
+            }
+
+            lastActiveDate = Date()
+        }
     }
 }

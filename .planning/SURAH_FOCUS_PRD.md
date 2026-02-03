@@ -138,6 +138,7 @@ Surah Focus is a premium iOS productivity app that combines Quran reading with s
 - **Database**: SwiftData (local persistence only, no cloud)
 - **Authentication**: Sign in with Apple (native, no Google for V1)
 - **Monetization**: RevenueCat SDK
+- **Networking**: Alamofire (HTTP client)
 - **Screen Time**: FamilyControls framework (iOS 16+)
 - **Quran API**: QuranAPI.pages.dev (single source, no backups)
 - **Audio**: AVFoundation (background playback)
@@ -338,8 +339,8 @@ Cannot listen to audio (needs internet for streaming) ❌
 ### 4.3 Error Handling
 
 **Network Issues**:
-- Timeout: 30 seconds
-- Retry logic: 3 attempts with exponential backoff (1s, 2s, 4s)
+- Timeout: 30 seconds (Alamofire built-in)
+- Retry logic: 3 attempts with exponential backoff (Alamofire RetryPolicy)
 - Fallback to cached data if available
 - Show user-friendly error: "Unable to load. Check your connection."
 
@@ -1608,7 +1609,8 @@ Any Screen → (subscription check fails) → Remove shields → Paywall
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "5.0.0")
+    .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "5.57.0"),
+    .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.10.0")
 ]
 ```
 

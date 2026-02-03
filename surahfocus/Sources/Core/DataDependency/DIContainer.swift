@@ -1,30 +1,206 @@
-//
-//  DIContainer.swift
-//  surahfocus
-//
-//  Created by Adithya Firmansyah Putra on 03/02/26.
-//
-
 import Foundation
 import SwiftData
 
 final class DIContainer {
-    private let modelContainer: ModelContainer
+    static let shared = DIContainer()
 
-    static let shared: DIContainer = {
-        do {
-            let container = try ModelContainer(for: User.self)
-            return DIContainer(modelContainer: container)
-        } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
-        }
-    }()
+    let modelContainer: ModelContainer
 
-    private init(modelContainer: ModelContainer) {
-        self.modelContainer = modelContainer
+    // Data Sources
+    lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
+    lazy var quranAPIDataSource: QuranAPIDataSource = QuranAPIDataSource()
+
+    // Repositories
+    lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
+    lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(localDataSource: localDataSource)
+    lazy var quranRepository: QuranRepository = QuranRepositoryImpl(apiDataSource: quranAPIDataSource)
+    lazy var screenTimeRepository: ScreenTimeRepository = ScreenTimeRepositoryImpl(localDataSource: localDataSource)
+
+    // Services - Now using real implementations
+    lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
+    lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
+    lazy var quranService: QuranService = QuranServiceImpl(quranRepository: quranRepository)
+    lazy var sessionService: SessionService = SessionServiceImpl(
+        sessionRepository: sessionRepository,
+        userRepository: userRepository
+    )
+    lazy var screenTimeService: ScreenTimeService = ScreenTimeServiceImpl(screenTimeRepository: screenTimeRepository)
+
+    @MainActor
+    var mainContext: ModelContext {
+        return modelContainer.mainContext
     }
 
-    lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
+    private init() {
+        do {
+            let schema = Schema([
+                User.self,
+                Session.self,
+                BlockedApp.self
+            ])
+            let config = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                allowsSave: true,
+                cloudKitDatabase: .none
+            )
+            self.modelContainer = try ModelContainer(
+                for: schema,
+                migrationPlan: SurahFocusMigrationPlan.self,
+                configurations: [config]
+            )
+        } catch {
+            // If migration fails, try with in-memory only for development
+            do {
+                let schema = Schema([
+                    User.self,
+                    Session.self,
+                    BlockedApp.self
+                ])
+                let config = ModelConfiguration(
+                    schema: schema,
+                    isStoredInMemoryOnly: true
+                )
+                self.modelContainer = try ModelContainer(
+                    for: schema,
+                    configurations: [config]
+                )
+                print("Using in-memory storage due to migration error: \(error)")
+            } catch {
+                fatalError("Failed to create ModelContainer: \(error)")
+            }
+        }
+    }
 
-    lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
+    // For testing with in-memory container
+    static func makeTestContainer() -> DIContainer {
+        let schema = Schema([
+            User.self,
+            Session.self,
+            BlockedApp.self
+        ])
+        let config = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true
+        )
+
+        guard let container = try? ModelContainer(for: schema, configurations: [config]) else {
+            fatalError("Failed to create test container")
+        }
+
+        return DIContainer(testContainer: container)
+    }
+
+    private init(testContainer: ModelContainer) {
+        self.modelContainer = testContainer
+    }
+}
+
+// Protocol stubs (to be implemented in later phases)
+protocol SessionRepository {}
+protocol QuranRepository {}
+protocol QuranService {}
+protocol SessionService {}
+
+// Implementation stubs (to be implemented in later phases)
+class SessionRepositoryImpl: SessionRepository {
+    let localDataSource: LocalDataSource
+    init(localDataSource: LocalDataSource) {
+        self.localDataSource = localDataSource
+    }
+}
+
+class QuranRepositoryImpl: QuranRepository {
+    let apiDataSource: QuranAPIDataSource
+    init(apiDataSource: QuranAPIDataSource) {
+        self.apiDataSource = apiDataSource
+    }
+}
+
+class QuranServiceImpl: QuranService {
+    let quranRepository: QuranRepository
+    init(quranRepository: QuranRepository) {
+        self.quranRepository = quranRepository
+    }
+}
+
+class SessionServiceImpl: SessionService {
+    let sessionRepository: SessionRepository
+    let userRepository: UserRepository
+    init(sessionRepository: SessionRepository, userRepository: UserRepository) {
+        self.sessionRepository = sessionRepository
+        self.userRepository = userRepository
+    }
+}
+
+class QuranAPIDataSource {
+    init() {}
+}
+
+// MARK: - Migration Plan
+
+enum SurahFocusMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] {
+        [SurahFocusSchemaV1.self, SurahFocusSchemaV2.self]
+    }
+
+    static var stages: [MigrationStage] {
+        [
+            MigrationStage.lightweight(
+                fromVersion: SurahFocusSchemaV1.self,
+                toVersion: SurahFocusSchemaV2.self
+            )
+        ]
+    }
+}
+
+// MARK: - Schema V1 (Original)
+
+enum SurahFocusSchemaV1: VersionedSchema {
+    static var versionIdentifier = Schema.Version(1, 0, 0)
+
+    static var models: [any PersistentModel.Type] {
+        [UserV1.self, Session.self, BlockedApp.self]
+    }
+
+    @Model
+    final class UserV1 {
+        @Attribute(.unique) var id: UUID
+        var appleUserId: String
+        var email: String?
+        var name: String?
+        var isPremium: Bool
+        var subscriptionExpiryDate: Date?
+        var currentStreak: Int
+        var longestStreak: Int
+        var createdAt: Date
+        var lastActiveDate: Date?
+
+        init(
+            appleUserId: String,
+            email: String? = nil,
+            name: String? = nil
+        ) {
+            self.id = UUID()
+            self.appleUserId = appleUserId
+            self.email = email
+            self.name = name
+            self.isPremium = false
+            self.subscriptionExpiryDate = nil
+            self.currentStreak = 0
+            self.longestStreak = 0
+            self.createdAt = Date()
+            self.lastActiveDate = nil
+        }
+    }
+}
+
+// MARK: - Schema V2 (With hasCompletedOnboarding)
+
+enum SurahFocusSchemaV2: VersionedSchema {
+    static var versionIdentifier = Schema.Version(2, 0, 0)
+
+    static var models: [any PersistentModel.Type] {
+        [User.self, Session.self, BlockedApp.self]
+    }
 }
