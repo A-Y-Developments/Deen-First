@@ -24,6 +24,10 @@ class User {
     var longestStreak: Int
     var lastEngagementDate: Date?
 
+    @Relationship(deleteRule: .cascade) var sessions: [Session]?
+    @Relationship(deleteRule: .cascade) var blockedApps: [BlockedApp]?
+    @Relationship(deleteRule: .cascade) var appTimeLimits: [AppTimeLimit]?
+
     init(
         id: String = UUID().uuidString,
         authProvider: String? = nil,
