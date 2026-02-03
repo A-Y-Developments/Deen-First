@@ -6,10 +6,23 @@
 //
 
 import Foundation
+import SwiftData
 
-// DIContainer stub - will be populated in future phases
 final class DIContainer {
-    static let shared = DIContainer()
+    private let modelContainer: ModelContainer
 
-    private init() {}
+    static let shared: DIContainer = {
+        do {
+            let container = try ModelContainer(for: User.self)
+            return DIContainer(modelContainer: container)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }()
+
+    private init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    // TODO: Add lazy var dependencies in future tasks
 }
