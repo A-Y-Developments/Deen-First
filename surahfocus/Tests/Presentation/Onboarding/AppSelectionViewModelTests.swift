@@ -19,7 +19,8 @@ final class AppSelectionViewModelTests: XCTestCase {
     func testInitialState() {
         XCTAssertEqual(viewModel.selectedAppsCount, 0)
         XCTAssertFalse(viewModel.isPresented)
-        XCTAssertTrue(viewModel.timeLimits.isEmpty)
+        // timeLimits is private, so we test through the public interface
+        XCTAssertEqual(viewModel.getTimeLimit(tokenHash: "test_token"), .sixty)
     }
 
     // MARK: - Picker Tests
@@ -67,7 +68,6 @@ final class AppSelectionViewModelTests: XCTestCase {
         // Note: Cannot test with actual token, but verify method exists
         let hash = viewModel.tokenHash(from: "test" as AnyHashable)
 
-        XCTAssertTrue(hash is String)
         XCTAssertFalse(hash.isEmpty)
     }
 

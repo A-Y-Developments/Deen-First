@@ -9,7 +9,7 @@ final class PaywallViewModelTests: XCTestCase {
 
     override func setUp() {
         mockSubscriptionService = MockSubscriptionService()
-        viewModel = PaywallViewModel(subscriptionService: mockSubscriptionService)
+        viewModel = PaywallViewModel()
     }
 
     override func tearDown() {

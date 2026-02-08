@@ -8,18 +8,22 @@ final class DIContainer {
 
     // Data Sources
     lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
-    lazy var quranAPIDataSource: QuranAPIDataSource = QuranAPIDataSource()
+    lazy var quranAPIDataSource: QuranAPIDataSource = QuranAPIDataSourceImpl(httpClient: .shared)
+    lazy var quranCacheManager: QuranCacheManager = QuranCacheManager()
 
     // Repositories
     lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
     lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(localDataSource: localDataSource)
-    lazy var quranRepository: QuranRepository = QuranRepositoryImpl(apiDataSource: quranAPIDataSource)
+    lazy var quranRepository: QuranRepository = QuranRepositoryImpl(
+        apiDataSource: quranAPIDataSource,
+        cacheManager: quranCacheManager
+    )
     lazy var screenTimeRepository: ScreenTimeRepository = ScreenTimeRepositoryImpl(localDataSource: localDataSource)
 
     // Services - Now using real implementations
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
-    lazy var quranService: QuranService = QuranServiceImpl(quranRepository: quranRepository)
+    lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
         userRepository: userRepository
@@ -96,32 +100,24 @@ final class DIContainer {
     }
 }
 
-// Protocol stubs (to be implemented in later phases)
-protocol SessionRepository {}
-protocol QuranRepository {}
-protocol QuranService {}
-protocol SessionService {}
+// MARK: - Session Stubs (TODO: Implement in later phase)
+protocol SessionRepository {
+    func save(_ session: Session) async throws
+    func getActiveSessions() async throws -> [Session]
+}
 
-// Implementation stubs (to be implemented in later phases)
 class SessionRepositoryImpl: SessionRepository {
     let localDataSource: LocalDataSource
     init(localDataSource: LocalDataSource) {
         self.localDataSource = localDataSource
     }
+    func save(_ session: Session) async throws {}
+    func getActiveSessions() async throws -> [Session] { [] }
 }
 
-class QuranRepositoryImpl: QuranRepository {
-    let apiDataSource: QuranAPIDataSource
-    init(apiDataSource: QuranAPIDataSource) {
-        self.apiDataSource = apiDataSource
-    }
-}
-
-class QuranServiceImpl: QuranService {
-    let quranRepository: QuranRepository
-    init(quranRepository: QuranRepository) {
-        self.quranRepository = quranRepository
-    }
+protocol SessionService {
+    func startSession(blockedApps: [BlockedApp], duration: TimeInterval) async throws
+    func endSession() async throws
 }
 
 class SessionServiceImpl: SessionService {
@@ -131,11 +127,10 @@ class SessionServiceImpl: SessionService {
         self.sessionRepository = sessionRepository
         self.userRepository = userRepository
     }
+    func startSession(blockedApps: [BlockedApp], duration: TimeInterval) async throws {}
+    func endSession() async throws {}
 }
 
-class QuranAPIDataSource {
-    init() {}
-}
 
 // MARK: - Migration Plan
 

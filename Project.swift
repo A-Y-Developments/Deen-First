@@ -117,6 +117,7 @@ let project = Project(
         .scheme(
             name: "SurahFocus",
             buildAction: .buildAction(targets: ["SurahFocus"]),
+            testAction: .targets(["SurahFocusTests"]),
             runAction: .runAction(
                 configuration: "Debug",
                 arguments: .arguments(

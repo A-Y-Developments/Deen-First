@@ -2,18 +2,9 @@ import XCTest
 @testable import SurahFocus
 
 final class HTTPClientTests: XCTestCase {
-    var client: HTTPClient!
 
-    override func setUp() {
-        client = HTTPClient()
-    }
-
-    override func tearDown() {
-        client = nil
-    }
-
-    func testHTTPClientInitialization() {
-        XCTAssertNotNil(client)
+    func testHTTPClientSharedInstance() {
+        XCTAssertNotNil(HTTPClient.shared)
     }
 
     func testNetworkErrorDescriptions() {

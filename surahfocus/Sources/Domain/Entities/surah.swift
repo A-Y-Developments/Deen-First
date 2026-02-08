@@ -7,15 +7,28 @@ struct Surah: Identifiable, Codable, Hashable {
     let englishName: String
     let englishNameTranslation: String
     let numberOfAyahs: Int
-    let revelationType: String
+    let revelationPlace: String
+    let surahNameArabic: String
+    let surahNameArabicLong: String
 
-    init(number: Int, name: String, englishName: String, englishNameTranslation: String, numberOfAyahs: Int, revelationType: String) {
+    init(
+        number: Int,
+        name: String,
+        englishName: String,
+        englishNameTranslation: String,
+        numberOfAyahs: Int,
+        revelationPlace: String,
+        surahNameArabic: String = "",
+        surahNameArabicLong: String = ""
+    ) {
         self.id = number
         self.number = number
         self.name = name
         self.englishName = englishName
         self.englishNameTranslation = englishNameTranslation
         self.numberOfAyahs = numberOfAyahs
-        self.revelationType = revelationType
+        self.revelationPlace = revelationPlace
+        self.surahNameArabic = surahNameArabic
+        self.surahNameArabicLong = surahNameArabicLong
     }
 }

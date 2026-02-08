@@ -68,7 +68,7 @@ final class UserRepositoryTests: XCTestCase {
         let user = User(appleUserId: "update123")
         try await repository.createUser(user)
 
-        guard var fetchedUser = try await repository.getCurrentUser() else {
+        guard let fetchedUser = try await repository.getCurrentUser() else {
             XCTFail("User not found")
             return
         }

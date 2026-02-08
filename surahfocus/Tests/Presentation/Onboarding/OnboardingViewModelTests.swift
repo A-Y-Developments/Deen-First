@@ -129,13 +129,11 @@ final class OnboardingViewModelTests: XCTestCase {
 
     // MARK: - Completion Tests
 
-    func testCompleteSetsCompletionFlag() {
-        Task {
-            await viewModel.complete()
+    func testCompleteSetsCompletionFlag() async {
+        await viewModel.complete()
 
-            XCTAssertTrue(viewModel.survey.isCompleted)
-            XCTAssertNotNil(viewModel.survey.completedAt)
-        }
+        XCTAssertTrue(viewModel.survey.isCompleted)
+        XCTAssertNotNil(viewModel.survey.completedAt)
     }
 
     // MARK: - Persistence Tests
@@ -185,7 +183,24 @@ final class OnboardingViewModelTests: XCTestCase {
     }
 
     func testContinueButtonState_Step4() {
-        viewModel.currentStep = 3
+        // Navigate through steps to reach step 4
+        // Step 1: Add motivation
+        viewModel.toggleMotivation(.consistency)
+        XCTAssertTrue(viewModel.canContinue)
+        viewModel.goNext()
+        XCTAssertEqual(viewModel.currentStep, 1)
+
+        // Step 2: Add distraction time
+        viewModel.toggleDistractionTime(.throughout)
+        XCTAssertTrue(viewModel.canContinue)
+        viewModel.goNext()
+        XCTAssertEqual(viewModel.currentStep, 2)
+
+        // Step 3: Add goal
+        viewModel.toggleGoal(.quranConsistency)
+        XCTAssertTrue(viewModel.canContinue)
+        viewModel.goNext()
+        XCTAssertEqual(viewModel.currentStep, 3) // Now at step 4 (index 3)
 
         // Step 4 (time comparison) always enabled
         XCTAssertTrue(viewModel.canContinue)
