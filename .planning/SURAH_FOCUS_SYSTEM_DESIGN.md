@@ -243,7 +243,7 @@ Day 5: User listens 10 min → Streak: 1 🔥
 ```
 
 **Rules**:
-- Minimum 2 minutes to count
+- Engagement counts immediately (no minimum time)
 - Only one activity per day needed (read OR listen)
 - Consecutive days only
 
@@ -511,27 +511,24 @@ protocol SessionService {
 class SessionServiceImpl: SessionService {
     private let sessionRepo: SessionRepository
     private let userRepo: UserRepository
-    
+
     func createSession(session: Session) async throws {
-        // Validate duration
-        guard session.durationSeconds >= 120 else {
-            throw SessionError.tooShort
-        }
-        
+        // Engagement counts immediately - no minimum time required
+
         // Save session
         try await sessionRepo.createSession(session)
-        
+
         // Update streak
         try await updateStreak(after: session)
     }
-    
+
     func updateStreak(after session: Session) async throws {
-        guard session.durationSeconds >= 120 else { return }
-        
+        // Engagement counts immediately - no minimum time required
+
         guard var user = try userRepo.getUserById(session.userId) else { return }
-        
+
         let today = Calendar.current.startOfDay(for: Date())
-        
+
         guard let lastEngagement = user.lastEngagementDate else {
             // First engagement
             user.currentStreak = 1
@@ -540,9 +537,9 @@ class SessionServiceImpl: SessionService {
             try await userRepo.updateUser(user)
             return
         }
-        
+
         let lastDay = Calendar.current.startOfDay(for: lastEngagement)
-        
+
         if Calendar.current.isDate(today, equalTo: lastDay, toGranularity: .day) {
             // Already engaged today
             return
@@ -556,7 +553,7 @@ class SessionServiceImpl: SessionService {
             // Missed days
             user.currentStreak = 1
         }
-        
+
         user.lastEngagementDate = today
         try await userRepo.updateUser(user)
     }

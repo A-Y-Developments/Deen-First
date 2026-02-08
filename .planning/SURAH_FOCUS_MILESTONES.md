@@ -1551,13 +1551,12 @@ make build # All targets compile
       func endSession(_ session: Session, durationSeconds: Int) async throws {
           session.endTime = Date()
           session.durationSeconds = durationSeconds
-          session.isCompleted = durationSeconds >= 120 // Minimum 2 minutes
-          
+          // Engagement counts immediately - no minimum time
+          session.isCompleted = true
+
           try await sessionRepository.updateSession(session)
-          
-          if session.isCompleted {
-              try await updateStreak(userId: session.userId)
-          }
+
+          try await updateStreak(userId: session.userId)
       }
       
       func updateStreak(userId: UUID) async throws {

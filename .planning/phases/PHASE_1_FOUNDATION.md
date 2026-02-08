@@ -554,8 +554,9 @@ final class Session {
     }
     
     // Helper computed property
+    // Engagement counts immediately - no minimum time required
     var isValid: Bool {
-        return durationSeconds >= 120 // Minimum 2 minutes
+        return true
     }
 }
 ```
@@ -602,24 +603,11 @@ final class SessionTests: XCTestCase {
         XCTAssertFalse(session.isCompleted)
     }
     
-    func testSessionValidityUnder2Minutes() {
+    func testSessionAlwaysValid() {
+        // Engagement counts immediately - no minimum time
         let session = Session(userId: UUID(), type: .reading, surahNumbers: [1])
-        session.durationSeconds = 119
-        
-        XCTAssertFalse(session.isValid)
-    }
-    
-    func testSessionValidityAtExactly2Minutes() {
-        let session = Session(userId: UUID(), type: .reading, surahNumbers: [1])
-        session.durationSeconds = 120
-        
-        XCTAssertTrue(session.isValid)
-    }
-    
-    func testSessionValidityOver2Minutes() {
-        let session = Session(userId: UUID(), type: .listening, surahNumbers: [1, 2])
-        session.durationSeconds = 300
-        
+        session.durationSeconds = 1  // Even 1 second counts
+
         XCTAssertTrue(session.isValid)
     }
     

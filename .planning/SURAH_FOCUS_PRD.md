@@ -939,7 +939,7 @@ final class QuranTabViewmodel: ObservableObject {
 **Session Tracking**:
 - Start tracking when view appears
 - Track duration (time spent reading)
-- Save session on view disappear (if duration >= 2 minutes)
+- Save session on view disappear (engagement counts immediately)
 - Update streak if new day
 
 **Implementation**:
@@ -964,18 +964,18 @@ final class SurahDetailViewmodel: ObservableObject {
     func saveSession() async {
         guard let startTime = sessionStartTime,
               let surah = surah else { return }
-        
+
         let duration = Int(Date().timeIntervalSince(startTime))
-        
-        guard duration >= 120 else { return } // Minimum 2 minutes
-        
+
+        // Engagement counts immediately - no minimum time required
+
         let session = Session(
             userId: user.id,
             sessionType: "read",
             surahNumber: surah.number,
             durationSeconds: duration
         )
-        
+
         try await sessionService.createSession(session)
     }
     
@@ -1005,10 +1005,10 @@ final class SurahDetailViewmodel: ObservableObject {
    - User can select 1+ surahs
    - Display: "3 surahs selected" or "Al-Fatihah, Al-Baqarah, +1 more"
 
-2. **Select Reciter** (default: Mishary Alafasy)
-   - Tap to open picker sheet
-   - List of reciters from QuranAPI.pages.dev
-   - Display: Reciter name
+2. **Select Reciter** (default from Settings)
+   - Display: Reciter name from Settings
+   - Tap to navigate to Settings (or note that it's configured in Settings)
+   - Note: Reciter selection is now in Settings tab, not here
 
 3. **Block Apps During Session** (pre-populated)
    - Display: "Instagram, TikTok, +2 more" (apps selected during onboarding)
@@ -1022,18 +1022,18 @@ final class SurahDetailViewmodel: ObservableObject {
 func loadDefaults() async {
     // Load blocked apps from onboarding
     selectedApps = try await screenTimeService.getBlockedApps(userId: user.id)
-    
-    // Load last selected reciter (or default)
-    if let reciterId = UserDefaults.standard.object(forKey: "lastSelectedReciter") as? Int {
-        selectedReciter = reciters.first { $0.id == reciterId } ?? .default
-    }
-    
+
+    // Load reciter from Settings (not UserDefaults)
+    selectedReciter = user.preferredReciter ?? .default
+
     // Load last selected surahs (or empty)
     if let surahNumbers = UserDefaults.standard.array(forKey: "lastSelectedSurahs") as? [Int] {
         selectedSurahs = surahs.filter { surahNumbers.contains($0.number) }
     }
 }
 ```
+
+**Note**: Reciter selection is now managed in Settings tab (see section 6.9)
 
 #### 6.7.2 Start Session (SAVE PREFERENCES HERE)
 
@@ -1043,26 +1043,26 @@ func loadDefaults() async {
 func startSession() async {
     // STEP 1: SAVE PREFERENCES FIRST (before audio starts)
     UserDefaults.standard.set(selectedSurahs.map(\.number), forKey: "lastSelectedSurahs")
-    UserDefaults.standard.set(selectedReciter.id, forKey: "lastSelectedReciter")
-    
+    // Note: Reciter is saved in Settings, not here
+
     // STEP 2: Apply Shield to selected apps
     try await screenTimeService.startBlockingSession(
         appTokens: selectedApps.map { ApplicationToken(data: $0.appToken) }
     )
-    
+
     // STEP 3: Fetch audio URL for first surah
     let audioResponse = try await quranService.getAudioURL(
         surahNumber: selectedSurahs[0].number,
         reciterId: selectedReciter.id
     )
-    
+
     // STEP 4: Load and play audio
     audioPlayer.loadAudio(url: audioResponse.audioUrl)
     audioPlayer.play()
-    
+
     // STEP 5: Start timer
     startTimer()
-    
+
     // STEP 6: Update UI
     isSessionActive = true
     currentSurah = selectedSurahs[0]
@@ -1288,6 +1288,13 @@ class AppTimeLimit {
 **Preferences**:
 - Translation: English (Sahih International) - tap to change
 - Default Reciter: Mishary Alafasy - tap to change
+  - Options from QuranAPI.pages.dev:
+    - Mishary Rashid Alafasy (ID 7, default)
+    - Abu Bakr Al-Shatri (ID 3)
+    - Abdul Basit Abdul Samad (ID 2)
+    - Saad Al-Ghamdi (ID 5)
+  - Saved to User.preferredReciter (SwiftData)
+  - Used by listening sessions
 
 **Support**:
 - Help & FAQ → Opens help page
@@ -1352,25 +1359,23 @@ final class SettingsTabViewmodel: ObservableObject {
 **User Story**: I want to build a daily Quran habit and see my consecutive days streak.
 
 **What Counts as Engagement**:
-- ✅ Reading any surah for 2+ minutes
-- ✅ Completing a listening session of 2+ minutes
+- ✅ Opening and reading any surah (engagement starts immediately)
+- ✅ Starting a listening session
 - ✅ Either activity counts for that day (only need one)
+- ✅ **No minimum time requirement** - engagement counts from the moment user opens a surah or starts listening
 
 **What Breaks the Streak**:
 - ❌ Missing a full day (no read or listen session)
-- ❌ Sessions < 2 minutes (too short to count)
 
 **Streak Logic**:
 
 ```swift
 func updateStreak(after session: Session) async {
-    // Only sessions >= 2 minutes count
-    guard session.durationSeconds >= 120 else { return }
-    
+    // Engagement counts immediately - no minimum time required
     guard var user = try userRepo.getUserById(session.userId) else { return }
-    
+
     let today = Calendar.current.startOfDay(for: Date())
-    
+
     guard let lastEngagement = user.lastEngagementDate else {
         // First ever engagement
         user.currentStreak = 1
@@ -1379,9 +1384,9 @@ func updateStreak(after session: Session) async {
         try await userRepo.updateUser(user)
         return
     }
-    
+
     let lastDay = Calendar.current.startOfDay(for: lastEngagement)
-    
+
     if Calendar.current.isDate(today, equalTo: lastDay, toGranularity: .day) {
         // Already engaged today, don't increment
         return
@@ -1395,7 +1400,7 @@ func updateStreak(after session: Session) async {
         // Missed one or more days, reset
         user.currentStreak = 1
     }
-    
+
     user.lastEngagementDate = today
     try await userRepo.updateUser(user)
 }

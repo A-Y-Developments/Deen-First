@@ -10,15 +10,19 @@ struct RootView: View {
     @StateObject private var appSelectionViewModel = AppSelectionViewModel()
     @StateObject private var appLimitSetupViewModel = AppLimitSetupViewModel()
     @StateObject private var downtimeSetupViewModel = DowntimeSetupViewModel()
+    @StateObject private var quranTabViewModel = QuranTabViewModel()
 
     @State private var currentUser: User?
     @State private var isPremium = false
     @State private var isScreenTimeAuthorized = false
     @State private var refreshTrigger = 0
+    @State private var isCheckingState = true
 
     var body: some View {
         NavigationStack(path: $router.navigationPath) {
-            if currentUser == nil {
+            if isCheckingState {
+                LoadingOverlay()
+            } else if currentUser == nil {
                 AuthView()
                     .navigationDestination(for: Router.Route.self) { route in
                         destinationView(for: route)
@@ -44,7 +48,7 @@ struct RootView: View {
                         destinationView(for: route)
                     }
             } else {
-                Text("Main Tabs - Phase 5")
+                MainTabView()
                     .navigationDestination(for: Router.Route.self) { route in
                         destinationView(for: route)
                     }
@@ -58,6 +62,7 @@ struct RootView: View {
         .environmentObject(appSelectionViewModel)
         .environmentObject(appLimitSetupViewModel)
         .environmentObject(downtimeSetupViewModel)
+        .environmentObject(quranTabViewModel)
         .task {
             await checkUserState()
         }
@@ -71,16 +76,23 @@ struct RootView: View {
 
     @MainActor
     private func checkUserState() async {
+        isCheckingState = true
+
         // Check user
         currentUser = try? await DIContainer.shared.authService.getCurrentUser()
 
-        guard currentUser != nil else { return }
+        guard currentUser != nil else {
+            isCheckingState = false
+            return
+        }
 
         // Check subscription
         isPremium = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
 
         // Check Screen Time authorization
         isScreenTimeAuthorized = AuthorizationCenter.shared.authorizationStatus == .approved
+
+        isCheckingState = false
     }
 
     @ViewBuilder
@@ -101,9 +113,9 @@ struct RootView: View {
         case .downtimeSetup:
             DowntimeSetupView()
         case .mainTabs:
-            Text("Main Tabs - Phase 5")
+            MainTabView()
         case .surahDetail(let surahId):
-            Text("Surah \(surahId) - Phase 5")
+            SurahDetailView(surahNumber: surahId)
         case .listenSession:
             Text("Listen Session - Phase 6")
         }

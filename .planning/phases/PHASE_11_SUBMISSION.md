@@ -181,7 +181,7 @@ All data will be permanently deleted within 30 days.
 When you start a listening or reading session, selected apps are temporarily blocked using Apple's Screen Time API. Blocks are automatically removed when you end your session.
 
 ### How do streaks work?
-Complete a valid session (2+ minutes) each day to maintain your streak. If you miss a day, your streak resets to zero.
+Complete a session each day to maintain your streak. Every engagement counts - start reading or listening and you're building your streak. If you miss a day, your streak resets to zero.
 
 ### What reciters are available?
 - Mishary Alafasy

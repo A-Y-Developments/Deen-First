@@ -250,7 +250,7 @@ Replace mindless scrolling with meaningful Quran engagement. Set daily limits fo
 Surah Focus uses Apple's Screen Time API to temporarily block apps you choose during your Quran sessions. You're always in control - shields are only active during your listening or reading time.
 
 **TRACK YOUR PROGRESS:**
-Build consistency with our streak system. Complete a valid session (2+ minutes) each day to maintain your streak. Watch as your dedication grows day by day.
+Build consistency with our streak system. Complete a session each day to maintain your streak. Every engagement counts - start reading or listening and you're building your streak. Watch as your dedication grows day by day.
 
 **BEAUTIFUL RECITATIONS:**
 Listen to renowned Quran reciters including:

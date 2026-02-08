@@ -1,6 +1,6 @@
 # PHASE 5: MAIN TABS + QURAN READING
-**Timeline:** Days 8-9 (Feb 10-11)  
-**Duration:** 2 full days  
+**Timeline:** Days 8-9 (Feb 10-11)
+**Duration:** 2 full days
 **Goal:** 3-tab navigation working, Quran browsing functional, reading experience polished
 
 ---
@@ -20,1075 +20,579 @@ This phase builds the main app experience:
 1. MainTabView with 3 tabs (Quran, Blocking, Settings)
 2. QuranTabView with surah list and search
 3. SurahDetailView with ayah display
-4. Streak badge component
-5. Reusable UI components
-6. Empty states for tabs
+4. User greeting section ("As-salamu alaykum, [Name]")
+5. Streak badge component
+6. Reusable UI components
+7. Empty states for tabs
+
+**Streak Tracking Update**: No minimum time requirement - user engagement counts immediately when opening/reading a surah or starting a listening session.
 
 **By end of Phase 5, you will have:**
-- ✅ 3-tab navigation functional
-- ✅ Can browse all 114 surahs
-- ✅ Search filters correctly
-- ✅ Can read any surah with translation
-- ✅ Streak displays on Quran tab
-- ✅ 110+ unit tests passing
+- 3-tab navigation functional
+- Can browse all 114 surahs
+- Search filters correctly
+- Can read any surah with translation
+- User greeting displays on Quran tab
+- Streak displays on Quran tab
+- 110+ unit tests passing
 
 ---
 
-## TASK 5.1: MAIN TAB VIEW (Day 8 Morning - 2 hours)
+## COMPONENTS TO CREATE
 
-### Step 1: Create MainTabView
+### 1. Main Tab Structure
+**File**: `Sources/Presentation/MainTabs/MainTabView.swift`
 
-**Create `Sources/Presentation/MainTabs/MainTabView.swift`:**
+**Purpose**: Root tab navigation container
 
+**Tab Configuration**:
+- Tab 0: QuranTabView (default, first visible)
+- Tab 1: BlockingTabView (placeholder for Phase 7)
+- Tab 2: SettingsTabView (placeholder for Phase 7)
+
+**Requirements**:
+- Use SwiftUI TabView with @State selectedTab binding
+- Tab icons: book.fill, shield.fill, gearshape.fill
+- Tab labels: "Quran", "Blocking", "Settings"
+- Accent color: #4facfe (brand blue gradient)
+- Each tab wrapped in NavigationStack
+- Tab bar visible at bottom
+
+**Dependencies**: None
+
+### 2. Quran Tab Components
+
+#### 2.1 QuranTabViewModel
+**File**: `Sources/Presentation/MainTabs/QuranTab/QuranTabViewModel.swift`
+
+**Purpose**: Business logic for Quran tab - manages surah list, search, user data, streak
+
+**Published Properties**:
+- `surahs: [Surah]` - all 114 surahs loaded from API
+- `filteredSurahs: [Surah]` - search-filtered surahs for display
+- `searchQuery: String` - current search text
+- `isLoading: Bool` - loading state indicator
+- `errorMessage: String?` - error message text
+- `showError: Bool` - triggers error alert
+- `currentStreak: Int` - user's current streak count
+- `user: User?` - current user object (for greeting name)
+
+**Methods**:
+- `loadSurahs() async` - fetch all surahs from QuranService, load user data and streak
+- `searchSurahs()` - filter surahs based on searchQuery using QuranService.searchSurahs()
+- `clearSearch()` - reset searchQuery and restore filteredSurahs to all surahs
+
+**Dependencies** (injected via DIContainer):
+- `quranService: QuranService` - for fetching surahs and searching
+- `authService: AuthService` - for getting current user
+
+**Initialization**:
+- Optional injection of quranService and authService for testing
+- Defaults to DIContainer.shared if not provided
+
+#### 2.2 QuranTabView
+**File**: `Sources/Presentation/MainTabs/QuranTab/QuranTabView.swift`
+
+**Purpose**: Main Quran browsing screen - displays surah list with search and streak
+
+**Layout Structure** (top to bottom):
+1. User greeting section: "As-salamu alaykum," + user name (if user exists)
+2. StreakBadge (only shown if currentStreak > 0)
+3. SearchBar component
+4. ScrollView with LazyVStack containing SurahCard for each surah
+5. Pull-to-refresh support
+
+**Navigation**:
+- NavigationStack wrapper
+- Navigation title: "Quran"
+- Toolbar trailing button: speaker icon (speaker.wave.2.fill) → navigates to .listenSession
+- SurahCard tap → navigates to .surahDetail(surahId: surah.number)
+
+**State Management**:
+- @StateObject for QuranTabViewModel
+- @EnvironmentObject for Router
+- .task {} modifier to call viewModel.loadSurahs() when view appears (only if surahs empty)
+- .onChange(of: searchQuery) to trigger viewModel.searchSurahs()
+- .alert() modifier for error display
+- .refreshable {} modifier for pull-to-refresh
+
+**Loading States**:
+- Show ProgressView when isLoading && surahs.isEmpty
+- Show content when surahs loaded
+
+#### 2.3 SurahCard Component
+**File**: `Sources/Presentation/Components/SurahCard.swift`
+
+**Purpose**: Reusable card displaying single surah in list
+
+**Visual Elements** (HStack, left to right):
+1. **Left**: Circle badge with surah number
+   - Circle stroke border (color: #4facfe, lineWidth: 2)
+   - Frame: 50x50
+   - Centered number text (semibold, size 16)
+2. **Middle**: Surah information (VStack, leading aligned)
+   - English name (semibold, size 18)
+   - HStack with: englishNameTranslation + bullet + numberOfAyahs + "ayahs" (size 14, secondary)
+3. **Right**: Arabic name
+   - surah.surahNameArabicLong (medium, size 20)
+
+**Styling**:
+- HStack with 16pt spacing
+- Padding: 16pt
+- Corner radius: 12pt
+- Background: systemBackground
+- Shadow: black opacity 0.05, radius 8, offset (0, 2)
+- ButtonStyle: plain (for tap handling)
+
+**Input**: let surah: Surah
+
+#### 2.4 StreakBadge Component
+**File**: `Sources/Presentation/Components/StreakBadge.swift`
+
+**Purpose**: Display user's current streak with motivational text
+
+**Visual Elements** (HStack):
+1. Fire emoji (🔥) - size 24
+2. VStack (leading aligned, 8pt spacing):
+   - "[X] day streak" text (bold, size 16)
+   - "Keep it going!" subtitle (size 12, secondary)
+3. Spacer (to push content to left)
+
+**Styling**:
+- Padding: 16pt
+- Corner radius: 12pt
+- Background: LinearGradient
+  - Colors: #FFE5B4 (opacity 0.3) to #FFD700 (opacity 0.2)
+  - StartPoint: leading, EndPoint: trailing
+
+**Input**: let streak: Int
+
+**Conditional Display**: Only show when streak > 0
+
+#### 2.5 SearchBar Component
+**File**: `Sources/Presentation/Components/SearchBar.swift`
+
+**Purpose**: Search input field for filtering surahs
+
+**Visual Elements** (HStack):
+1. Magnifying glass icon (magnifyingglass) - secondary color
+2. TextField with placeholder text
+3. X circle button (xmark.circle.fill) - only shown when text not empty
+
+**Styling**:
+- HStack spacing
+- Padding: 12pt
+- Background: systemGray6
+- Corner radius: 10pt
+- TextField: plain style
+
+**Inputs**:
+- @Binding var text: String
+- let placeholder: String
+
+**Behavior**:
+- X button clears text binding
+- Placeholder provided by parent (e.g., "Search surahs...")
+
+### 3. Surah Detail Components
+
+#### 3.1 SurahDetailViewModel
+**File**: `Sources/Presentation/MainTabs/QuranTab/SurahDetailViewModel.swift`
+
+**Purpose**: Manages surah detail data - surah metadata, ayahs, translation toggle
+
+**Stored Property**:
+- `surahNumber: Int` - the surah to load (set at init)
+
+**Published Properties**:
+- `surah: Surah?` - surah metadata
+- `ayahs: [Ayah]` - list of verses
+- `showTranslation: Bool` - translation visibility toggle (default: true)
+- `isLoading: Bool` - loading state
+- `errorMessage: String?` - error text
+- `showError: Bool` - error alert flag
+
+**Methods**:
+- `loadSurahDetail() async` - fetch surah + ayahs from QuranService.loadSurahDetail()
+- `toggleTranslation() async` - flip showTranslation flag, reload data
+
+**Dependencies** (via DIContainer):
+- `quranService: QuranService` - for fetching surah details
+
+**Initialization**:
+- Required: surahNumber: Int
+- Optional: quranService injection for testing
+
+#### 3.2 SurahDetailView
+**File**: `Sources/Presentation/MainTabs/QuranTab/SurahDetailView.swift`
+
+**Purpose**: Display individual surah with all ayahs, reading experience
+
+**Layout Structure** (top to bottom):
+1. SurahHeader component
+2. BismillahView component (conditional: if surah.number != 1 && surah.number != 9)
+3. ScrollView with LazyVStack of AyahCard for each ayah
+4. Bottom padding (80pt for future floating button)
+
+**Navigation**:
+- Navigation title: surah.englishName (or "Loading..." if nil)
+- NavigationBarTitleDisplayMode: inline
+- Toolbar trailing button: translation toggle icon
+  - Icon: text.bubble.fill (when showing) or text.bubble (when hidden)
+  - Color: #4facfe
+  - Action: call viewModel.toggleTranslation()
+- Back button: automatic from NavigationStack
+
+**State Management**:
+- @StateObject for SurahDetailViewModel (initialized with surahNumber)
+- .task {} modifier to call viewModel.loadSurahDetail() when ayahs empty
+- .alert() modifier for error display
+
+**Loading States**:
+- Show ProgressView when isLoading && ayahs.isEmpty
+- Show content when ayahs loaded
+
+#### 3.3 AyahCard Component
+**File**: `Sources/Presentation/Components/AyahCard.swift`
+
+**Purpose**: Display single ayah with Arabic text and optional translation
+
+**Visual Elements** (VStack, trailing aligned, 12pt spacing):
+1. **Top**: Ayah number badge (HStack)
+   - Circle (fill: #4facfe opacity 0.1, frame: 32x32)
+   - Overlay: numberInSurah text (semibold, size 12, color: #4facfe)
+   - Spacer
+2. **Middle**: Arabic text
+   - ayah.text (medium, size 24)
+   - MultilineTextAlignment: trailing
+   - Frame maxWidth: .infinity, alignment: trailing
+3. **Bottom**: English translation (conditional)
+   - Only shown if showTranslation == true AND ayah.english != nil
+   - Divider (vertical padding 4pt)
+   - ayah.english text (size 16, secondary)
+   - MultilineTextAlignment: leading
+   - Frame maxWidth: .infinity, alignment: leading
+
+**Styling**:
+- VStack alignment: trailing
+- Padding: 16pt
+- Corner radius: 12pt
+- Background: systemBackground
+- Shadow: black opacity 0.05, radius 4, offset (0, 2)
+
+**Inputs**:
+- let ayah: Ayah
+- let showTranslation: Bool
+
+#### 3.4 SurahHeader Component
+**File**: `Sources/Presentation/Components/SurahHeader.swift`
+
+**Purpose**: Display surah metadata at top of detail view
+
+**Visual Elements** (VStack, center aligned, 12pt spacing):
+1. **Top**: Arabic name
+   - surah.surahNameArabicLong (bold, size 32)
+2. **Middle**: English translation
+   - surah.englishNameTranslation (size 18, secondary)
+3. **Bottom**: Info row (HStack, 16pt spacing)
+   - Label: "[numberOfAyahs] Ayahs" with icon text.alignleft (size 14, secondary)
+   - Text: bullet (secondary)
+   - Text: surah.revelationPlace (size 14, secondary)
+
+**Styling**:
+- Frame maxWidth: .infinity (center alignment)
+- Padding: 20pt
+- Corner radius: 16pt
+- Background: LinearGradient
+  - Colors: #4facfe (opacity 0.1) to #00f2fe (opacity 0.1)
+  - StartPoint: topLeading, EndPoint: bottomTrailing
+
+**Input**: let surah: Surah
+
+#### 3.5 BismillahView Component
+**File**: `Sources/Presentation/Components/BismillahView.swift`
+
+**Purpose**: Display Bismillah text before surah content
+
+**Visual Elements**:
+- Arabic text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+- Center aligned
+- Font: medium, size 24
+
+**Styling**:
+- Padding: 20pt
+- Frame maxWidth: .infinity
+- Background: #4facfe (opacity 0.05)
+- Corner radius: 12pt
+
+**Conditional Display Rules**:
+- DON'T show for Surah 1 (Al-Fatihah) - Bismillah is first ayah
+- DON'T show for Surah 9 (At-Tawbah) - no Bismillah
+- SHOW for all other surahs
+
+### 4. Placeholder Tab Views
+
+#### 4.1 BlockingTabView
+**File**: `Sources/Presentation/MainTabs/BlockingTab/BlockingTabView.swift`
+
+**Purpose**: Placeholder for Phase 7 blocking functionality
+
+**Content** (VStack, 24pt spacing):
+- Icon: shield.fill (size 60, color: #4facfe)
+- Title: "Blocking" (bold, size 24)
+- Subtitle: "Phase 7: Manage blocked apps and time limits" (size 16, secondary)
+
+**Navigation**:
+- NavigationStack wrapper
+- Navigation title: "Blocking"
+- Center-aligned content with padding
+
+#### 4.2 SettingsTabView
+**File**: `Sources/Presentation/MainTabs/SettingsTab/SettingsTabView.swift`
+
+**Purpose**: Placeholder for Phase 7 settings functionality
+
+**Content** (VStack, 24pt spacing):
+- Icon: gearshape.fill (size 60, color: #4facfe)
+- Title: "Settings" (bold, size 24)
+- Subtitle: "Phase 7: Profile, subscription, and app settings" (size 16, secondary)
+
+**Navigation**:
+- NavigationStack wrapper
+- Navigation title: "Settings"
+- Center-aligned content with padding
+
+---
+
+## ROUTING UPDATES
+
+### Router Changes
+**File**: `Sources/Core/SceneNavigation/Router.swift`
+
+**Verify Existing Routes**:
+- `.mainTabs` - should route to MainTabView
+- `.surahDetail(surahId: Int)` - should route to SurahDetailView
+- `.listenSession` - already shows placeholder (no changes needed)
+
+**RootView Updates**:
+**File**: `Sources/RootView.swift`
+
+**Update Required**: Change `.mainTabs` case body from placeholder text to:
 ```swift
-import SwiftUI
-
-struct MainTabView: View {
-    @State private var selectedTab = 0
-    
-    var body: some View {
-        TabView(selection: $selectedTab) {
-            QuranTabView()
-                .tabItem {
-                    Label("Quran", systemImage: "book.fill")
-                }
-                .tag(0)
-            
-            BlockingTabView()
-                .tabItem {
-                    Label("Blocking", systemImage: "shield.fill")
-                }
-                .tag(1)
-            
-            SettingsTabView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-                .tag(2)
-        }
-        .accentColor(Color(hex: "4facfe"))
-    }
-}
-
-#Preview {
-    MainTabView()
-}
+MainTabView()
 ```
 
-### Step 2: Create Placeholder Tab Views
-
-**Create `Sources/Presentation/MainTabs/BlockingTab/BlockingTabView.swift`:**
-
+**Verify `.surahDetail(surahId:)` case** routes to:
 ```swift
-import SwiftUI
-
-struct BlockingTabView: View {
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Image(systemName: "shield.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(Color(hex: "4facfe"))
-                
-                Text("Blocking")
-                    .font(.system(size: 24, weight: .bold))
-                
-                Text("Phase 7: Manage blocked apps and time limits")
-                    .font(.system(size: 16))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding()
-            .navigationTitle("Blocking")
-        }
-    }
-}
+SurahDetailView(surahNumber: surahId)
 ```
 
-**Create `Sources/Presentation/MainTabs/SettingsTab/SettingsTabView.swift`:**
+---
 
-```swift
-import SwiftUI
+## TESTING REQUIREMENTS
 
-struct SettingsTabView: View {
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(Color(hex: "4facfe"))
-                
-                Text("Settings")
-                    .font(.system(size: 24, weight: .bold))
-                
-                Text("Phase 7: Profile, subscription, and app settings")
-                    .font(.system(size: 16))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding()
-            .navigationTitle("Settings")
-        }
-    }
-}
-```
+### Unit Tests (Target: +8 tests, 101+ total)
 
-### Step 3: Update RootView
+#### QuranTabViewModelTests
+**File**: `Tests/Presentation/MainTabs/QuranTabViewModelTests.swift`
 
-**Update `Sources/RootView.swift`:**
+**Test Cases**:
+1. `testInitialState` - Verify all @Published properties initialized correctly
+2. `testLoadSurahsSuccess` - Verify surahs populate after loadSurahs()
+3. `testLoadSurahsLoadsUserStreak` - Verify currentStreak loads from user
+4. `testSearchSurahsFiltersResults` - Verify searchSurahs() filters correctly
+5. `testClearSearchRestoresAllSurahs` - Verify clearSearch() resets state
 
-```swift
-case .mainTabs:
-    MainTabView()
-```
+**Mock Requirements**:
+- MockQuranService with properties: surahsToReturn, searchResults
+- MockAuthService with property: userToReturn
+- Implement QuranService protocol methods
+- Implement AuthService.getCurrentUser()
 
-### Verification Checkpoint 1:
+#### SurahDetailViewModelTests
+**File**: `Tests/Presentation/MainTabs/SurahDetailViewModelTests.swift`
 
+**Test Cases**:
+1. `testInitialState` - Verify @Published properties initialized correctly
+2. `testLoadSurahDetailSuccess` - Verify surah and ayahs populate after load
+3. `testToggleTranslationChangesState` - Verify toggleTranslation() flips flag
+
+**Mock Requirements**:
+- MockQuranService with properties: surahToReturn, ayahsToReturn
+- Implement QuranService.loadSurahDetail() method
+
+---
+
+## VERIFICATION CHECKLIST
+
+### Build Verification
 ```bash
 make build
 ```
 
-**Test in simulator:**
-1. Navigate to main tabs
-2. Verify 3 tabs display
-3. Can switch between tabs
-4. Tab bar icons correct
+**Expected Results**:
+- No compile errors
+- All 3 tabs render correctly
+- Tab switching works smoothly
+- Tab bar icons display correctly
+
+### Manual Testing (Simulator)
+
+**Quran Tab Flow**:
+1. App launches → Quran tab is default/first
+2. See greeting "As-salamu alaykum, [User Name]"
+3. See streak badge if streak > 0
+4. See all 114 surahs in scrollable list
+5. Type "opening" in search → Only Al-Fatihah shows
+6. Clear search → All surahs return
+7. Tap any surah → Navigate to detail view
+8. See surah header with Arabic name
+9. See Bismillah (if not surah 1 or 9)
+10. See all ayahs with Arabic text
+11. Tap translation toggle → Translations hide
+12. Tap again → Translations show
+13. Navigate back → Return to surah list
+14. Pull down to refresh → Surahs reload
+
+**Tab Navigation**:
+1. Tap Blocking tab → See placeholder with "Phase 7" message
+2. Tap Settings tab → See placeholder with "Phase 7" message
+3. Tap Quran tab → Return to Quran tab
+
+**Performance**:
+1. Scroll rapidly through 114 surahs → Should be smooth (60 FPS)
+2. Open Al-Baqarah (286 ayahs) → Scroll through ayahs smoothly
+3. Search responsiveness → Results update immediately on typing
+
+**Error Handling**:
+1. Open app with no internet → Show cached data if available
+2. Open app with no internet and no cache → Show error alert
+3. Search returns no results → Show empty state or message
 
 ---
 
-## TASK 5.2: QURAN TAB VIEWMODEL (Day 8 Morning - 2 hours)
+## FILE STRUCTURE
 
-### Step 1: Create QuranTabViewModel
-
-**Create `Sources/Presentation/MainTabs/QuranTab/QuranTabViewModel.swift`:**
-
-```swift
-import SwiftUI
-
-@MainActor
-final class QuranTabViewModel: ObservableObject {
-    @Published var surahs: [Surah] = []
-    @Published var filteredSurahs: [Surah] = []
-    @Published var searchQuery = ""
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var showError = false
-    @Published var currentStreak = 0
-    
-    private let quranService: QuranService
-    private let authService: AuthService
-    
-    init(
-        quranService: QuranService? = nil,
-        authService: AuthService? = nil
-    ) {
-        self.quranService = quranService ?? DIContainer.shared.quranService
-        self.authService = authService ?? DIContainer.shared.authService
-    }
-    
-    func loadSurahs() async {
-        isLoading = true
-        errorMessage = nil
-        
-        defer { isLoading = false }
-        
-        do {
-            surahs = try await quranService.loadAllSurahs()
-            filteredSurahs = surahs
-            
-            // Load user streak
-            if let user = try await authService.getCurrentUser() {
-                currentStreak = user.currentStreak
-            }
-        } catch {
-            errorMessage = "Failed to load surahs: \(error.localizedDescription)"
-            showError = true
-        }
-    }
-    
-    func searchSurahs() {
-        if searchQuery.isEmpty {
-            filteredSurahs = surahs
-        } else {
-            filteredSurahs = quranService.searchSurahs(query: searchQuery, in: surahs)
-        }
-    }
-    
-    func clearSearch() {
-        searchQuery = ""
-        filteredSurahs = surahs
-    }
-}
 ```
+Sources/Presentation/
+├── MainTabs/
+│   ├── MainTabView.swift (NEW)
+│   ├── QuranTab/
+│   │   ├── QuranTabView.swift (NEW)
+│   │   └── QuranTabViewModel.swift (NEW)
+│   ├── BlockingTab/
+│   │   └── BlockingTabView.swift (NEW)
+│   └── SettingsTab/
+│       └── SettingsTabView.swift (NEW)
+├── Components/
+│   ├── SurahCard.swift (NEW)
+│   ├── AyahCard.swift (NEW)
+│   ├── StreakBadge.swift (NEW)
+│   ├── SearchBar.swift (NEW)
+│   ├── SurahHeader.swift (NEW)
+│   └── BismillahView.swift (NEW)
+└── ListenSession/
+    └── (Existing placeholder for Phase 6)
 
-### Step 2: Create QuranTabViewModel Tests
+Tests/Presentation/MainTabs/
+├── QuranTabViewModelTests.swift (NEW)
+└── SurahDetailViewModelTests.swift (NEW)
 
-**Create `Tests/Presentation/MainTabs/QuranTabViewModelTests.swift`:**
-
-```swift
-import XCTest
-@testable import SurahFocus
-
-@MainActor
-final class QuranTabViewModelTests: XCTestCase {
-    var viewModel: QuranTabViewModel!
-    var mockQuranService: MockQuranService!
-    var mockAuthService: MockAuthService!
-    
-    override func setUp() {
-        mockQuranService = MockQuranService()
-        mockAuthService = MockAuthService()
-        viewModel = QuranTabViewModel(
-            quranService: mockQuranService,
-            authService: mockAuthService
-        )
-    }
-    
-    override func tearDown() {
-        viewModel = nil
-        mockQuranService = nil
-        mockAuthService = nil
-    }
-    
-    func testInitialState() {
-        XCTAssertTrue(viewModel.surahs.isEmpty)
-        XCTAssertTrue(viewModel.filteredSurahs.isEmpty)
-        XCTAssertEqual(viewModel.searchQuery, "")
-        XCTAssertFalse(viewModel.isLoading)
-        XCTAssertEqual(viewModel.currentStreak, 0)
-    }
-    
-    func testLoadSurahsSuccess() async {
-        let mockSurahs = [
-            Surah(number: 1, name: "Al-Fatihah", englishName: "The Opening", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationType: "Meccan")
-        ]
-        mockQuranService.surahsToReturn = mockSurahs
-        
-        await viewModel.loadSurahs()
-        
-        XCTAssertEqual(viewModel.surahs.count, 1)
-        XCTAssertEqual(viewModel.filteredSurahs.count, 1)
-        XCTAssertFalse(viewModel.isLoading)
-    }
-    
-    func testLoadSurahsLoadsUserStreak() async {
-        let mockUser = User(appleUserId: "test123")
-        mockUser.currentStreak = 5
-        mockAuthService.userToReturn = mockUser
-        
-        await viewModel.loadSurahs()
-        
-        XCTAssertEqual(viewModel.currentStreak, 5)
-    }
-    
-    func testSearchSurahsFiltersResults() {
-        viewModel.surahs = [
-            Surah(number: 1, name: "Al-Fatihah", englishName: "Al-Fatihah", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationType: "Meccan"),
-            Surah(number: 2, name: "Al-Baqarah", englishName: "Al-Baqarah", englishNameTranslation: "The Cow", numberOfAyahs: 286, revelationType: "Medinan")
-        ]
-        viewModel.filteredSurahs = viewModel.surahs
-        mockQuranService.searchResults = [viewModel.surahs[0]]
-        
-        viewModel.searchQuery = "opening"
-        viewModel.searchSurahs()
-        
-        XCTAssertEqual(viewModel.filteredSurahs.count, 1)
-        XCTAssertEqual(viewModel.filteredSurahs.first?.englishName, "Al-Fatihah")
-    }
-    
-    func testClearSearchRestoresAllSurahs() {
-        viewModel.surahs = [
-            Surah(number: 1, name: "Al-Fatihah", englishName: "Al-Fatihah", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationType: "Meccan")
-        ]
-        viewModel.searchQuery = "test"
-        viewModel.filteredSurahs = []
-        
-        viewModel.clearSearch()
-        
-        XCTAssertEqual(viewModel.searchQuery, "")
-        XCTAssertEqual(viewModel.filteredSurahs.count, 1)
-    }
-}
-
-// MARK: - Mock Services
-
-class MockQuranService: QuranService {
-    var surahsToReturn: [Surah] = []
-    var searchResults: [Surah] = []
-    
-    func loadAllSurahs() async throws -> [Surah] {
-        return surahsToReturn
-    }
-    
-    func loadSurahDetail(number: Int, withTranslation: Bool) async throws -> (surah: Surah, ayahs: [Ayah]) {
-        let surah = Surah(number: number, name: "", englishName: "", englishNameTranslation: "", numberOfAyahs: 0, revelationType: "")
-        return (surah, [])
-    }
-    
-    func getAudioURL(for surah: Surah, reciterId: Int) -> String {
-        return ""
-    }
-    
-    func searchSurahs(query: String, in surahs: [Surah]) -> [Surah] {
-        return searchResults
-    }
-}
-```
-
-### Verification Checkpoint 2:
-
-```bash
-make test
-```
-
-**Expected Output:**
-```
-Test Suite 'QuranTabViewModelTests' passed (5 tests)
+Modified Files:
+├── Sources/RootView.swift (UPDATE: .mainTabs case)
+└── Sources/Core/SceneNavigation/Router.swift (VERIFY routes)
 ```
 
 ---
 
-## TASK 5.3: QURAN TAB VIEW (Day 8 Afternoon - 3 hours)
+## PRD NOTES & UPDATES
 
-### Step 1: Create Surah Card Component
+### Changes from Original PRD:
+1. **Streak Tracking**: Removed 2-minute minimum. User engagement counts immediately when opening a surah or starting to listen.
+2. **User Greeting**: Added "As-salamu alaykum, [Name]" to Quran tab (per user request).
+3. **Session Tracking**: Deferred to later phase - Phase 5 focuses on UI only.
 
-**Create `Sources/Presentation/Components/SurahCard.swift`:**
-
-```swift
-import SwiftUI
-
-struct SurahCard: View {
-    let surah: Surah
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Surah number badge
-            ZStack {
-                Circle()
-                    .strokeBorder(Color(hex: "4facfe"), lineWidth: 2)
-                    .frame(width: 50, height: 50)
-                
-                Text("\(surah.number)")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(hex: "4facfe"))
-            }
-            
-            // Surah info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(surah.englishName)
-                    .font(.system(size: 18, weight: .semibold))
-                
-                HStack(spacing: 8) {
-                    Text(surah.englishNameTranslation)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                    
-                    Text("•")
-                        .foregroundColor(.secondary)
-                    
-                    Text("\(surah.numberOfAyahs) ayahs")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            Spacer()
-            
-            // Arabic name
-            Text(surah.name)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundColor(.primary)
-        }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-    }
-}
-
-#Preview {
-    SurahCard(
-        surah: Surah(
-            number: 1,
-            name: "سُورَةُ ٱلْفَاتِحَةِ",
-            englishName: "Al-Fatihah",
-            englishNameTranslation: "The Opening",
-            numberOfAyahs: 7,
-            revelationType: "Meccan"
-        )
-    )
-    .padding()
-}
-```
-
-### Step 2: Create Streak Badge Component
-
-**Create `Sources/Presentation/Components/StreakBadge.swift`:**
-
-```swift
-import SwiftUI
-
-struct StreakBadge: View {
-    let streak: Int
-    
-    var body: some View {
-        HStack(spacing: 8) {
-            Text("🔥")
-                .font(.system(size: 24))
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(streak) day streak")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.primary)
-                
-                Text("Keep it going!")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-        }
-        .padding(16)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(hex: "FFE5B4").opacity(0.3),
-                    Color(hex: "FFD700").opacity(0.2)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .cornerRadius(12)
-    }
-}
-
-#Preview {
-    StreakBadge(streak: 7)
-        .padding()
-}
-```
-
-### Step 3: Create QuranTabView
-
-**Create `Sources/Presentation/MainTabs/QuranTab/QuranTabView.swift`:**
-
-```swift
-import SwiftUI
-
-struct QuranTabView: View {
-    @StateObject private var viewModel = QuranTabViewModel()
-    @EnvironmentObject var router: Router
-    
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                if viewModel.isLoading && viewModel.surahs.isEmpty {
-                    ProgressView()
-                } else {
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            // Streak Badge
-                            if viewModel.currentStreak > 0 {
-                                StreakBadge(streak: viewModel.currentStreak)
-                                    .padding(.horizontal, 16)
-                                    .padding(.top, 8)
-                            }
-                            
-                            // Search Bar
-                            SearchBar(
-                                text: $viewModel.searchQuery,
-                                placeholder: "Search surahs..."
-                            )
-                            .onChange(of: viewModel.searchQuery) { _, _ in
-                                viewModel.searchSurahs()
-                            }
-                            .padding(.horizontal, 16)
-                            
-                            // Surah List
-                            LazyVStack(spacing: 12) {
-                                ForEach(viewModel.filteredSurahs) { surah in
-                                    Button {
-                                        router.navigate(to: .surahDetail(surahId: surah.number))
-                                    } label: {
-                                        SurahCard(surah: surah)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                        .padding(.bottom, 20)
-                    }
-                    .refreshable {
-                        await viewModel.loadSurahs()
-                    }
-                }
-            }
-            .navigationTitle("Quran")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        router.navigate(to: .listenSession)
-                    } label: {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .foregroundColor(Color(hex: "4facfe"))
-                    }
-                }
-            }
-        }
-        .task {
-            if viewModel.surahs.isEmpty {
-                await viewModel.loadSurahs()
-            }
-        }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "An error occurred")
-        }
-    }
-}
-
-#Preview {
-    QuranTabView()
-        .environmentObject(Router())
-}
-```
-
-### Step 4: Create SearchBar Component
-
-**Create `Sources/Presentation/Components/SearchBar.swift`:**
-
-```swift
-import SwiftUI
-
-struct SearchBar: View {
-    @Binding var text: String
-    let placeholder: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField(placeholder, text: $text)
-                .textFieldStyle(.plain)
-            
-            if !text.isEmpty {
-                Button {
-                    text = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(12)
-        .background(Color(.systemGray6))
-        .cornerRadius(10)
-    }
-}
-```
-
-### Verification Checkpoint 3:
-
-```bash
-make build
-```
-
-**Test in simulator:**
-1. Navigate to Quran tab
-2. Should see loading indicator
-3. 114 surahs load
-4. Streak badge displays (if user has streak)
-5. Search bar functional
-6. Can scroll through surahs
+### PRD References:
+- Section 6.5: Main Navigation (3-Tab Bottom Bar)
+- Section 6.6: Tab 1 - Quran (Reading & Listening)
+- Section 6.6.1: Surah Reading View
 
 ---
 
-## TASK 5.4: SURAH DETAIL VIEWMODEL (Day 9 Morning - 2 hours)
+## DEPENDENCIES (Already Exist)
 
-### Step 1: Create SurahDetailViewModel
+### Services to Reuse:
+- `QuranService.loadAllSurahs()` - Returns [Surah] with 114 surahs
+- `QuranService.loadSurahDetail(number:withTranslation:)` - Returns (Surah, [Ayah])
+- `QuranService.searchSurahs(query:in:)` - Filters [Surah] by query
+- `AuthService.getCurrentUser()` - Returns User with name, streak
 
-**Create `Sources/Presentation/MainTabs/QuranTab/SurahDetailViewModel.swift`:**
+### Entities to Reuse:
+- `Surah` - number, name, surahNameArabicLong, englishName, englishNameTranslation, numberOfAyahs, revelationPlace
+- `Ayah` - number, text, numberInSurah, english (translation text)
+- `User` - name, currentStreak, lastEngagementDate
 
-```swift
-import SwiftUI
-
-@MainActor
-final class SurahDetailViewModel: ObservableObject {
-    @Published var surah: Surah?
-    @Published var ayahs: [Ayah] = []
-    @Published var showTranslation = true
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var showError = false
-    
-    private let quranService: QuranService
-    private let surahNumber: Int
-    
-    init(surahNumber: Int, quranService: QuranService? = nil) {
-        self.surahNumber = surahNumber
-        self.quranService = quranService ?? DIContainer.shared.quranService
-    }
-    
-    func loadSurahDetail() async {
-        isLoading = true
-        errorMessage = nil
-        
-        defer { isLoading = false }
-        
-        do {
-            let (loadedSurah, loadedAyahs) = try await quranService.loadSurahDetail(
-                number: surahNumber,
-                withTranslation: showTranslation
-            )
-            surah = loadedSurah
-            ayahs = loadedAyahs
-        } catch {
-            errorMessage = "Failed to load surah: \(error.localizedDescription)"
-            showError = true
-        }
-    }
-    
-    func toggleTranslation() async {
-        showTranslation.toggle()
-        await loadSurahDetail()
-    }
-}
-```
-
-### Step 2: Create SurahDetailViewModel Tests
-
-**Create `Tests/Presentation/MainTabs/SurahDetailViewModelTests.swift`:**
-
-```swift
-import XCTest
-@testable import SurahFocus
-
-@MainActor
-final class SurahDetailViewModelTests: XCTestCase {
-    var viewModel: SurahDetailViewModel!
-    var mockQuranService: MockQuranService!
-    
-    override func setUp() {
-        mockQuranService = MockQuranService()
-        viewModel = SurahDetailViewModel(surahNumber: 1, quranService: mockQuranService)
-    }
-    
-    override func tearDown() {
-        viewModel = nil
-        mockQuranService = nil
-    }
-    
-    func testInitialState() {
-        XCTAssertNil(viewModel.surah)
-        XCTAssertTrue(viewModel.ayahs.isEmpty)
-        XCTAssertTrue(viewModel.showTranslation)
-        XCTAssertFalse(viewModel.isLoading)
-    }
-    
-    func testLoadSurahDetailSuccess() async {
-        let mockSurah = Surah(number: 1, name: "Al-Fatihah", englishName: "The Opening", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationType: "Meccan")
-        let mockAyahs = [
-            Ayah(number: 1, text: "بِسْمِ اللَّهِ", numberInSurah: 1)
-        ]
-        mockQuranService.surahToReturn = mockSurah
-        mockQuranService.ayahsToReturn = mockAyahs
-        
-        await viewModel.loadSurahDetail()
-        
-        XCTAssertNotNil(viewModel.surah)
-        XCTAssertEqual(viewModel.ayahs.count, 1)
-        XCTAssertFalse(viewModel.isLoading)
-    }
-    
-    func testToggleTranslationChangesState() async {
-        await viewModel.toggleTranslation()
-        
-        XCTAssertFalse(viewModel.showTranslation)
-    }
-}
-```
-
-### Verification Checkpoint 4:
-
-```bash
-make test
-```
-
-**Expected Output:**
-```
-Test Suite 'SurahDetailViewModelTests' passed (3 tests)
-```
+### Navigation:
+- `Router.navigate(to:)` - For navigation
+- Router.Route.mainTabs - Main tab view
+- Router.Route.surahDetail(surahId:) - Surah detail
+- Router.Route.listenSession - Listening (Phase 6)
 
 ---
 
-## TASK 5.5: SURAH DETAIL VIEW (Day 9 Afternoon - 4 hours)
+## IMPLEMENTATION QUESTIONS - ANSWERED
 
-### Step 1: Create Ayah Card Component
+### Q1: Translation Format
+**Use**: `ayah.english` property contains the English translation text.
 
-**Create `Sources/Presentation/Components/AyahCard.swift`:**
+### Q2: Arabic Name Display
+**Use**: `surah.surahNameArabicLong` for main display (more complete Arabic name).
 
-```swift
-import SwiftUI
+### Q3: Revelation Property
+**Use**: `surah.revelationPlace` - shows "Makkah" or "Madina" (display as-is).
 
-struct AyahCard: View {
-    let ayah: Ayah
-    let showTranslation: Bool
-    
-    var body: some View {
-        VStack(alignment: .trailing, spacing: 12) {
-            // Ayah number
-            HStack {
-                Circle()
-                    .fill(Color(hex: "4facfe").opacity(0.1))
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Text("\(ayah.numberInSurah)")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(hex: "4facfe"))
-                    )
-                
-                Spacer()
-            }
-            
-            // Arabic text
-            Text(ayah.text)
-                .font(.system(size: 24, weight: .medium))
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            
-            // Translation
-            if showTranslation, let translation = ayah.translation {
-                Divider()
-                    .padding(.vertical, 4)
-                
-                Text(translation)
-                    .font(.system(size: 16))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-    }
-}
+### Q4: Search Scope
+**QuranService.searchSurahs()** already searches:
+- Arabic name (surah.name)
+- English translation (surah.englishNameTranslation)
+- Surah number
 
-#Preview {
-    AyahCard(
-        ayah: Ayah(
-            number: 1,
-            text: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-            numberInSurah: 1,
-            translation: "In the name of Allah, the Entirely Merciful, the Especially Merciful."
-        ),
-        showTranslation: true
-    )
-    .padding()
-}
+No additional search implementation needed.
+
+### Q5: Bismillah Text
+**Hardcode** in BismillahView:
+```
+"بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
 ```
 
-### Step 2: Create SurahDetailView
+**Display Rules**:
+- Surah 1 (Al-Fatihah): DON'T show (it's the first ayah)
+- Surah 9 (At-Tawbah): DON'T show (no Bismillah)
+- All others: SHOW
 
-**Create `Sources/Presentation/MainTabs/QuranTab/SurahDetailView.swift`:**
+### Q6: ListenSession Route
+**No changes** - Router already shows "Listen Session - Phase 6" placeholder.
 
-```swift
-import SwiftUI
+### Q7: Error Handling
+**QuranService throws**:
+- `invalidSurahNumber` → Show "Surah not found"
+- `networkError` → Show "Unable to load. Check your connection."
+- Other errors → Show localized error message
 
-struct SurahDetailView: View {
-    let surahNumber: Int
-    @StateObject private var viewModel: SurahDetailViewModel
-    @Environment(\.dismiss) private var dismiss
-    
-    init(surahNumber: Int) {
-        self.surahNumber = surahNumber
-        _viewModel = StateObject(wrappedValue: SurahDetailViewModel(surahNumber: surahNumber))
-    }
-    
-    var body: some View {
-        ZStack {
-            if viewModel.isLoading && viewModel.ayahs.isEmpty {
-                ProgressView()
-            } else if let surah = viewModel.surah {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Surah Header
-                        SurahHeader(surah: surah)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 16)
-                        
-                        // Bismillah (except for Surah 9)
-                        if surah.number != 1 && surah.number != 9 {
-                            BismillahView()
-                                .padding(.horizontal, 16)
-                        }
-                        
-                        // Ayahs
-                        LazyVStack(spacing: 16) {
-                            ForEach(viewModel.ayahs) { ayah in
-                                AyahCard(
-                                    ayah: ayah,
-                                    showTranslation: viewModel.showTranslation
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 80) // Space for floating button
-                    }
-                }
-            }
-        }
-        .navigationTitle(viewModel.surah?.englishName ?? "Loading...")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    Task {
-                        await viewModel.toggleTranslation()
-                    }
-                } label: {
-                    Image(systemName: viewModel.showTranslation ? "text.bubble.fill" : "text.bubble")
-                        .foregroundColor(Color(hex: "4facfe"))
-                }
-            }
-        }
-        .task {
-            if viewModel.ayahs.isEmpty {
-                await viewModel.loadSurahDetail()
-            }
-        }
-        .alert("Error", isPresented: $viewModel.showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.errorMessage ?? "An error occurred")
-        }
-    }
-}
-
-// MARK: - Supporting Views
-
-struct SurahHeader: View {
-    let surah: Surah
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Text(surah.name)
-                .font(.system(size: 32, weight: .bold))
-            
-            Text(surah.englishNameTranslation)
-                .font(.system(size: 18))
-                .foregroundColor(.secondary)
-            
-            HStack(spacing: 16) {
-                Label("\(surah.numberOfAyahs) Ayahs", systemImage: "text.alignleft")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                
-                Text("•")
-                    .foregroundColor(.secondary)
-                
-                Text(surah.revelationType)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(20)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(hex: "4facfe").opacity(0.1),
-                    Color(hex: "00f2fe").opacity(0.1)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .cornerRadius(16)
-    }
-}
-
-struct BismillahView: View {
-    var body: some View {
-        Text("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ")
-            .font(.system(size: 24, weight: .medium))
-            .multilineTextAlignment(.center)
-            .padding(20)
-            .frame(maxWidth: .infinity)
-            .background(Color(hex: "4facfe").opacity(0.05))
-            .cornerRadius(12)
-    }
-}
-
-#Preview {
-    NavigationStack {
-        SurahDetailView(surahNumber: 1)
-    }
-}
-```
-
-### Step 3: Update Router
-
-**Update `Sources/Core/SceneNavigation/Router.swift`:**
-
-Add navigation destination in RootView:
-
-```swift
-case .surahDetail(let surahId):
-    SurahDetailView(surahNumber: surahId)
-```
-
-### Verification Checkpoint 5:
-
-```bash
-make build
-```
-
-**Test in simulator:**
-1. Navigate to Quran tab
-2. Tap any surah
-3. Surah detail loads
-4. See surah header
-5. See bismillah (if not surah 1 or 9)
-6. Scroll through ayahs
-7. Toggle translation button works
-8. Translation shows/hides
+**UI Implementation**: Use `.alert(isPresented: $showError)` modifier.
 
 ---
 
-## FINAL BUILD & TEST
+## TIME ALLOCATION (13 hours)
 
-### Step 1: Run All Tests
+### Day 1 (7 hours):
+- Task 5.1: MainTabView + placeholder tabs (2 hours)
+- Task 5.2: QuranTabViewModel + tests (2 hours)
+- Task 5.3: QuranTabView + components (3 hours)
 
-```bash
-make test
-```
-
-**Expected Output:**
-```
-Test Suite 'QuranTabViewModelTests' passed (5 tests)
-Test Suite 'SurahDetailViewModelTests' passed (3 tests)
-[... previous tests ...]
-
-Test Suite 'SurahFocusTests' passed (101+ tests)
-```
-
-### Step 2: Integration Test
-
-**Full flow test:**
-1. Launch app
-2. Navigate to main tabs
-3. See Quran tab with 114 surahs
-4. Search for "opening" → Al-Fatihah appears
-5. Clear search → all surahs return
-6. Tap Al-Fatihah
-7. See 7 ayahs with translations
-8. Toggle translation off → translations hide
-9. Toggle translation on → translations show
-10. Navigate back → returns to list
-
-### Step 3: Performance Test
-
-**Scroll performance:**
-1. Open Quran tab
-2. Scroll rapidly through 114 surahs
-3. Should be smooth (60 FPS)
-4. Open any long surah (Al-Baqarah, 286 ayahs)
-5. Scroll through ayahs
-6. Should remain smooth
-
----
-
-## PHASE 5 COMPLETION CHECKLIST
-
-### Main Tab Structure
-- [ ] MainTabView created with 3 tabs
-- [ ] Tab bar icons and labels correct
-- [ ] Tab switching works smoothly
-- [ ] Placeholder views for Blocking and Settings
-
-### Quran Tab
-- [ ] QuranTabViewModel implemented
-- [ ] QuranTabView created
-- [ ] Can load all 114 surahs
-- [ ] Streak badge displays
-- [ ] Search bar functional
-- [ ] Search filters correctly
-- [ ] 5 Quran tab tests passing
-
-### Surah Detail
-- [ ] SurahDetailViewModel implemented
-- [ ] SurahDetailView created
-- [ ] Surah header displays correctly
-- [ ] Bismillah shows (except surah 1, 9)
-- [ ] All ayahs render
-- [ ] Translation toggle works
-- [ ] 3 surah detail tests passing
-
-### Components
-- [ ] SurahCard component
-- [ ] AyahCard component
-- [ ] StreakBadge component
-- [ ] SearchBar component
-- [ ] BismillahView component
-- [ ] SurahHeader component
-
-### Integration
-- [ ] Router updated with surah detail route
-- [ ] Navigation works end-to-end
-- [ ] 101+ total tests passing
-- [ ] Smooth scroll performance
-- [ ] No memory leaks
-
-### Verification Commands
-```bash
-# All tests pass
-make test
-
-# Build succeeds
-make build
-
-# Check performance
-# Use Instruments > Time Profiler
-# Scroll through surahs - should be 60 FPS
-```
-
----
-
-## TROUBLESHOOTING
-
-### Issue: Surahs not loading
-**Solution:**
-1. Check internet connection
-2. Verify API working (Phase 4)
-3. Check cache for corrupted data
-4. Clear cache and retry
-
-### Issue: Search not working
-**Solution:**
-1. Verify searchSurahs() called on text change
-2. Check search query not empty
-3. Verify filteredSurahs updates
-4. Check search implementation in service
-
-### Issue: Scroll performance poor
-**Solution:**
-1. Use LazyVStack instead of VStack
-2. Verify cards are efficient
-3. Check for unnecessary re-renders
-4. Profile with Instruments
-
-### Issue: Translation not showing
-**Solution:**
-1. Check showTranslation flag
-2. Verify API returns translations
-3. Check ayah.translation not nil
-4. Verify conditional rendering logic
+### Day 2 (6 hours):
+- Task 5.4: SurahDetailViewModel + tests (2 hours)
+- Task 5.5: SurahDetailView + components (4 hours)
 
 ---
 
@@ -1100,39 +604,87 @@ make build
 - Lock screen controls
 - SessionRepository implementation
 - ListenSessionView with audio controls
-- Session tracking and streak updates
+- Multi-surah queue playback
 
 **Prerequisites for Phase 6:**
 - Phase 5 fully complete
-- Can browse and read surahs
+- Navigation to .listenSession works
 - 101+ tests passing
 - Quran UI polished
 
 ---
 
-## TIME TRACKING
+## PHASE 5 COMPLETION CHECKLIST
 
-**Estimated vs Actual:**
-- Task 5.1 (Main Tab View): 2 hours
-- Task 5.2 (Quran Tab ViewModel): 2 hours
-- Task 5.3 (Quran Tab View): 3 hours
-- Task 5.4 (Surah Detail ViewModel): 2 hours
-- Task 5.5 (Surah Detail View): 4 hours
-- **Total: 13 hours over 2 days**
+### Main Tab Structure
+- [ ] MainTabView created with 3 tabs
+- [ ] Tab bar icons and labels correct
+- [ ] Tab switching works smoothly
+- [ ] Placeholder views for Blocking and Settings
+- [ ] RootView updated to use MainTabView
 
-**If behind schedule:**
-- Skip streak badge (add in Phase 8)
-- Remove search functionality temporarily
-- Simplify surah header design
-- Use basic list instead of cards
+### Quran Tab
+- [ ] QuranTabViewModel implemented
+- [ ] QuranTabView created with user greeting
+- [ ] Can load all 114 surahs
+- [ ] User greeting displays with name
+- [ ] Streak badge displays when applicable
+- [ ] Search bar functional
+- [ ] Search filters correctly
+- [ ] Pull-to-refresh works
+- [ ] 5 Quran tab tests passing
+
+### Surah Detail
+- [ ] SurahDetailViewModel implemented
+- [ ] SurahDetailView created
+- [ ] Surah header displays correctly
+- [ ] Bismillah shows correctly (not 1, 9)
+- [ ] All ayahs render
+- [ ] Translation toggle works
+- [ ] Arabic text aligned right
+- [ ] Translation aligned left
+- [ ] 3 surah detail tests passing
+
+### Components
+- [ ] SurahCard component
+- [ ] AyahCard component
+- [ ] StreakBadge component
+- [ ] SearchBar component
+- [ ] BismillahView component
+- [ ] SurahHeader component
+
+### Integration
+- [ ] Router verified with routes
+- [ ] Navigation works end-to-end
+- [ ] 101+ total tests passing
+- [ ] Smooth scroll performance
+- [ ] Error handling works
+
+### Verification
+```bash
+# All tests pass
+make test
+
+# Build succeeds
+make build
+
+# Manual testing complete
+```
 
 ---
 
 **🎯 PHASE 5 COMPLETE! Ready for Phase 6: Listening Sessions + Audio Player**
 
-Commit your work:
-```bash
-git add .
-git commit -m "✅ Phase 5 complete: Main Tabs + Quran Reading + 101 tests passing"
-git push
+**Commit message**:
+```
+feat: Phase 5 complete - Main Tabs + Quran Reading
+
+- 3-tab navigation (Quran, Blocking, Settings)
+- Quran browsing with 114 surahs
+- Surah detail view with ayah display
+- Search functionality
+- User greeting "As-salamu alaykum"
+- Streak badge display
+- Translation toggle
+- 8 new unit tests (101+ total passing)
 ```
