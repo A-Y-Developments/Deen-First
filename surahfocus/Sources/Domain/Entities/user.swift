@@ -8,6 +8,9 @@ final class User {
     var email: String?
     var name: String?
     var hasCompletedOnboarding: Bool
+    var hasCompletedAppSelection: Bool
+    var hasCompletedAppLimitSetup: Bool
+    var hasCompletedDowntimeSetup: Bool
     var isPremium: Bool
     var subscriptionExpiryDate: Date?
     var currentStreak: Int
@@ -25,6 +28,9 @@ final class User {
         self.email = email
         self.name = name
         self.hasCompletedOnboarding = false
+        self.hasCompletedAppSelection = false
+        self.hasCompletedAppLimitSetup = false
+        self.hasCompletedDowntimeSetup = false
         self.isPremium = false
         self.subscriptionExpiryDate = nil
         self.currentStreak = 0

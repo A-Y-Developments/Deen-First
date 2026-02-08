@@ -50,9 +50,8 @@ struct AuthView: View {
                     request.requestedScopes = [.email, .fullName]
                 } onCompletion: { result in
                     Task {
-                        if let user = await viewModel.handleSignIn(result: result) {
-                            await navigateUser(user)
-                        }
+                        _ = await viewModel.handleSignIn(result: result)
+                        NotificationCenter.default.post(name: .didSignIn, object: nil)
                     }
                 }
                 .signInWithAppleButtonStyle(.white)
@@ -71,29 +70,6 @@ struct AuthView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "An error occurred")
-        }
-        .task {
-            // Check if user already signed in
-            if let user = await viewModel.getCurrentUser() {
-                await navigateUser(user)
-            }
-        }
-    }
-
-    @MainActor
-    private func navigateUser(_ user: User) async {
-        // Check onboarding FIRST, then subscription
-        if !user.hasCompletedOnboarding {
-            router.replaceWith(.onboarding)
-            return
-        }
-
-        // Onboarding complete, check subscription
-        let isPremium = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
-        if !isPremium {
-            router.replaceWith(.paywall)
-        } else {
-            router.replaceWith(.screenTimePermission)
         }
     }
 }

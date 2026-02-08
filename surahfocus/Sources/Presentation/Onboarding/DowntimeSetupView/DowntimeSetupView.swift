@@ -66,7 +66,10 @@ struct DowntimeSetupView: View {
                     VStack(spacing: 12) {
                         Button {
                             viewModel.save()
-                            router.navigate(to: .mainTabs)
+                            Task {
+                                await markDowntimeSetupComplete()
+                                router.reset()
+                            }
                         } label: {
                             Text("Complete Setup")
                                 .font(.system(size: 18, weight: .semibold))
@@ -85,7 +88,10 @@ struct DowntimeSetupView: View {
 
                         Button("Skip") {
                             viewModel.skip()
-                            router.navigate(to: .mainTabs)
+                            Task {
+                                await markDowntimeSetupComplete()
+                                router.replaceWith(.mainTabs)
+                            }
                         }
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.7))
@@ -95,6 +101,7 @@ struct DowntimeSetupView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden()
         .onAppear {
             loadSelectedApps()
         }
@@ -107,6 +114,15 @@ struct DowntimeSetupView: View {
         }
 
         viewModel.loadApps(appDataArray)
+    }
+
+    @MainActor
+    private func markDowntimeSetupComplete() async {
+        if let user = try? await DIContainer.shared.authService.getCurrentUser() {
+            user.hasCompletedDowntimeSetup = true
+            try? await DIContainer.shared.userRepository.updateUser(user)
+        }
+        NotificationCenter.default.post(name: .didSignIn, object: nil)
     }
 }
 

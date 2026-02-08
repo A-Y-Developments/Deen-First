@@ -85,7 +85,7 @@ struct ScreenTimePermissionView: View {
 
                     Button("I'll do this later") {
                         viewModel.skip()
-                        router.navigate(to: .mainTabs)
+                        router.replaceWith(.mainTabs)
                     }
                     .font(.system(size: 14))
                     .foregroundColor(.white.opacity(0.7))
@@ -99,10 +99,11 @@ struct ScreenTimePermissionView: View {
         } message: {
             Text(viewModel.errorMessage ?? "An error occurred")
         }
+        .navigationBarBackButtonHidden()
         .onAppear {
             viewModel.checkAuthorization()
             if viewModel.isAuthorized {
-                router.replaceWith([.appSelection])
+                router.replaceWith(.appSelection)
             }
         }
     }

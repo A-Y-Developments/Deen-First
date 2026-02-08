@@ -1,4 +1,5 @@
 import SwiftUI
+import FamilyControls
 
 struct PaywallView: View {
     @EnvironmentObject var router: Router
@@ -85,13 +86,7 @@ struct PaywallView: View {
                     Button {
                         Task {
                             if await viewModel.purchase() {
-                                // After purchase, check if user needs onboarding
-                                if let user = try? await DIContainer.shared.authService.getCurrentUser(),
-                                   !user.hasCompletedOnboarding {
-                                    router.navigate(to: .onboarding)
-                                } else {
-                                    router.navigate(to: .screenTimePermission)
-                                }
+                                await navigateAfterPurchase()
                             }
                         }
                     } label: {
@@ -124,7 +119,7 @@ struct PaywallView: View {
                         Button("Restore Purchases") {
                             Task {
                                 if await viewModel.restorePurchases() {
-                                    router.navigate(to: .mainTabs)
+                                    await navigateAfterRestore()
                                 }
                             }
                         }
@@ -157,6 +152,19 @@ struct PaywallView: View {
         .task {
             await viewModel.loadOfferings()
         }
+    }
+
+    @MainActor
+    private func navigateAfterPurchase() async {
+        // After purchase, always go to screen time permission
+        // AuthView guard will handle proper routing on next launch
+        router.replaceWith(.screenTimePermission)
+    }
+
+    @MainActor
+    private func navigateAfterRestore() async {
+        // After restore, let AuthView guard handle proper routing
+        router.replaceWith(.screenTimePermission)
     }
 }
 

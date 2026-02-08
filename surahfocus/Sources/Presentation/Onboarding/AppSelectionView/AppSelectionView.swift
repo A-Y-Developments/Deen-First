@@ -60,7 +60,10 @@ struct AppSelectionView: View {
                     if let sharedDefaults = UserDefaults(suiteName: AppGroupConstants.suiteName) {
                         sharedDefaults.set(encodedApps, forKey: "selectedAppsForSetup")
                     }
-                    router.navigate(to: .appLimitSetup)
+                    Task {
+                        await markAppSelectionComplete()
+                        router.navigate(to: .appLimitSetup)
+                    }
                 } label: {
                     Text("Complete Setup")
                         .font(.system(size: 18, weight: .semibold))
@@ -94,8 +97,17 @@ struct AppSelectionView: View {
         .onChange(of: viewModel.selection) { oldValue, newValue in
             viewModel.updateSelection(newValue)
         }
+        .navigationBarBackButtonHidden()
         .onAppear {
             viewModel.loadSavedSelection()
+        }
+    }
+
+    @MainActor
+    private func markAppSelectionComplete() async {
+        if let user = try? await DIContainer.shared.authService.getCurrentUser() {
+            user.hasCompletedAppSelection = true
+            try? await DIContainer.shared.userRepository.updateUser(user)
         }
     }
 }

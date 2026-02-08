@@ -73,7 +73,10 @@ struct AppLimitSetupView: View {
                     Button {
                         viewModel.save()
                         passAppsToNextScreen()
-                        router.navigate(to: .downtimeSetup)
+                        Task {
+                            await markAppLimitSetupComplete()
+                            router.navigate(to: .downtimeSetup)
+                        }
                     } label: {
                         Text("Next")
                             .font(.system(size: 18, weight: .semibold))
@@ -93,7 +96,10 @@ struct AppLimitSetupView: View {
                     Button("Skip") {
                         viewModel.skip()
                         passAppsToNextScreen()
-                        router.navigate(to: .downtimeSetup)
+                        Task {
+                            await markAppLimitSetupComplete()
+                            router.navigate(to: .downtimeSetup)
+                        }
                     }
                     .font(.system(size: 16))
                     .foregroundColor(.white.opacity(0.7))
@@ -102,6 +108,7 @@ struct AppLimitSetupView: View {
                 .padding(.bottom, 32)
             }
         }
+        .navigationBarBackButtonHidden()
         .onAppear {
             loadSelectedApps()
         }
@@ -122,6 +129,14 @@ struct AppLimitSetupView: View {
     }
 
     private func passAppsToNextScreen() {}
+
+    @MainActor
+    private func markAppLimitSetupComplete() async {
+        if let user = try? await DIContainer.shared.authService.getCurrentUser() {
+            user.hasCompletedAppLimitSetup = true
+            try? await DIContainer.shared.userRepository.updateUser(user)
+        }
+    }
 }
 
 struct TimeLimitCard: View {
