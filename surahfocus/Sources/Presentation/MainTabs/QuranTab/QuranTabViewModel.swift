@@ -16,10 +16,9 @@ final class QuranTabViewModel: ObservableObject {
         case surah
         case juz
     }
-
     private let quranService: QuranService
     private let authService: AuthService
-
+    
     init(
         quranService: QuranService = DIContainer.shared.quranService,
         authService: AuthService = DIContainer.shared.authService
@@ -27,18 +26,18 @@ final class QuranTabViewModel: ObservableObject {
         self.quranService = quranService
         self.authService = authService
     }
-
+    
     func loadSurahs() async {
         isLoading = true
         errorMessage = nil
         showError = false
         defer { isLoading = false }
-
+        
         do {
             let loadedSurahs = try await quranService.loadAllSurahs()
             surahs = loadedSurahs
             filteredSurahs = loadedSurahs
-
+            
             if let currentUser = try? await authService.getCurrentUser() {
                 user = currentUser
                 currentStreak = currentUser.currentStreak
@@ -48,11 +47,11 @@ final class QuranTabViewModel: ObservableObject {
             showError = true
         }
     }
-
+    
     func searchSurahs() {
         filteredSurahs = quranService.searchSurahs(query: searchQuery, in: surahs)
     }
-
+    
     func clearSearch() {
         searchQuery = ""
         filteredSurahs = surahs

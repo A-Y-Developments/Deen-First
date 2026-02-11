@@ -26,13 +26,12 @@ struct MainTabView: View {
                     Label("Quran", systemImage: "book.fill")
                 }
                 .tag(0)
-            
             BlockingTabView()
                 .tabItem {
                     Label("Blocking", systemImage: "nosign")
                 }
                 .tag(1)
-            
+
             SettingsTabView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")

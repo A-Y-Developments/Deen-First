@@ -15,6 +15,10 @@ final class Router: ObservableObject {
         case mainTabs
         case surahDetail(surahId: Int)
         case listenSession
+        // Blocks View
+        case blocks
+        case appLimit
+        case timeLimit
     }
 
     func navigate(to route: Route) {
