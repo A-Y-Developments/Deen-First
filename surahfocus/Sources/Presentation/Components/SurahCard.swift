@@ -9,7 +9,7 @@ struct SurahCard: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .strokeBorder(Color(hex: "4facfe"), lineWidth: 2)
+                        .fill(Color(hex: "1A494D"))
                         .frame(width: 50, height: 50)
                     Text("\(surah.number)")
                         .font(.system(size: 16, weight: .semibold))

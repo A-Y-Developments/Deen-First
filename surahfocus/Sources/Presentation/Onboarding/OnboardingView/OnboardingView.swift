@@ -3,55 +3,61 @@ import SwiftUI
 struct OnboardingView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject private var viewModel: OnboardingViewModel
-
+    
     var body: some View {
         ZStack {
             // Background
             LinearGradient(
-                colors: [
-                    Color(hex: "1a1a2e"),
-                    Color(hex: "16213e")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+                gradient: Gradient(stops: [
+                    .init(color: Color(hex: "062629"), location: 0.0),
+                    .init(color: Color(hex: "041315"), location: 1.0)
+                ]),
+                startPoint: .bottom,
+                endPoint: .top
             )
             .ignoresSafeArea()
-
+            
             VStack(spacing: 0) {
                 // Header
-                HStack {
-                    if viewModel.canGoBack {
-                        Button(action: viewModel.goBack) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.white)
+                VStack {
+                    // Navigation
+                    if viewModel.currentStep < 3 {
+                        HStack {
+                            if viewModel.canGoBack {
+                                Button(action: viewModel.goBack) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 18, weight: .medium))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            Spacer()
+                            Button("Skip") {
+                                viewModel.skip()
+                            }
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.white.opacity(0.7))
+                            
                         }
                     }
-
-                    Spacer()
-
-                    Text(viewModel.progressText)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-
-                    Spacer()
-
+                    
+                    // Indicator
                     if viewModel.currentStep < 3 {
-                        Button("Skip") {
-                            viewModel.skip()
+                        HStack(spacing: 6) {
+                            ForEach(0..<viewModel.totalSteps-1, id: \.self) { index in
+                                Rectangle()
+                                    .fill(index < viewModel.currentStep + 1 ? Color.white : Color.white.opacity(0.2))
+                                    .frame(height: 4)
+                                    .frame(maxWidth: .infinity)
+                                    .animation(.easeInOut(duration: 0.25), value: viewModel.currentStep)
+                            }
                         }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
-                    } else {
-                        // Invisible spacer for alignment
-                        Text("Skip")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.clear)
+                        .padding(.top)
                     }
                 }
                 .padding(.horizontal, 24)
-                .padding(.vertical, 16)
-
+                .padding(.top, 16)
+                .padding(.bottom, 36)
+                
                 // Content
                 TabView(selection: $viewModel.currentStep) {
                     OnboardingStep1View()
@@ -64,8 +70,8 @@ struct OnboardingView: View {
                         .tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-
-                // Continue Button
+                
+                // Next Button
                 Button {
                     if viewModel.currentStep == 3 {
                         Task {
@@ -82,31 +88,22 @@ struct OnboardingView: View {
                                 .tint(.white)
                             Text("Saving...")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundStyle(viewModel.canContinue ? Color.black : Color.white)
                         } else {
-                            Text("Continue")
+                            Text("Next")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundStyle(viewModel.canContinue ? Color.black : Color.white)
                         }
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
-                        viewModel.canContinue ?
-                        LinearGradient(
-                            colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ) :
-                        LinearGradient(
-                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                        viewModel.canContinue ? Color.white : Color(hex: "031315")
                     )
                     .cornerRadius(16)
                 }
                 .disabled(!viewModel.canContinue)
+                .clipShape(Capsule())
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
             }
