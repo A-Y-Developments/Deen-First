@@ -24,15 +24,31 @@ final class DIContainer {
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
+    lazy var screenTimeService: ScreenTimeService = ScreenTimeServiceImpl(screenTimeRepository: screenTimeRepository)
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
-        userRepository: userRepository
+        userRepository: userRepository,
+        screenTimeService: screenTimeService
     )
-    lazy var screenTimeService: ScreenTimeService = ScreenTimeServiceImpl(screenTimeRepository: screenTimeRepository)
 
     @MainActor
     var mainContext: ModelContext {
         return modelContainer.mainContext
+    }
+
+    @MainActor
+    var audioPlayerService: AudioPlayerService {
+        return AudioPlayerServiceImpl()
+    }
+
+    @MainActor
+    var ayahAudioPlayerService: AyahAudioPlayerService {
+        return AyahAudioPlayerServiceImpl(audioPlayer: audioPlayerService)
+    }
+
+    @MainActor
+    var audioDownloadService: AudioDownloadService {
+        return AudioDownloadServiceImpl()
     }
 
     private init() {
@@ -98,37 +114,6 @@ final class DIContainer {
     private init(testContainer: ModelContainer) {
         self.modelContainer = testContainer
     }
-}
-
-// MARK: - Session Stubs (TODO: Implement in later phase)
-protocol SessionRepository {
-    func save(_ session: Session) async throws
-    func getActiveSessions() async throws -> [Session]
-}
-
-class SessionRepositoryImpl: SessionRepository {
-    let localDataSource: LocalDataSource
-    init(localDataSource: LocalDataSource) {
-        self.localDataSource = localDataSource
-    }
-    func save(_ session: Session) async throws {}
-    func getActiveSessions() async throws -> [Session] { [] }
-}
-
-protocol SessionService {
-    func startSession(blockedApps: [BlockedApp], duration: TimeInterval) async throws
-    func endSession() async throws
-}
-
-class SessionServiceImpl: SessionService {
-    let sessionRepository: SessionRepository
-    let userRepository: UserRepository
-    init(sessionRepository: SessionRepository, userRepository: UserRepository) {
-        self.sessionRepository = sessionRepository
-        self.userRepository = userRepository
-    }
-    func startSession(blockedApps: [BlockedApp], duration: TimeInterval) async throws {}
-    func endSession() async throws {}
 }
 
 

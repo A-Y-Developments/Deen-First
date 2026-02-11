@@ -68,12 +68,21 @@ final class LocalDataSource {
 
     @MainActor
     func getActiveSession() throws -> Session? {
-        // A session is active if it has started but not ended
         let descriptor = FetchDescriptor<Session>()
         let sessions = try context.fetch(descriptor)
-
-        // Find sessions that have started but not ended
         return sessions.first { $0.endTime == nil && !$0.isCompleted }
+    }
+
+    @MainActor
+    func fetchSessions(predicate: (Session) -> Bool) throws -> [Session] {
+        let descriptor = FetchDescriptor<Session>()
+        let sessions = try context.fetch(descriptor)
+        return sessions.filter(predicate)
+    }
+
+    @MainActor
+    func updateSession(_ session: Session) throws {
+        try context.save()
     }
 
     @MainActor

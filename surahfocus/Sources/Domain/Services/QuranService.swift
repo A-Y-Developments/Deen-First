@@ -5,6 +5,7 @@ protocol QuranService {
     func loadSurah(number: Int) async throws -> (Surah, [Ayah])
     func loadVerse(surahNo: Int, ayahNo: Int) async throws -> Ayah
     func getAudioStreamURL(reciterId: Int, surahNo: Int, ayahNo: Int) async throws -> URL
+    func getLocalAudioURL(reciterId: Int, surahNo: Int, ayahNo: Int) -> URL?
     func searchSurahs(query: String, in surahs: [Surah]) -> [Surah]
     func getAvailableReciters() -> [Reciter]
 }
@@ -43,6 +44,12 @@ final class QuranServiceImpl: QuranService {
             throw QuranServiceError.invalidAudioURL
         }
         return url
+    }
+
+    func getLocalAudioURL(reciterId: Int, surahNo: Int, ayahNo: Int) -> URL? {
+        let audio = AyahAudio(reciterId: reciterId, surahNumber: surahNo, ayahNumber: ayahNo)
+        let fileURL = AudioFileHelper.shared.fileURL(for: audio)
+        return FileManager.default.fileExists(atPath: fileURL.path) ? fileURL : nil
     }
 
     func searchSurahs(query: String, in surahs: [Surah]) -> [Surah] {

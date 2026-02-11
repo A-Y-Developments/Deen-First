@@ -36,7 +36,8 @@ final class Session {
     }
 
     // Helper computed property
+    // Engagement counts immediately - no minimum time requirement
     var isValid: Bool {
-        return durationSeconds >= AppConstants.minSessionSeconds
+        return true
     }
 }

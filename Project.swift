@@ -107,7 +107,7 @@ let project = Project(
             product: .unitTests,
             bundleId: "\(baseBundleId).Tests",
             deploymentTargets: .iOS("17.0"),
-            sources: ["surahfocus/Tests/**"],
+            sources: ["surahfocus/Tests/**", "Tests/**"],
             dependencies: [
                 .target(name: "SurahFocus")
             ]

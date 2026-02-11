@@ -1,0 +1,152 @@
+import Foundation
+import Combine
+import SwiftUI
+import FamilyControls
+import ManagedSettings
+
+@MainActor
+final class FocusSectionViewModel: ObservableObject {
+    @Published var selectedSurahs: [SurahWithRange] = []
+    @Published var blockedApps: [BlockedApp] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var isPickerPresented = false
+    @Published var appSelection = FamilyActivitySelection()
+
+    private let sessionService: SessionService
+    private let screenTimeRepository: ScreenTimeRepository
+    private let userRepository: UserRepository
+    private let quranService: QuranService
+    private weak var router: Router?
+
+    init(router: Router? = nil) {
+        self.sessionService = DIContainer.shared.sessionService
+        self.screenTimeRepository = DIContainer.shared.screenTimeRepository
+        self.userRepository = DIContainer.shared.userRepository
+        self.quranService = DIContainer.shared.quranService
+        self.router = router
+    }
+
+    func loadData() async {
+        isLoading = true
+
+        do {
+            guard let user = try await userRepository.getCurrentUser() else { return }
+            blockedApps = try await screenTimeRepository.getBlockedApps(for: user.id)
+
+            if let surahNumbers = UserDefaults.standard.array(forKey: "lastSelectedSurahs") as? [Int] {
+                let allSurahs = try await quranService.loadAllSurahs()
+                selectedSurahs = surahNumbers.compactMap { number in
+                    guard let surah = allSurahs.first(where: { $0.number == number }) else { return nil }
+
+                    // Load saved ayah range for this surah
+                    let rangeKey = "surahRange_\(number)"
+                    let rangeData = UserDefaults.standard.dictionary(forKey: rangeKey) as? [String: Int]
+                    let startAyah = rangeData?["start"] ?? 1
+                    let endAyah = rangeData?["end"] ?? surah.numberOfAyahs
+
+                    return SurahWithRange(surah: surah, startAyah: startAyah, endAyah: endAyah)
+                }
+            }
+
+            // Load existing app selection from shared defaults
+            loadAppSelectionFromDefaults()
+        } catch {
+            errorMessage = "Failed to load data"
+        }
+
+        isLoading = false
+    }
+
+    private func loadAppSelectionFromDefaults() {
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else { return }
+
+        // Load application tokens
+        var selection = FamilyActivitySelection()
+        if let tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data] {
+            for (_, data) in tokenMapping {
+                if let token = try? JSONDecoder().decode(ApplicationToken.self, from: data) {
+                    selection.applicationTokens.insert(token)
+                }
+            }
+        }
+
+        // Load category tokens
+        if let categoryMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.categoryTokensKey) as? [String: Data] {
+            for (_, data) in categoryMapping {
+                if let token = try? JSONDecoder().decode(ActivityCategoryToken.self, from: data) {
+                    selection.categoryTokens.insert(token)
+                }
+            }
+        }
+
+        appSelection = selection
+    }
+
+    func navigateToSelectSurah() {
+        router?.navigate(to: .selectSurah(surahs: selectedSurahs))
+    }
+
+    func navigateToAyahRange(_ surahWithRange: SurahWithRange) {
+        router?.navigate(to: .ayahRange(surah: surahWithRange.surah))
+    }
+
+    func updateSurahRange(_ surahWithRange: SurahWithRange) {
+        if let index = selectedSurahs.firstIndex(where: { $0.surah.number == surahWithRange.surah.number }) {
+            selectedSurahs[index] = surahWithRange
+        }
+    }
+
+    func openAppPicker() {
+        isPickerPresented = true
+    }
+
+    func updateAppSelection(_ newSelection: FamilyActivitySelection) {
+        // Just update local state, don't save to shared defaults yet
+        appSelection = newSelection
+    }
+
+    func saveAppSelection() {
+        // Save the selection to shared defaults when session starts
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else { return }
+
+        // Save application tokens
+        var tokenMapping: [String: Data] = [:]
+        for token in appSelection.applicationTokens {
+            if let encoded = try? JSONEncoder().encode(token) {
+                let key = String(token.hashValue)
+                tokenMapping[key] = encoded
+            }
+        }
+        sharedDefaults.set(tokenMapping, forKey: AppGroupConstants.tokenMappingKey)
+
+        // Save category tokens
+        var categoryMapping: [String: Data] = [:]
+        for token in appSelection.categoryTokens {
+            if let encoded = try? JSONEncoder().encode(token) {
+                let key = String(token.hashValue)
+                categoryMapping[key] = encoded
+            }
+        }
+        sharedDefaults.set(categoryMapping, forKey: AppGroupConstants.categoryTokensKey)
+    }
+
+    func removeSurah(_ surah: SurahWithRange) {
+        selectedSurahs.removeAll { $0.id == surah.id }
+    }
+
+    var selectedAppsCount: Int {
+        appSelection.applicationTokens.count + appSelection.categoryTokens.count
+    }
+
+    var canStartSession: Bool {
+        !selectedSurahs.isEmpty
+    }
+
+    func navigateToDownload() {
+        guard canStartSession else { return }
+        // Save app selection before starting session
+        saveAppSelection()
+        router?.navigate(to: .downloadModal(surahs: selectedSurahs))
+    }
+}
