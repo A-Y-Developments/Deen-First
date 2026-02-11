@@ -118,6 +118,12 @@ struct RootView: View {
             SurahDetailView(surahNumber: surahId)
         case .listenSession:
             Text("Listen Session - Phase 6")
+        case .blocks:
+            BlockingTabView()
+        case .appLimit:
+            AppLimitView()
+        case .timeLimit:
+            TimeLimitView()
         }
     }
 }

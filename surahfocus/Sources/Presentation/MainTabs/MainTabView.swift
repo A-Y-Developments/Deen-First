@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedTab = 0
-
+    @EnvironmentObject var router: Router
+    @EnvironmentObject var viewModel: QuranTabViewModel
+    
+    @State private var selectedTab = 1
+    @State var bottomSheetPosition: BottomSheetPosition = .relative(0.55)
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             QuranTabView()
@@ -10,13 +14,11 @@ struct MainTabView: View {
                     Label("Quran", systemImage: "book.fill")
                 }
                 .tag(0)
-
             BlockingTabView()
                 .tabItem {
                     Label("Blocking", systemImage: "shield.fill")
                 }
                 .tag(1)
-
             SettingsTabView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
