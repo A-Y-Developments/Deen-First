@@ -34,7 +34,25 @@ struct QuranTabView: View {
                             .font(.system(size: 32, weight: .bold))
                             .foregroundStyle(Color(hex: "ADA666"))
                     }
+                    .padding(.trailing, 32)
+                    
+                    Text("Start a new streak")
+                        .font(.system(.footnote))
+                        .foregroundStyle(Color(hex: "DBDABD"))
                 }
+                .padding(.top, 24)
+                
+                Button {
+                    print("start focus session")
+                } label: {
+                    Text("Start Focus Session")
+                        .padding()
+                        .background(Color(hex: "1A494D"))
+                        .foregroundColor(Color(hex: "DBDABD"))
+                        .font(.system(.body, weight: .regular))
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 48)
                 
                 Spacer()
             }

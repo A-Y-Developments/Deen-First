@@ -11,6 +11,17 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             QuranTabView()
+                .bottomSheet(
+                    bottomSheetPosition: self.$bottomSheetPosition,
+                    switchablePositions: [
+                        .relative(0.55),
+                        .relativeTop(0.95)
+                    ]
+                ) {
+                    SurahListSheet()
+                        .environmentObject(viewModel)
+                        .environmentObject(router)
+                }
                 .tabItem {
                     Label("Quran", systemImage: "book.fill")
                 }
@@ -28,4 +39,10 @@ struct MainTabView: View {
         }
         .accentColor(Color(hex: "4facfe"))
     }
+}
+
+#Preview {
+    MainTabView()
+        .environmentObject(Router())
+        .environmentObject(QuranTabViewModel())
 }
