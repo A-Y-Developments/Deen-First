@@ -1,4 +1,5 @@
 import SwiftUI
+import BottomSheet
 
 struct MainTabView: View {
     @EnvironmentObject var router: Router
