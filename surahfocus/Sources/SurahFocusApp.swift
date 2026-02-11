@@ -11,6 +11,7 @@ struct SurahFocusApp: App {
             RootView()
                 .modelContainer(DIContainer.shared.modelContainer)
                 .environmentObject(subscriptionMonitor)
+                .preferredColorScheme(.dark)
         }
     }
 

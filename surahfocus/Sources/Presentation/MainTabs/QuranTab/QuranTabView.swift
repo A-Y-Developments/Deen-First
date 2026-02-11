@@ -55,24 +55,24 @@ struct QuranTabView: View {
                 
                 Spacer()
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    router.navigate(to: .listenSession)
-                } label: {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .foregroundColor(Color(hex: "4facfe"))
+            .navigationTitle("Quran")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        router.navigate(to: .focusSection)
+                    } label: {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .foregroundColor(Color(hex: "4facfe"))
+                    }
                 }
             }
         }
-        .errorAlert(isError: $viewModel.showError, errorMessage: $viewModel.errorMessage)
         .task {
             if viewModel.surahs.isEmpty {
                 await viewModel.loadSurahs()
             }
         }
-        .onChange(of: viewModel.searchQuery) { _, _ in
+        .onChange(of: viewModel.searchQuery) { oldValue, newValue in
             viewModel.searchSurahs()
         }
     }

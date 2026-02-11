@@ -124,6 +124,18 @@ struct RootView: View {
             AppLimitView()
         case .timeLimit:
             TimeLimitView()
+        case .focusSection:
+            FocusSectionView(router: router)
+        case .selectSurah(let surahs):
+            SelectSurahView(existingSurahs: surahs)
+        case .ayahRange(let surah):
+            AyahRangeSelectionView(surah: surah)
+        case .downloadModal(let surahs):
+            DownloadModalView(surahs: surahs)
+        case .activeSession(let surahs, let ayahs):
+            ActiveSessionView(surahs: surahs, ayahs: ayahs)
+        case .sessionFinish(let duration, let surahCount):
+            SessionFinishView(duration: duration, surahCount: surahCount)
         }
     }
 }

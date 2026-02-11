@@ -19,6 +19,13 @@ final class Router: ObservableObject {
         case blocks
         case appLimit
         case timeLimit
+        
+        case focusSection
+        case selectSurah(surahs: [SurahWithRange])
+        case ayahRange(surah: Surah)
+        case downloadModal(surahs: [SurahWithRange])
+        case activeSession(surahs: [SurahWithRange], ayahs: [Ayah])
+        case sessionFinish(duration: TimeInterval, surahCount: Int)
     }
 
     func navigate(to route: Route) {

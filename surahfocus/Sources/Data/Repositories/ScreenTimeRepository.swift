@@ -11,6 +11,7 @@ protocol ScreenTimeRepository {
     func saveActiveSession(_ session: Session) async throws
     func loadActiveSession() async throws -> Session?
     func clearActiveSession() async throws
+    func getBlockedApps(for userId: UUID) async throws -> [BlockedApp]
 }
 
 // MARK: - Screen Time Repository Implementation
@@ -69,6 +70,12 @@ final class ScreenTimeRepositoryImpl: ScreenTimeRepository {
         guard let session = try await loadActiveSession() else { return }
         try await MainActor.run {
             try localDataSource.deleteSession(session)
+        }
+    }
+
+    func getBlockedApps(for userId: UUID) async throws -> [BlockedApp] {
+        try await MainActor.run {
+            try localDataSource.getAllBlockedApps()
         }
     }
 }

@@ -152,14 +152,18 @@ final class ScreenTimeServiceImpl: ScreenTimeService {
         }
 
         // Apply shields using ManagedSettings
-        // Note: ManagedSettings API must be used on iOS device
-        // The actual shield application requires DeviceActivity framework setup
+        await MainActor.run {
+            let wrapper = ManagedSettingsWrapper()
+            wrapper.applyShields(applicationTokens: Set(applicationTokens), categoryTokens: Set(categoryTokens))
+        }
     }
 
     @available(iOS 16.0, *)
     func removeShields() async throws {
-        // Clear all shield settings
-        // Note: Must be called from iOS device with ManagedSettings
+        await MainActor.run {
+            let wrapper = ManagedSettingsWrapper()
+            wrapper.removeAllShields()
+        }
     }
 
     func isShieldsActive() async throws -> Bool {

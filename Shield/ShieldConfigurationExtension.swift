@@ -1,12 +1,12 @@
 import FamilyControls
 import ManagedSettings
-import ShieldConfiguration
 import SwiftUI
+import Foundation
 
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
     private var sharedDefaults: UserDefaults? {
-        UserDefaults(suiteName: AppGroupConstants.suiteName)
+        UserDefaults(suiteName: "group.com.surahfocus.app")
     }
 
     override func configuration(shielding application: Application) -> ShieldConfiguration {
