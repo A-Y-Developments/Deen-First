@@ -35,7 +35,8 @@ struct SurahDetailView: View {
 
                         LazyVStack(spacing: 12) {
                             ForEach(viewModel.ayahs) { ayah in
-                                AyahCard(ayah: ayah, showTranslation: viewModel.showTranslation)
+//                                AyahCard(ayah: ayah, showTranslation: viewModel.showTranslation)
+                                Text(ayah.text)
                             }
                         }
                         .padding(.horizontal, 16)

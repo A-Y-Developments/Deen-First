@@ -10,6 +10,12 @@ final class QuranTabViewModel: ObservableObject {
     @Published var showError: Bool = false
     @Published var currentStreak: Int = 0
     @Published var user: User?
+    @Published var viewMode: QuranViewMode = .surah
+    
+    enum QuranViewMode {
+        case surah
+        case juz
+    }
 
     private let quranService: QuranService
     private let authService: AuthService

@@ -9,16 +9,17 @@ struct AuthView: View {
         ZStack {
             // Background gradient
             LinearGradient(
-                colors: [
-                    Color(hex: "1a1a2e"),
-                    Color(hex: "16213e")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+                gradient: Gradient(stops: [
+                    .init(color: Color(hex: "062629"), location: 0.0),
+                    .init(color: Color(hex: "020c0e"), location: 0.5),
+                    .init(color: Color(hex: "020c0e"), location: 1.0)
+                ]),
+                startPoint: .bottom,
+                endPoint: .top
             )
             .ignoresSafeArea()
 
-            VStack(spacing: 40) {
+            VStack(spacing: 32) {
                 Spacer()
 
                 // App Icon
@@ -35,12 +36,13 @@ struct AuthView: View {
                 // App Name & Tagline
                 VStack(spacing: 8) {
                     Text("Surah Focus")
-                        .font(.system(size: 36, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(.title, design: .serif))
+                        .fontWeight(.bold)
+                        .foregroundColor(Color(hex: "ADA666"))
 
                     Text("Block Apps, Build Quran Habits")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(.callout))
+                        .foregroundColor(Color(hex:"DBDABD"))
                 }
 
                 Spacer()
@@ -56,15 +58,20 @@ struct AuthView: View {
                 }
                 .signInWithAppleButtonStyle(.white)
                 .frame(height: 50)
-                .padding(.horizontal, 32)
+                .frame(maxWidth: .infinity)
+                .clipShape(Capsule())
+                .padding(.horizontal, 20)
                 .disabled(viewModel.isLoading)
 
                 if viewModel.isLoading {
                     ProgressView()
                         .tint(.white)
                 }
+                
+                Text("Terms of Service • Privacy")
+                    .foregroundStyle(Color(hex: "8E8E93"))
+                    .font(.caption.weight(.regular))
             }
-            .padding()
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}

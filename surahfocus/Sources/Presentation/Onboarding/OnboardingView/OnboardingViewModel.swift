@@ -3,12 +3,11 @@ import SwiftData
 
 @MainActor
 final class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: Int = 0
+    @Published var currentStep: Int = 3
     @Published var survey = OnboardingSurvey()
     @Published var canContinue = false
     @Published var isCompleting = false
-
-    private let totalSteps = 4
+    @Published var totalSteps = 4
 
     var progressText: String {
         "\(currentStep + 1)/\(totalSteps)"
