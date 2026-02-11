@@ -12,7 +12,7 @@ let project = Project(
         // Main App Target
         .target(
             name: "SurahFocus",
-            destinations: .iOS,
+            destinations: .iPhone,
             product: .app,
             bundleId: baseBundleId,
             deploymentTargets: .iOS("17.0"),
@@ -22,12 +22,6 @@ let project = Project(
                 "CFBundleVersion": "1",
                 "UISupportedInterfaceOrientations": [
                     "UIInterfaceOrientationPortrait"
-                ],
-                "UISupportedInterfaceOrientations~ipad": [
-                    "UIInterfaceOrientationPortrait",
-                    "UIInterfaceOrientationPortraitUpsideDown",
-                    "UIInterfaceOrientationLandscapeLeft",
-                    "UIInterfaceOrientationLandscapeRight",
                 ],
                 "ITSAppUsesNonExemptEncryption": false,
                 "UILaunchScreen": [:],
