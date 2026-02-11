@@ -40,7 +40,8 @@ let project = Project(
             entitlements: "surahfocus/Sources/SurahFocus.entitlements",
             dependencies: [
                 .external(name: "RevenueCat"),
-                .external(name: "Alamofire")
+                .external(name: "Alamofire"),
+                .external(name: "BottomSheet")
             ],
             settings: .settings(
                 configurations: [
