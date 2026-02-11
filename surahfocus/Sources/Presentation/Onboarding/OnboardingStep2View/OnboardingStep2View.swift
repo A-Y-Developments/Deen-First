@@ -8,12 +8,17 @@ struct OnboardingStep2View: View {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("When does your phone distract you most?")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(.title, design: .serif))
+                        .fontWeight(.bold)
                         .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
 
-                    Text("Select all that apply")
-                        .font(.system(size: 16))
+                    Text("Astagfirullah, let's fix that!")
+                        .font(.system(.subheadline))
                         .foregroundColor(.white.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
                 }
                 .padding(.top, 24)
 
@@ -58,6 +63,7 @@ struct OnboardingStep2View: View {
                         viewModel.toggleDistractionTime(.quickCheck)
                     }
                 }
+                .padding(.top, 24)
             }
             .padding(.horizontal, 24)
         }

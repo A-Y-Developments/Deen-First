@@ -16,33 +16,16 @@ struct SelectableCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                if let icon = icon {
-                    Text(icon)
-                        .font(.system(size: 24))
-                }
-
-                Text(text)
+                Text("\(icon ?? "") \(text)")
                     .font(.system(size: 16))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.leading)
-
-                Spacer()
-
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 24))
-                    .foregroundColor(isSelected ? Color(hex: "4facfe") : .white.opacity(0.3))
+                    .foregroundColor(isSelected ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
             }
             .padding(16)
             .background(Color.white.opacity(isSelected ? 0.15 : 0.05))
+            .background(isSelected ? Color(hex: "1a494d") : Color(hex: "06191c"))
             .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .strokeBorder(
-                        isSelected ? Color(hex: "4facfe") : Color.clear,
-                        lineWidth: 2
-                    )
-                    .foregroundStyle(.secondary)
-            )
         }
     }
 }

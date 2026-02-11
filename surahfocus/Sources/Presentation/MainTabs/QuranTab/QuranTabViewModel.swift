@@ -16,7 +16,6 @@ final class QuranTabViewModel: ObservableObject {
         case surah
         case juz
     }
-    
     private let quranService: QuranService
     private let authService: AuthService
     

@@ -7,13 +7,18 @@ struct OnboardingStep3View: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("What do you want more of?")
-                        .font(.system(size: 28, weight: .bold))
+                    Text("What's your heart craving for?")
+                        .font(.system(.title, design: .serif))
+                        .fontWeight(.bold)
                         .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
 
-                    Text("Select what matters most")
-                        .font(.system(size: 16))
+                    Text("Bismillah, let's make it happen!")
+                        .font(.subheadline)
                         .foregroundColor(.white.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
                 }
                 .padding(.top, 24)
 
@@ -27,6 +32,7 @@ struct OnboardingStep3View: View {
                         }
                     }
                 }
+                .padding(.top, 24)
             }
             .padding(.horizontal, 24)
         }

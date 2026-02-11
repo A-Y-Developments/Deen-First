@@ -5,7 +5,7 @@ struct MainTabView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: QuranTabViewModel
     
-    @State private var selectedTab = 1
+    @State private var selectedTab = 0
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.55)
     
     var body: some View {
@@ -28,16 +28,17 @@ struct MainTabView: View {
                 .tag(0)
             BlockingTabView()
                 .tabItem {
-                    Label("Blocking", systemImage: "shield.fill")
+                    Label("Blocking", systemImage: "nosign")
                 }
                 .tag(1)
+
             SettingsTabView()
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
+                    Label("Settings", systemImage: "gear")
                 }
                 .tag(2)
         }
-        .accentColor(Color(hex: "4facfe"))
+        .accentColor(Color(hex: "ADA666"))
     }
 }
 

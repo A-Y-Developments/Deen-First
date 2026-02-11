@@ -6,7 +6,6 @@ struct QuranTabView: View {
     
     var body: some View {
         ZStack {
-            // Background
             LinearGradient(
                 gradient: Gradient(stops: [
                     .init(color: Color(hex: "062629"), location: 0.0),
@@ -57,7 +56,6 @@ struct QuranTabView: View {
                 Spacer()
             }
         }
-        .navigationTitle("Quran")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -79,3 +77,4 @@ struct QuranTabView: View {
         }
     }
 }
+
