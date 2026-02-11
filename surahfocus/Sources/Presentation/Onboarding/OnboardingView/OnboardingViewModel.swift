@@ -3,7 +3,7 @@ import SwiftData
 
 @MainActor
 final class OnboardingViewModel: ObservableObject {
-    @Published var currentStep: Int = 3
+    @Published var currentStep: Int = 0
     @Published var survey = OnboardingSurvey()
     @Published var canContinue = false
     @Published var isCompleting = false
