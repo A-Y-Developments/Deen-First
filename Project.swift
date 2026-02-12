@@ -12,7 +12,7 @@ let project = Project(
         // Main App Target
         .target(
             name: "SurahFocus",
-            destinations: .iPhone,
+            destinations: [.iPhone],
             product: .app,
             bundleId: baseBundleId,
             deploymentTargets: .iOS("17.0"),
