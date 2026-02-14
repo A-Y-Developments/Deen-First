@@ -8,11 +8,13 @@ final class ActiveSessionViewModel: ObservableObject {
     @Published var sessionDuration: TimeInterval = 0
     @Published var showEndConfirmation = false
 
+    @Published var errorMessage: String?
+
     private let ayahAudioPlayer: AyahAudioPlayerServiceImpl
     private let sessionService: SessionService
     private let screenTimeService: ScreenTimeService
     private let subscriptionService: SubscriptionService
-    private weak var router: Router?
+    weak var router: Router?
 
     private var session: Session?
     private var cancellables = Set<AnyCancellable>()
@@ -41,20 +43,41 @@ final class ActiveSessionViewModel: ObservableObject {
 
         ayahAudioPlayer.$sessionDuration
             .assign(to: &$sessionDuration)
+
+        ayahAudioPlayer.onQueueFinished = { [weak self] in
+            Task { @MainActor in
+                await self?.handleQueueFinished()
+            }
+        }
+    }
+
+    private func handleQueueFinished() async {
+        ayahAudioPlayer.stop()
+        if let session {
+            try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
+        }
+        try? await screenTimeService.removeShields()
+        router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))
     }
 
     func startSession() async {
         do {
+            guard !ayahs.isEmpty else {
+                errorMessage = "No ayahs to play"
+                return
+            }
+
             session = try await sessionService.startSession(
                 type: .listening,
                 surahNumbers: surahs.map { $0.surah.number },
-                reciterId: 7
+                reciterId: 1
             )
 
-            try await ayahAudioPlayer.loadQueue(ayahs, reciterId: 7)
+            try await ayahAudioPlayer.loadQueue(ayahs, reciterId: 1)
             ayahAudioPlayer.play()
 
         } catch {
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -79,6 +102,8 @@ final class ActiveSessionViewModel: ObservableObject {
     }
 
     func confirmEndSession() async {
+        showEndConfirmation = false
+
         ayahAudioPlayer.stop()
 
         if let session {

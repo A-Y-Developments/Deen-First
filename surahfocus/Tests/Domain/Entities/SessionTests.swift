@@ -41,13 +41,15 @@ final class SessionTests: XCTestCase {
         let session = Session(userId: UUID(), type: .reading, surahNumbers: [1])
         session.durationSeconds = 119
 
-        XCTAssertFalse(session.isValid)
+        // Engagement counts immediately - no minimum time requirement
+        XCTAssertTrue(session.isValid)
     }
 
     func testSessionValidityAtExactly2Minutes() {
         let session = Session(userId: UUID(), type: .reading, surahNumbers: [1])
         session.durationSeconds = 120
 
+        // Engagement counts immediately - no minimum time requirement
         XCTAssertTrue(session.isValid)
     }
 

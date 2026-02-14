@@ -43,10 +43,10 @@ struct ActiveSessionView: View {
                         .padding()
                     }
                     .onChange(of: viewModel.currentAyahIndex) { oldValue, newIndex in
-                        if let currentAyah = viewModel.ayahs.first(where: { $0.numberInSurah == newIndex + 1 }) {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                proxy.scrollTo(currentAyah.id, anchor: .center)
-                            }
+                        guard newIndex >= 0, newIndex < viewModel.ayahs.count else { return }
+                        let currentAyah = viewModel.ayahs[newIndex]
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(currentAyah.id, anchor: .center)
                         }
                     }
                 }
@@ -96,6 +96,15 @@ struct ActiveSessionView: View {
             Button("End", role: .destructive) {
                 Task { await viewModel.confirmEndSession() }
             }
+        }
+        .alert(viewModel.errorMessage ?? "Error", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("OK") { viewModel.errorMessage = nil }
+        }
+        .onAppear {
+            viewModel.router = router
         }
         .task {
             await viewModel.startSession()
