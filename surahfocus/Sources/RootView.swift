@@ -116,8 +116,6 @@ struct RootView: View {
             MainTabView()
         case .surahDetail(let surahId):
             SurahDetailView(surahNumber: surahId)
-        case .listenSession:
-            Text("Listen Session - Phase 6")
         case .blocks:
             BlockingTabView()
         case .appLimit:
@@ -130,8 +128,6 @@ struct RootView: View {
             SelectSurahView(existingSurahs: surahs)
         case .ayahRange(let surah):
             AyahRangeSelectionView(surah: surah)
-        case .downloadModal(let surahs):
-            DownloadModalView(surahs: surahs)
         case .activeSession(let surahs, let ayahs):
             ActiveSessionView(surahs: surahs, ayahs: ayahs)
         case .sessionFinish(let duration, let surahCount):

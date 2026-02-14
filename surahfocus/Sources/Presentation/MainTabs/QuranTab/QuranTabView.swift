@@ -42,7 +42,7 @@ struct QuranTabView: View {
                 .padding(.top, 24)
                 
                 Button {
-                    print("start focus session")
+                    router.navigate(to: .focusSection)
                 } label: {
                     Text("Start Focus Session")
                         .padding()
@@ -56,16 +56,6 @@ struct QuranTabView: View {
                 Spacer()
             }
             .navigationTitle("Quran")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        router.navigate(to: .focusSection)
-                    } label: {
-                        Image(systemName: "speaker.wave.2.fill")
-                            .foregroundColor(Color(hex: "4facfe"))
-                    }
-                }
-            }
         }
         .task {
             if viewModel.surahs.isEmpty {

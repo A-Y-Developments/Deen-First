@@ -9,14 +9,12 @@ final class DIContainer {
     // Data Sources
     lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
     lazy var quranAPIDataSource: QuranAPIDataSource = QuranAPIDataSourceImpl(httpClient: .shared)
-    lazy var quranCacheManager: QuranCacheManager = QuranCacheManager()
 
     // Repositories
     lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
     lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(localDataSource: localDataSource)
     lazy var quranRepository: QuranRepository = QuranRepositoryImpl(
-        apiDataSource: quranAPIDataSource,
-        cacheManager: quranCacheManager
+        apiDataSource: quranAPIDataSource
     )
     lazy var screenTimeRepository: ScreenTimeRepository = ScreenTimeRepositoryImpl(localDataSource: localDataSource)
 
@@ -32,23 +30,13 @@ final class DIContainer {
     )
 
     @MainActor
+    lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
+    @MainActor
+    lazy var ayahAudioPlayerService: AyahAudioPlayerService = AyahAudioPlayerServiceImpl(audioPlayer: audioPlayerService)
+
+    @MainActor
     var mainContext: ModelContext {
         return modelContainer.mainContext
-    }
-
-    @MainActor
-    var audioPlayerService: AudioPlayerService {
-        return AudioPlayerServiceImpl()
-    }
-
-    @MainActor
-    var ayahAudioPlayerService: AyahAudioPlayerService {
-        return AyahAudioPlayerServiceImpl(audioPlayer: audioPlayerService)
-    }
-
-    @MainActor
-    var audioDownloadService: AudioDownloadService {
-        return AudioDownloadServiceImpl()
     }
 
     private init() {

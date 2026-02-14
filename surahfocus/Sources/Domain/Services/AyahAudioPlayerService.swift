@@ -92,22 +92,7 @@ final class AyahAudioPlayerServiceImpl: NSObject, AyahAudioPlayerService {
 
         let quranService = DIContainer.shared.quranService
 
-        // Try local cache first
-        if let localURL = quranService.getLocalAudioURL(
-            reciterId: reciterId,
-            surahNo: ayah.surahNo,
-            ayahNo: ayah.numberInSurah
-        ) {
-            try? await audioPlayer.loadAudio(
-                url: localURL,
-                surahName: ayah.surahName,
-                reciterName: "Mishary Rashid Alafasy"
-            )
-            onAyahChanged?(ayah, currentAyahIndex)
-            return
-        }
-
-        // Fallback to remote URL
+        // Get remote URL
         let audioURL = try await quranService.getAudioStreamURL(
             reciterId: reciterId,
             surahNo: ayah.surahNo,

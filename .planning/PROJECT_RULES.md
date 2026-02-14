@@ -700,6 +700,17 @@ struct SurahFocusApp: App {
 
 For project initialization, Tuist configuration, Makefile, and environment setup, see [PROJECT_SETUP.md](./PROJECT_SETUP.md).
 
+### Build Verification
+
+**Use this command to verify builds:**
+```bash
+xcodebuild -workspace SurahFocus.xcworkspace -scheme SurahFocus -destination 'generic/platform=iOS Simulator' build 2>&1 | grep -E "(BUILD|error:)" | tail -10
+```
+
+**Build Rules:**
+- Build ONCE at end of work to verify, fix all issues at once
+- Don't build too frequently - only at end for verification
+
 ---
 
 ## DEVELOPMENT WORKFLOW

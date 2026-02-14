@@ -9,76 +9,129 @@ struct PaywallView: View {
         ZStack {
             // Background
             LinearGradient(
-                colors: [
-                    Color(hex: "1a1a2e"),
-                    Color(hex: "16213e")
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+                gradient: Gradient(stops: [
+                    .init(color: Color(hex: "062629"), location: 0.0),
+                    .init(color: Color(hex: "041315"), location: 1.0)
+                ]),
+                startPoint: .bottom,
+                endPoint: .top
             )
             .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 32) {
-                    // Header
-                    VStack(spacing: 12) {
-                        Image(systemName: "moon.stars.fill")
-                            .font(.system(size: 60))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                VStack(spacing: 28) {
+                    Spacer().frame(height: 40)
 
+                    // Title
+                    VStack(spacing: 8) {
                         Text("Unlock Your Quran Journey")
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.system(.largeTitle, design: .serif))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                             .multilineTextAlignment(.center)
 
-                        Text("Start your free trial, cancel anytime")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.7))
+                        Text("Start your free trial, cancel anytime.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "8E8E93"))
                     }
-                    .padding(.top, 40)
+                    .padding(.horizontal, 32)
 
-                    // Features
+                    // Feature Box
                     VStack(alignment: .leading, spacing: 16) {
-                        FeatureRow(icon: "shield.fill", text: "Block distracting apps")
-                        FeatureRow(icon: "book.fill", text: "Read Quran with translations")
-                        FeatureRow(icon: "speaker.wave.2.fill", text: "Listen to beautiful recitations")
-                        FeatureRow(icon: "flame.fill", text: "Track your daily streak")
-                        FeatureRow(icon: "clock.fill", text: "Set time limits & schedules")
-                        FeatureRow(icon: "checkmark.circle.fill", text: "Build a daily Quran habit")
+                        PaywallPlanFeatureRow(text: "Block distracting apps")
+                        PaywallPlanFeatureRow(text: "Track your daily streak")
+                        PaywallPlanFeatureRow(text: "Set time limits & schedules")
                     }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(Color(hex: "ADA666").opacity(0.2), lineWidth: 1)
+                    )
                     .padding(.horizontal, 24)
 
-                    // Subscription Plans
-                    VStack(spacing: 12) {
-                        // Yearly Plan
-                        SubscriptionCard(
-                            title: "Yearly",
-                            price: viewModel.yearlyPackage?.localizedPriceString ?? "$29.99/year",
-                            savings: "Save 50%",
-                            trial: "7-day free trial",
-                            isSelected: viewModel.selectedPlan == .yearly,
-                            badge: "RECOMMENDED"
-                        ) {
+                    // Yearly Plan
+                    ZStack(alignment: .topTrailing) {
+                        Button {
                             viewModel.selectedPlan = .yearly
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Yearly")
+                                        .font(.system(.title, design: .serif))
+                                        .italic()
+                                        .foregroundColor(viewModel.selectedPlan == .yearly ? Color(hex: "DBDABD") : .white)
+
+                                    Text(viewModel.yearlyPackage?.localizedPriceString ?? "$29.99")
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(viewModel.selectedPlan == .yearly ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+                                }
+
+                                Spacer()
+
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    Text("7-days Free Trial")
+                                        .font(.subheadline)
+                                        .foregroundColor(viewModel.selectedPlan == .yearly ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+
+                                    Text("$2.49/Mo")
+                                        .font(.callout)
+                                        .foregroundColor(viewModel.selectedPlan == .yearly ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+                                }
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(viewModel.selectedPlan == .yearly ? Color(hex: "ADA666") : Color(hex: "ADA666").opacity(0.2), lineWidth: viewModel.selectedPlan == .yearly ? 2 : 1)
+                            )
                         }
 
-                        // Monthly Plan
-                        SubscriptionCard(
-                            title: "Monthly",
-                            price: viewModel.monthlyPackage?.localizedPriceString ?? "$4.99/month",
-                            savings: nil,
-                            trial: "3-day free trial",
-                            isSelected: viewModel.selectedPlan == .monthly,
-                            badge: nil
-                        ) {
-                            viewModel.selectedPlan = .monthly
+                        // Save 50% label
+                        Text("Save 50%")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: "ADA666"))
+                            .foregroundColor(Color(hex: "1A494D"))
+                            .rotationEffect(.degrees(5))
+                            .offset(x: -24, y: -12)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 48)
+
+                    // Monthly Plan
+                    Button {
+                        viewModel.selectedPlan = .monthly
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Monthly")
+                                    .font(.system(.title, design: .serif))
+                                    .italic()
+                                    .foregroundColor(viewModel.selectedPlan == .monthly ? Color(hex: "DBDABD") : .white)
+                            }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("3-days Free Trial")
+                                    .font(.subheadline)
+                                    .foregroundColor(viewModel.selectedPlan == .monthly ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+
+                                Text(viewModel.monthlyPackage?.localizedPriceString ?? "$4.99/Mo")
+                                    .font(.callout)
+                                    .foregroundColor(viewModel.selectedPlan == .monthly ? Color(hex: "DBDABD") : Color(hex: "AEAEB2"))
+                            }
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(viewModel.selectedPlan == .monthly ? Color(hex: "ADA666") : Color(hex: "ADA666").opacity(0.2), lineWidth: viewModel.selectedPlan == .monthly ? 2 : 1)
+                        )
                     }
                     .padding(.horizontal, 24)
 
@@ -93,54 +146,37 @@ struct PaywallView: View {
                         HStack {
                             if viewModel.isLoading {
                                 ProgressView()
-                                    .tint(.white)
+                                    .tint(.black)
                             } else {
-                                Text("Start \(viewModel.trialDurationText) Free Trial")
-                                    .font(.system(size: 18, weight: .semibold))
+                                Text("Start My Free Trial")
+                                    .font(.headline)
+                                    .foregroundColor(.black)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(16)
+                        .padding()
+                        .background(Color.white)
+                        .clipShape(Capsule())
                     }
                     .disabled(viewModel.isLoading)
                     .padding(.horizontal, 24)
+                    .padding(.top)
 
-                    // Footer Links
-                    VStack(spacing: 8) {
-                        Button("Restore Purchases") {
-                            Task {
-                                if await viewModel.restorePurchases() {
-                                    await navigateAfterRestore()
-                                }
+                    // Restore
+                    Button {
+                        Task {
+                            if await viewModel.restorePurchases() {
+                                await navigateAfterRestore()
                             }
                         }
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.7))
-
-                        HStack(spacing: 16) {
-                            Button("Terms of Service") {
-                                // Open terms URL
-                            }
-
-                            Text("•")
-
-                            Button("Privacy") {
-                                // Open privacy URL
-                            }
-                        }
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.5))
+                    } label: {
+                        Text("Restore purchase")
+                            .font(.footnote)
+                            .foregroundColor(Color(hex: "8E8E93"))
                     }
-                    .padding(.bottom, 40)
+                    .padding(.top, 4)
+
+                    Spacer()
                 }
             }
         }
@@ -156,109 +192,30 @@ struct PaywallView: View {
 
     @MainActor
     private func navigateAfterPurchase() async {
-        // After purchase, always go to screen time permission
-        // AuthView guard will handle proper routing on next launch
         router.replaceWith(.screenTimePermission)
     }
 
     @MainActor
     private func navigateAfterRestore() async {
-        // After restore, let AuthView guard handle proper routing
         router.replaceWith(.screenTimePermission)
     }
 }
 
 // MARK: - Supporting Views
 
-struct FeatureRow: View {
-    let icon: String
-    let text: String
+private struct PaywallPlanFeatureRow: View {
+    var text: String
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(Color(hex: "4facfe"))
-                .frame(width: 24)
+            Image(systemName: "checkmark")
+                .foregroundColor(Color(hex: "ADA666"))
 
             Text(text)
-                .font(.system(size: 16))
-                .foregroundColor(.white)
+                .foregroundColor(Color(hex: "DBDABD"))
+                .font(.callout)
 
             Spacer()
-        }
-    }
-}
-
-struct SubscriptionCard: View {
-    let title: String
-    let price: String
-    let savings: String?
-    let trial: String
-    let isSelected: Bool
-    let badge: String?
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(title)
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-
-                        if let badge = badge {
-                            Text(badge)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(Color(hex: "1a1a2e"))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color(hex: "FFD700"))
-                                .cornerRadius(4)
-                        }
-                    }
-
-                    Text(price)
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.7))
-
-                    HStack(spacing: 8) {
-                        if let savings = savings {
-                            Text(savings)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(Color(hex: "4facfe"))
-                        }
-
-                        Text(trial)
-                            .font(.system(size: 12))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                }
-
-                Spacer()
-
-                Circle()
-                    .strokeBorder(
-                        isSelected ? Color(hex: "4facfe") : Color.white.opacity(0.3),
-                        lineWidth: 2
-                    )
-                    .background(
-                        Circle()
-                            .fill(isSelected ? Color(hex: "4facfe") : Color.clear)
-                    )
-                    .frame(width: 24, height: 24)
-            }
-            .padding(20)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(
-                        isSelected ? Color(hex: "4facfe") : Color.clear,
-                        lineWidth: 2
-                    )
-            )
         }
     }
 }
