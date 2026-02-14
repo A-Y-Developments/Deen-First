@@ -10,10 +10,9 @@ import SwiftUI
 struct SurahListSheet: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: QuranTabViewModel
-    
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
+        VStack(spacing: 16) {
                 
                 SearchBar(text: $viewModel.searchQuery,
                           placeholder: "Search surahs...")
@@ -76,9 +75,8 @@ struct SurahListSheet: View {
                         .padding(.top, 8)
                     }
                 }
-            }
-            .background(Color(hex: "051b1d"))
         }
+        .background(Color(hex: "051b1d"))
         .onChange(of: viewModel.searchQuery) { _, _ in
             viewModel.searchSurahs()
         }

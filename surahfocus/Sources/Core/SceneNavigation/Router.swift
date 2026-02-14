@@ -14,16 +14,14 @@ final class Router: ObservableObject {
         case downtimeSetup
         case mainTabs
         case surahDetail(surahId: Int)
-        case listenSession
         // Blocks View
         case blocks
         case appLimit
         case timeLimit
-        
+
         case focusSection
         case selectSurah(surahs: [SurahWithRange])
         case ayahRange(surah: Surah)
-        case downloadModal(surahs: [SurahWithRange])
         case activeSession(surahs: [SurahWithRange], ayahs: [Ayah])
         case sessionFinish(duration: TimeInterval, surahCount: Int)
     }

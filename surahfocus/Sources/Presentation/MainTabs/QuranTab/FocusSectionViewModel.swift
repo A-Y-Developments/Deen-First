@@ -147,6 +147,6 @@ final class FocusSectionViewModel: ObservableObject {
         guard canStartSession else { return }
         // Save app selection before starting session
         saveAppSelection()
-        router?.navigate(to: .downloadModal(surahs: selectedSurahs))
+        router?.navigate(to: .activeSession(surahs: selectedSurahs, ayahs: []))
     }
 }

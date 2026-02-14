@@ -5,7 +5,7 @@ struct MainTabView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: QuranTabViewModel
     
-    @State private var selectedTab = 2
+    @State private var selectedTab = 0
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.55)
     
     var body: some View {
