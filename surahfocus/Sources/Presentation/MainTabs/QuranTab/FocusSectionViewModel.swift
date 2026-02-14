@@ -143,10 +143,23 @@ final class FocusSectionViewModel: ObservableObject {
         !selectedSurahs.isEmpty
     }
 
-    func navigateToDownload() {
+    func navigateToDownload() async {
         guard canStartSession else { return }
-        // Save app selection before starting session
         saveAppSelection()
-        router?.navigate(to: .activeSession(surahs: selectedSurahs, ayahs: []))
+
+        do {
+            var allAyahs: [Ayah] = []
+            for surahWithRange in selectedSurahs {
+                let (_, ayahs) = try await quranService.loadSurah(number: surahWithRange.surah.number)
+                let rangeAyahs = ayahs.filter { ayah in
+                    ayah.numberInSurah >= surahWithRange.startAyah &&
+                    ayah.numberInSurah <= surahWithRange.endAyah
+                }
+                allAyahs.append(contentsOf: rangeAyahs)
+            }
+            router?.navigate(to: .activeSession(surahs: selectedSurahs, ayahs: allAyahs))
+        } catch {
+            errorMessage = "Failed to load ayahs"
+        }
     }
 }

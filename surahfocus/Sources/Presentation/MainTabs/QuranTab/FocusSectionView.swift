@@ -160,7 +160,11 @@ struct FocusSectionView: View {
     }
 
     private var startSessionButton: some View {
-        Button(action: { viewModel.navigateToDownload() }) {
+        Button(action: {
+            Task {
+                await viewModel.navigateToDownload()
+            }
+        }) {
             Text("Start Session")
                 .font(.headline)
                 .foregroundColor(.white)
