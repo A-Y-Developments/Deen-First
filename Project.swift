@@ -38,6 +38,9 @@ let project = Project(
                 .external(name: "BottomSheet")
             ],
             settings: .settings(
+                base: [
+                    "OTHER_LDFLAGS": .string("$(inherited) -framework FamilyControls -framework DeviceActivity -framework ManagedSettings")
+                ],
                 configurations: [
                     .debug(
                         name: "Debug",
@@ -45,7 +48,7 @@ let project = Project(
                             "CODE_SIGN_IDENTITY": .string("Apple Development"),
                             "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
                         ]
                     ),
                     .release(
@@ -54,7 +57,7 @@ let project = Project(
                             "CODE_SIGN_IDENTITY": .string("Apple Development"),
                             "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
                         ]
                     ),
                 ]
@@ -75,6 +78,7 @@ let project = Project(
                 ]
             ]),
             sources: ["ScreenTimeMonitor/**"],
+            entitlements: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements",
             dependencies: []
         ),
 
@@ -92,6 +96,7 @@ let project = Project(
                 ]
             ]),
             sources: ["Shield/**"],
+            entitlements: "Shield/Shield.entitlements",
             dependencies: []
         ),
 

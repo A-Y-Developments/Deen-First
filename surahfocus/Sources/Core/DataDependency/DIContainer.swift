@@ -17,12 +17,25 @@ final class DIContainer {
         apiDataSource: quranAPIDataSource
     )
     lazy var screenTimeRepository: ScreenTimeRepository = ScreenTimeRepositoryImpl(localDataSource: localDataSource)
+    lazy var appLimitRepository: AppLimitRepository = AppLimitRepositoryImpl(localDataSource: localDataSource)
+    lazy var timeLimitSettingsRepository: TimeLimitRepository = TimeLimitRepositoryImpl(localDataSource: localDataSource)
+
+    // New Screen Time Rules
+    lazy var screenTimeRulesRepository: ScreenTimeRulesRepository = ScreenTimeRulesRepositoryImpl()
 
     // Services - Now using real implementations
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
     lazy var screenTimeService: ScreenTimeService = ScreenTimeServiceImpl(screenTimeRepository: screenTimeRepository)
+    lazy var appLimitService: AppLimitService = AppLimitServiceImpl(
+        repository: appLimitRepository,
+        screenTimeRepository: screenTimeRepository
+    )
+    lazy var timeLimitSettingsService: TimeLimitService = TimeLimitSettingsServiceImpl(repository: timeLimitSettingsRepository, screenTimeRepository: screenTimeRepository)
+
+    // New Screen Time Rules Service
+    lazy var screenTimeRulesUseCase: ScreenTimeRulesUseCase = ScreenTimeRulesUseCaseImpl(repository: screenTimeRulesRepository)
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
         userRepository: userRepository,
@@ -44,7 +57,9 @@ final class DIContainer {
             let schema = Schema([
                 User.self,
                 Session.self,
-                BlockedApp.self
+                BlockedApp.self,
+                AppLimit.self,
+                TimeLimitSettings.self
             ])
             let config = ModelConfiguration(
                 schema: schema,
@@ -63,7 +78,9 @@ final class DIContainer {
                 let schema = Schema([
                     User.self,
                     Session.self,
-                    BlockedApp.self
+                    BlockedApp.self,
+                    AppLimit.self,
+                    TimeLimitSettings.self
                 ])
                 let config = ModelConfiguration(
                     schema: schema,
@@ -85,7 +102,9 @@ final class DIContainer {
         let schema = Schema([
             User.self,
             Session.self,
-            BlockedApp.self
+            BlockedApp.self,
+            AppLimit.self,
+            TimeLimitSettings.self
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -128,7 +147,7 @@ enum SurahFocusSchemaV1: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 0, 0)
 
     static var models: [any PersistentModel.Type] {
-        [UserV1.self, Session.self, BlockedApp.self]
+        [UserV1.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self]
     }
 
     @Model
@@ -169,6 +188,6 @@ enum SurahFocusSchemaV2: VersionedSchema {
     static var versionIdentifier = Schema.Version(2, 0, 0)
 
     static var models: [any PersistentModel.Type] {
-        [User.self, Session.self, BlockedApp.self]
+        [User.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self]
     }
 }

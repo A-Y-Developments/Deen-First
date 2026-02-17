@@ -136,7 +136,7 @@ final class FocusSectionViewModel: ObservableObject {
     }
 
     var selectedAppsCount: Int {
-        appSelection.applicationTokens.count + appSelection.categoryTokens.count
+        appSelection.applicationTokens.count
     }
 
     var canStartSession: Bool {

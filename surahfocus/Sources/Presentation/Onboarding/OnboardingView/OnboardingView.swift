@@ -76,7 +76,6 @@ struct OnboardingView: View {
                     if viewModel.currentStep == 3 {
                         Task {
                             await viewModel.complete()
-                            router.navigate(to: .paywall)
                         }
                     } else {
                         viewModel.goNext()

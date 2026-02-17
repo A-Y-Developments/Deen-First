@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import FamilyControls
+import DeviceActivity
 
 // MARK: - Screen Time Repository Protocol
 
@@ -12,12 +13,23 @@ protocol ScreenTimeRepository {
     func loadActiveSession() async throws -> Session?
     func clearActiveSession() async throws
     func getBlockedApps(for userId: UUID) async throws -> [BlockedApp]
+    func deleteBlockedApp(_ app: BlockedApp) async throws
+
+    // MARK: - Device Activity Monitoring
+
+    func startActivityMonitoring(
+        name: DeviceActivityName,
+        schedule: DeviceActivitySchedule,
+        events: [DeviceActivityEvent.Name: DeviceActivityEvent]
+    ) async throws
+    func stopActivityMonitoring(_ names: Set<DeviceActivityName>) async throws
 }
 
 // MARK: - Screen Time Repository Implementation
 
 final class ScreenTimeRepositoryImpl: ScreenTimeRepository {
     let localDataSource: LocalDataSource
+    private let activityCenter = DeviceActivityCenter()
 
     init(localDataSource: LocalDataSource) {
         self.localDataSource = localDataSource
@@ -76,6 +88,34 @@ final class ScreenTimeRepositoryImpl: ScreenTimeRepository {
     func getBlockedApps(for userId: UUID) async throws -> [BlockedApp] {
         try await MainActor.run {
             try localDataSource.getAllBlockedApps()
+        }
+    }
+
+    func deleteBlockedApp(_ app: BlockedApp) async throws {
+        try await MainActor.run {
+            try localDataSource.deleteBlockedApp(app)
+        }
+    }
+
+    // MARK: - Device Activity Monitoring
+
+    func startActivityMonitoring(
+        name: DeviceActivityName,
+        schedule: DeviceActivitySchedule,
+        events: [DeviceActivityEvent.Name: DeviceActivityEvent]
+    ) async throws {
+        try await MainActor.run {
+            if !events.isEmpty {
+                try activityCenter.startMonitoring(name, during: schedule, events: events)
+            } else {
+                try activityCenter.startMonitoring(name, during: schedule)
+            }
+        }
+    }
+
+    func stopActivityMonitoring(_ names: Set<DeviceActivityName>) async throws {
+        try await MainActor.run {
+            try activityCenter.stopMonitoring(Array(names))
         }
     }
 }

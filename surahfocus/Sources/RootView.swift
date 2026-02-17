@@ -7,9 +7,7 @@ struct RootView: View {
     @StateObject private var onboardingViewModel = OnboardingViewModel()
     @StateObject private var paywallViewModel = PaywallViewModel()
     @StateObject private var screenTimePermissionViewModel = ScreenTimePermissionViewModel()
-    @StateObject private var appSelectionViewModel = AppSelectionViewModel()
-    @StateObject private var appLimitSetupViewModel = AppLimitSetupViewModel()
-    @StateObject private var downtimeSetupViewModel = DowntimeSetupViewModel()
+    @StateObject private var onboardingSetupViewModel = OnboardingScreenTimeViewModel()
     @StateObject private var quranTabViewModel = QuranTabViewModel()
 
     @State private var currentUser: User?
@@ -22,6 +20,9 @@ struct RootView: View {
         NavigationStack(path: $router.navigationPath) {
             if isCheckingState {
                 LoadingOverlay()
+                .navigationDestination(for: Router.Route.self) { route in
+                        destinationView(for: route)
+                    }
             } else if currentUser == nil {
                 AuthView()
                     .navigationDestination(for: Router.Route.self) { route in
@@ -37,16 +38,6 @@ struct RootView: View {
                     .navigationDestination(for: Router.Route.self) { route in
                         destinationView(for: route)
                     }
-            } else if !isScreenTimeAuthorized {
-                ScreenTimePermissionView()
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
-            } else if !currentUser!.hasCompletedAppSelection {
-                AppSelectionView()
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
             } else {
                 MainTabView()
                     .navigationDestination(for: Router.Route.self) { route in
@@ -59,14 +50,18 @@ struct RootView: View {
         .environmentObject(onboardingViewModel)
         .environmentObject(paywallViewModel)
         .environmentObject(screenTimePermissionViewModel)
-        .environmentObject(appSelectionViewModel)
-        .environmentObject(appLimitSetupViewModel)
-        .environmentObject(downtimeSetupViewModel)
+        .environmentObject(onboardingSetupViewModel)
         .environmentObject(quranTabViewModel)
         .task {
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
+            refreshTrigger += 1
+            Task {
+                await checkUserState()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .didCompleteScreenTimeSetup)) { _ in
             refreshTrigger += 1
             Task {
                 await checkUserState()
@@ -114,6 +109,7 @@ struct RootView: View {
             DowntimeSetupView()
         case .mainTabs:
             MainTabView()
+                .navigationBarBackButtonHidden(true)
         case .surahDetail(let surahId):
             SurahDetailView(surahNumber: surahId)
         case .blocks:
@@ -122,6 +118,12 @@ struct RootView: View {
             AppLimitView()
         case .timeLimit:
             TimeLimitView()
+        case .editAppLimit(let id):
+            AppLimitView(limitId: id)
+        case .editTimeLimit(let id):
+            TimeLimitView(limitId: id)
+        case .editAllDay(let id):
+            AppLimitView(limitId: id, isAllDay: true)
         case .focusSection:
             FocusSectionView(router: router)
         case .selectSurah(let surahs):
@@ -138,6 +140,7 @@ struct RootView: View {
 
 extension Notification.Name {
     static let didSignIn = Notification.Name("didSignIn")
+    static let didCompleteScreenTimeSetup = Notification.Name("didCompleteScreenTimeSetup")
 }
 
 #Preview {
