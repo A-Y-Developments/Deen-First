@@ -35,7 +35,9 @@ let project = Project(
             dependencies: [
                 .external(name: "RevenueCat"),
                 .external(name: "Alamofire"),
-                .external(name: "BottomSheet")
+                .external(name: "BottomSheet"),
+                .target(name: "ScreenTimeMonitor"),
+                .target(name: "Shield")
             ],
             settings: .settings(
                 base: [
@@ -73,13 +75,45 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "NSExtension": [
-                    "NSExtensionPointIdentifier": "com.apple.device-activity.monitor",
-                    "NSExtensionPrincipalClass": "DeviceActivityMonitorExtension",
+                    "NSExtensionPointIdentifier": "com.apple.deviceactivity.monitor-extension",
+                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",
                 ]
             ]),
             sources: ["ScreenTimeMonitor/**"],
-            entitlements: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements",
-            dependencies: []
+            entitlements: .file(path: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements"),
+            dependencies: [
+                .sdk(name: "DeviceActivity", type: .framework),
+                .sdk(name: "ManagedSettings", type: .framework),
+                .sdk(name: "FamilyControls", type: .framework)
+            ],
+            settings: .settings(
+                base: [
+                    "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                    "CODE_SIGN_STYLE": .string("Automatic"),
+                    "DEVELOPMENT_TEAM": .string(teamId),
+                    "PRODUCT_MODULE_NAME": .string("ScreenTimeMonitor")
+                ],
+                configurations: [
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                        ]
+                    ),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                        ]
+                    ),
+                ]
+            )
         ),
 
         // Shield Extension
@@ -91,13 +125,45 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "NSExtension": [
-                    "NSExtensionPointIdentifier": "com.apple.shield-configuration",
-                    "NSExtensionPrincipalClass": "ShieldConfigurationExtension",
+                    "NSExtensionPointIdentifier": "com.apple.ManagedSettingsUI.shield-configuration-service",
+                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShieldConfigurationExtension",
                 ]
             ]),
             sources: ["Shield/**"],
-            entitlements: "Shield/Shield.entitlements",
-            dependencies: []
+            entitlements: .file(path: "Shield/Shield.entitlements"),
+            dependencies: [
+                .sdk(name: "ManagedSettings", type: .framework),
+                .sdk(name: "ManagedSettingsUI", type: .framework),
+                .sdk(name: "FamilyControls", type: .framework)
+            ],
+            settings: .settings(
+                base: [
+                    "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                    "CODE_SIGN_STYLE": .string("Automatic"),
+                    "DEVELOPMENT_TEAM": .string(teamId),
+                    "PRODUCT_MODULE_NAME": .string("Shield")
+                ],
+                configurations: [
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                        ]
+                    ),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                        ]
+                    ),
+                ]
+            )
         ),
 
         // Test Target

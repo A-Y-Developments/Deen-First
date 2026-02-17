@@ -16,34 +16,35 @@ final class DIContainer {
     lazy var quranRepository: QuranRepository = QuranRepositoryImpl(
         apiDataSource: quranAPIDataSource
     )
-    lazy var screenTimeRepository: ScreenTimeRepository = ScreenTimeRepositoryImpl(localDataSource: localDataSource)
-    lazy var appLimitRepository: AppLimitRepository = AppLimitRepositoryImpl(localDataSource: localDataSource)
-    lazy var timeLimitSettingsRepository: TimeLimitRepository = TimeLimitRepositoryImpl(localDataSource: localDataSource)
-
-    // New Screen Time Rules
     lazy var screenTimeRulesRepository: ScreenTimeRulesRepository = ScreenTimeRulesRepositoryImpl()
 
-    // Services - Now using real implementations
+    // Managed Settings & Device Activity
+    @MainActor
+    lazy var managedSettings: ManagedSettingsWrapper = ManagedSettingsWrapper()
+    
+    @MainActor
+    lazy var deviceActivityManager: DeviceActivityManager = DeviceActivityManagerImpl(managedSettings: managedSettings)
+
+    // Services
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
-    lazy var screenTimeService: ScreenTimeService = ScreenTimeServiceImpl(screenTimeRepository: screenTimeRepository)
-    lazy var appLimitService: AppLimitService = AppLimitServiceImpl(
-        repository: appLimitRepository,
-        screenTimeRepository: screenTimeRepository
+    
+    @MainActor
+    lazy var screenTimeRulesUseCase: ScreenTimeRulesUseCase = ScreenTimeRulesUseCaseImpl(
+        repository: screenTimeRulesRepository,
+        deviceActivityManager: deviceActivityManager
     )
-    lazy var timeLimitSettingsService: TimeLimitService = TimeLimitSettingsServiceImpl(repository: timeLimitSettingsRepository, screenTimeRepository: screenTimeRepository)
-
-    // New Screen Time Rules Service
-    lazy var screenTimeRulesUseCase: ScreenTimeRulesUseCase = ScreenTimeRulesUseCaseImpl(repository: screenTimeRulesRepository)
+    
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
         userRepository: userRepository,
-        screenTimeService: screenTimeService
+        screenTimeRulesUseCase: MainActor.assumeIsolated { screenTimeRulesUseCase }
     )
 
     @MainActor
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
+    
     @MainActor
     lazy var ayahAudioPlayerService: AyahAudioPlayerService = AyahAudioPlayerServiceImpl(audioPlayer: audioPlayerService)
 
@@ -56,10 +57,7 @@ final class DIContainer {
         do {
             let schema = Schema([
                 User.self,
-                Session.self,
-                BlockedApp.self,
-                AppLimit.self,
-                TimeLimitSettings.self
+                Session.self
             ])
             let config = ModelConfiguration(
                 schema: schema,
@@ -67,20 +65,16 @@ final class DIContainer {
                 allowsSave: true,
                 cloudKitDatabase: .none
             )
+            // NO MIGRATION - Fresh start
             self.modelContainer = try ModelContainer(
                 for: schema,
-                migrationPlan: SurahFocusMigrationPlan.self,
                 configurations: [config]
             )
         } catch {
-            // If migration fails, try with in-memory only for development
             do {
                 let schema = Schema([
                     User.self,
-                    Session.self,
-                    BlockedApp.self,
-                    AppLimit.self,
-                    TimeLimitSettings.self
+                    Session.self
                 ])
                 let config = ModelConfiguration(
                     schema: schema,
@@ -90,21 +84,17 @@ final class DIContainer {
                     for: schema,
                     configurations: [config]
                 )
-                print("Using in-memory storage due to migration error: \(error)")
+                print("⚠️ Using in-memory storage due to error: \(error)")
             } catch {
-                fatalError("Failed to create ModelContainer: \(error)")
+                fatalError("❌ Failed to create ModelContainer: \(error)")
             }
         }
     }
 
-    // For testing with in-memory container
     static func makeTestContainer() -> DIContainer {
         let schema = Schema([
             User.self,
-            Session.self,
-            BlockedApp.self,
-            AppLimit.self,
-            TimeLimitSettings.self
+            Session.self
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -120,74 +110,5 @@ final class DIContainer {
 
     private init(testContainer: ModelContainer) {
         self.modelContainer = testContainer
-    }
-}
-
-
-// MARK: - Migration Plan
-
-enum SurahFocusMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] {
-        [SurahFocusSchemaV1.self, SurahFocusSchemaV2.self]
-    }
-
-    static var stages: [MigrationStage] {
-        [
-            MigrationStage.lightweight(
-                fromVersion: SurahFocusSchemaV1.self,
-                toVersion: SurahFocusSchemaV2.self
-            )
-        ]
-    }
-}
-
-// MARK: - Schema V1 (Original)
-
-enum SurahFocusSchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(1, 0, 0)
-
-    static var models: [any PersistentModel.Type] {
-        [UserV1.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self]
-    }
-
-    @Model
-    final class UserV1 {
-        @Attribute(.unique) var id: UUID
-        var appleUserId: String
-        var email: String?
-        var name: String?
-        var isPremium: Bool
-        var subscriptionExpiryDate: Date?
-        var currentStreak: Int
-        var longestStreak: Int
-        var createdAt: Date
-        var lastActiveDate: Date?
-
-        init(
-            appleUserId: String,
-            email: String? = nil,
-            name: String? = nil
-        ) {
-            self.id = UUID()
-            self.appleUserId = appleUserId
-            self.email = email
-            self.name = name
-            self.isPremium = false
-            self.subscriptionExpiryDate = nil
-            self.currentStreak = 0
-            self.longestStreak = 0
-            self.createdAt = Date()
-            self.lastActiveDate = nil
-        }
-    }
-}
-
-// MARK: - Schema V2 (With hasCompletedOnboarding)
-
-enum SurahFocusSchemaV2: VersionedSchema {
-    static var versionIdentifier = Schema.Version(2, 0, 0)
-
-    static var models: [any PersistentModel.Type] {
-        [User.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self]
     }
 }

@@ -18,6 +18,11 @@ final class AppLimitConfigViewModel: ObservableObject {
     @Published var appSelection = FamilyActivitySelection()
     @Published var hasSetupCompleted: Bool = false
 
+    @Published var showDeleteConfirmation = false
+    @Published var showTimePicker: Bool = false
+    @Published var dailyLimitMinutes: Int = 60
+
+    var isEditMode: Bool { editingRuleId != nil }
     // MARK: - Edit Mode
 
     private(set) var editingRuleId: UUID?
@@ -34,11 +39,15 @@ final class AppLimitConfigViewModel: ObservableObject {
     // MARK: - Initialization
 
     init(
-        screenTimeRulesUseCase: ScreenTimeRulesUseCase = DIContainer.shared.screenTimeRulesUseCase,
+        screenTimeRulesUseCase: ScreenTimeRulesUseCase,
         authCenter: AuthorizationCenter = .shared
     ) {
         self.screenTimeRulesUseCase = screenTimeRulesUseCase
         self.authCenter = authCenter
+    }
+    
+    convenience init() {
+        self.init(screenTimeRulesUseCase: DIContainer.shared.screenTimeRulesUseCase)
     }
 
     // MARK: - Setup for Edit Mode
@@ -66,6 +75,8 @@ final class AppLimitConfigViewModel: ObservableObject {
         if let limitSeconds = rule.limitSeconds {
             selectedTimeLimit = TimeLimit.fromMinutes(limitSeconds / 60)
         }
+
+        dailyLimitMinutes = (rule.limitSeconds ?? 3600) / 60
 
         // Load days
         if let daysActive = rule.daysActive {
@@ -166,7 +177,7 @@ final class AppLimitConfigViewModel: ObservableObject {
             let config = TimeLimitConfig(
                 id: editingRuleId,
                 name: settingsName.isEmpty ? "App Limit" : settingsName,
-                timeLimit: selectedTimeLimit,
+                timeLimit: .fromMinutes(dailyLimitMinutes),
                 daysActive: daysActive
             )
 
@@ -217,6 +228,22 @@ final class AppLimitConfigViewModel: ObservableObject {
             return "\(apps) app\(apps == 1 ? "" : "s")"
         } else {
             return "\(categories) categor\(categories == 1 ? "y" : "ies")"
+        }
+    }
+
+    func deleteCurrentLimit() async {
+        guard let limitId = editingRuleId else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            try await screenTimeRulesUseCase.deleteTimeLimit(id: limitId)
+            hasSetupCompleted = true
+            isLoading = false
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
         }
     }
 }
