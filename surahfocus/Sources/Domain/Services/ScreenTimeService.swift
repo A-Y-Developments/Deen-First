@@ -20,6 +20,11 @@ protocol ScreenTimeService {
     // Session management
     func startQuranSession(surahId: Int) async throws
     func endQuranSession() async throws
+
+    // Blocking management
+    func getBlockedAppsInfo(userId: UUID) async throws -> [BlockedAppInfo]
+    func removeAppFromBlocking(tokenData: Data, userId: UUID) async throws
+    func updateAppTimeLimit(tokenData: Data, limit: TimeLimit) async throws
 }
 
 // MARK: - Screen Time Service Implementation
@@ -76,7 +81,7 @@ final class ScreenTimeServiceImpl: ScreenTimeService {
         sharedDefaults.set(categoryMapping, forKey: AppGroupConstants.categoryTokensKey)
 
         // Save time limits
-        let limitsDict = timeLimits.mapValues { $0.rawValue }
+        let limitsDict = timeLimits.mapValues { $0.seconds }
         sharedDefaults.set(limitsDict, forKey: "appTimeLimits")
 
         // Also save to repository for backup
@@ -200,6 +205,67 @@ final class ScreenTimeServiceImpl: ScreenTimeService {
         sharedDefaults.removeObject(forKey: "activeSession")
         sharedDefaults.removeObject(forKey: "activeSurahId")
         sharedDefaults.removeObject(forKey: "sessionStartTime")
+    }
+
+    // MARK: - Blocking Management
+
+    func getBlockedAppsInfo(userId: UUID) async throws -> [BlockedAppInfo] {
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else {
+            throw ScreenTimeError.appGroupUnavailable
+        }
+
+        // Get blocked apps from repository
+        let blockedApps = try await screenTimeRepository.getBlockedApps(for: userId)
+
+        // Get time limits from shared defaults
+        let timeLimitsDict = sharedDefaults.dictionary(forKey: "appTimeLimits") as? [String: Int] ?? [:]
+
+        // Map to BlockedAppInfo
+        return blockedApps.enumerated().map { index, app in
+            let limitValue = timeLimitsDict[String(app.appTokenData.hashValue)] ?? 60
+            let timeLimit = TimeLimit.fromMinutes(limitValue)
+
+            return BlockedAppInfo(
+                id: app.id,
+                tokenData: app.appTokenData,
+                name: app.appName.isEmpty ? "App \(index + 1)" : app.appName,
+                bundleId: app.bundleIdentifier,
+                timeLimit: timeLimit,
+                limitType: .appLimit
+            )
+        }
+    }
+
+    func removeAppFromBlocking(tokenData: Data, userId: UUID) async throws {
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else {
+            throw ScreenTimeError.appGroupUnavailable
+        }
+
+        // Get all blocked apps
+        let blockedApps = try await screenTimeRepository.getBlockedApps(for: userId)
+
+        // Find and remove the app with matching token data
+        if let appToRemove = blockedApps.first(where: { $0.appTokenData == tokenData }) {
+            try await screenTimeRepository.deleteBlockedApp(appToRemove)
+
+            // Also remove from shared defaults token mapping
+            if var tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data] {
+                let keyToRemove = String(tokenData.hashValue)
+                tokenMapping.removeValue(forKey: keyToRemove)
+                sharedDefaults.set(tokenMapping, forKey: AppGroupConstants.tokenMappingKey)
+            }
+        }
+    }
+
+    func updateAppTimeLimit(tokenData: Data, limit: TimeLimit) async throws {
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else {
+            throw ScreenTimeError.appGroupUnavailable
+        }
+
+        // Update time limits in shared defaults
+        var timeLimitsDict = sharedDefaults.dictionary(forKey: "appTimeLimits") as? [String: Int] ?? [:]
+        timeLimitsDict[String(tokenData.hashValue)] = limit.seconds
+        sharedDefaults.set(timeLimitsDict, forKey: "appTimeLimits")
     }
 }
 

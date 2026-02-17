@@ -66,7 +66,7 @@ edit:
 .PHONY: build
 build:
 	@echo "$(BLUE)Building the app...$(NC)"
-	@xcodebuild -scheme SurahFocus -destination 'platform=iOS Simulator' build | xcpretty
+	@xcodebuild -workspace SurahFocus.xcworkspace -scheme SurahFocus -sdk iphoneos -destination 'id=00008120-001A025C1EC00032' build 2>&1 | grep "error:" | head -10
 	@echo "$(GREEN)✓ App built successfully$(NC)"
 
 # Run unit tests

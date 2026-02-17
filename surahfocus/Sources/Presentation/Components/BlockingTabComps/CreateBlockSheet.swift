@@ -56,18 +56,30 @@ struct CreateBlockSheet: View {
                 description: "Limit selected apps daily usage"
             ) {
                 print("app limit focus")
+                dismiss()
                 router.navigate(to: .appLimit)
             }
-            
+
             // Menu 2
             BlockRow(
-                title: "Focus Session",
-                description: "Block apps during focus time"
+                title: "Time of Day",
+                description: "Block apps during specific time windows"
             ) {
-                print("tapped focus")
+                print("tapped time of day")
+                dismiss()
                 router.navigate(to: .timeLimit)
             }
-            
+
+            // Menu 3
+            BlockRow(
+                title: "All Day",
+                description: "Block apps for entire days"
+            ) {
+                print("tapped all day")
+                dismiss()
+                // TODO: Add allDay navigation
+            }
+
             Spacer()
         }
         .padding(24)

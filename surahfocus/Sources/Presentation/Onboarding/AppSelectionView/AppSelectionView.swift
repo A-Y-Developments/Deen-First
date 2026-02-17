@@ -3,7 +3,7 @@ import FamilyControls
 
 struct AppSelectionView: View {
     @EnvironmentObject var router: Router
-    @EnvironmentObject private var viewModel: AppSelectionViewModel
+    @EnvironmentObject private var viewModel: OnboardingScreenTimeViewModel
 
     var body: some View {
         ZStack {
@@ -42,7 +42,7 @@ struct AppSelectionView: View {
                             .font(.system(size: 48))
                             .foregroundColor(Color(hex: "4facfe"))
 
-                        Text(viewModel.selectedAppsCount == 0 ? "Select Apps" : "\(viewModel.selectedAppsCount) apps selected")
+                        Text(selectionText)
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.white)
                     }
@@ -56,58 +56,66 @@ struct AppSelectionView: View {
                 Spacer()
 
                 Button {
-                    let encodedApps = viewModel.selection.applicationTokens.compactMap { try? JSONEncoder().encode($0) }
-                    if let sharedDefaults = UserDefaults(suiteName: AppGroupConstants.suiteName) {
-                        sharedDefaults.set(encodedApps, forKey: "selectedAppsForSetup")
-                    }
-                    Task {
-                        await markAppSelectionComplete()
-                        router.navigate(to: .appLimitSetup)
-                    }
+                    router.navigate(to: .appLimitSetup)
                 } label: {
-                    Text("Complete Setup")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            viewModel.selectedAppsCount > 0 ?
-                            LinearGradient(
-                                colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ) :
-                            LinearGradient(
-                                colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                    HStack {
+                        Text("Next")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        (viewModel.selectedAppsCount > 0 || viewModel.selectedCategoriesCount > 0) ?
+                        LinearGradient(
+                            colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ) :
+                        LinearGradient(
+                            colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
+                            startPoint: .leading,
+                            endPoint: .trailing
                         )
-                        .cornerRadius(16)
+                    )
+                    .cornerRadius(16)
                 }
-                .disabled(viewModel.selectedAppsCount == 0)
+                .disabled(viewModel.selectedAppsCount == 0 && viewModel.selectedCategoriesCount == 0)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
+
+                // Error message display
+                if let error = viewModel.errorMessage {
+                    Text(error)
+                        .font(.system(size: 14))
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 16)
+                }
             }
         }
         .familyActivityPicker(
-            isPresented: $viewModel.isPresented,
+            isPresented: $viewModel.isPickerPresented,
             selection: $viewModel.selection
         )
         .onChange(of: viewModel.selection) { oldValue, newValue in
             viewModel.updateSelection(newValue)
         }
         .navigationBarBackButtonHidden()
-        .onAppear {
-            viewModel.loadSavedSelection()
-        }
     }
 
-    @MainActor
-    private func markAppSelectionComplete() async {
-        if let user = try? await DIContainer.shared.authService.getCurrentUser() {
-            user.hasCompletedAppSelection = true
-            try? await DIContainer.shared.userRepository.updateUser(user)
+    private var selectionText: String {
+        let apps = viewModel.selectedAppsCount
+        let categories = viewModel.selectedCategoriesCount
+
+        if apps == 0 && categories == 0 {
+            return "Select Apps"
+        } else if apps > 0 && categories > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s"), \(categories) categor\(categories == 1 ? "y" : "ies")"
+        } else if apps > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s") selected"
+        } else {
+            return "\(categories) categor\(categories == 1 ? "y" : "ies") selected"
         }
     }
 }
@@ -115,5 +123,5 @@ struct AppSelectionView: View {
 #Preview {
     AppSelectionView()
         .environmentObject(Router())
-        .environmentObject(AppSelectionViewModel())
+        .environmentObject(OnboardingScreenTimeViewModel())
 }

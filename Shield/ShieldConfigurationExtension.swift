@@ -1,12 +1,11 @@
-import FamilyControls
 import ManagedSettings
-import SwiftUI
-import Foundation
+import ManagedSettingsUI
+import UIKit
 
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
     private var sharedDefaults: UserDefaults? {
-        UserDefaults(suiteName: "group.com.surahfocus.app")
+        UserDefaults(suiteName: "group.com.aydev.surahfocus")
     }
 
     override func configuration(shielding application: Application) -> ShieldConfiguration {
@@ -31,7 +30,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         )
     }
 
-    override func configuration(shielding applicationCategory: ApplicationCategory) -> ShieldConfiguration {
+    override func configuration(shielding application: Application, in category: ActivityCategory) -> ShieldConfiguration {
         // Custom UI shown when app categories are blocked
         let message = getShieldMessage()
 
@@ -112,11 +111,10 @@ extension UIColor {
             (a, r, g, b) = (255, 0, 0, 0)
         }
         self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
+            red: CGFloat(Double(r) / 255),
+            green: CGFloat(Double(g) / 255),
+            blue: CGFloat(Double(b) / 255),
+            alpha: CGFloat(Double(a) / 255)
         )
     }
 }

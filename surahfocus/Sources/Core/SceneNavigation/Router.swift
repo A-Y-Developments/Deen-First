@@ -18,6 +18,9 @@ final class Router: ObservableObject {
         case blocks
         case appLimit
         case timeLimit
+        case editAppLimit(id: UUID)
+        case editTimeLimit(id: UUID)
+        case editAllDay(id: UUID)
 
         case focusSection
         case selectSurah(surahs: [SurahWithRange])
@@ -42,8 +45,11 @@ final class Router: ObservableObject {
     }
 
     func replaceWith(_ routes: [Route]) {
-        navigationPath = NavigationPath()
-        routes.forEach { navigationPath.append($0) }
+        var newPath = NavigationPath()
+        for route in routes {
+            newPath.append(route)
+        }
+        navigationPath = newPath
     }
 
     func reset() {

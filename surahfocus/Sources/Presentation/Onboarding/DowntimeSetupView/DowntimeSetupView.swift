@@ -2,14 +2,16 @@ import SwiftUI
 
 struct DowntimeSetupView: View {
     @EnvironmentObject var router: Router
-    @EnvironmentObject private var viewModel: DowntimeSetupViewModel
+    @EnvironmentObject private var viewModel: OnboardingScreenTimeViewModel
+
+    let prayers = ["subuh", "zuhr", "asr", "maghrib", "isya"]
 
     var body: some View {
         ZStack {
             LinearGradient(
                 colors: [
                     Color(hex: "1a1a2e"),
-                    Color(hex: "16213e")
+                    Color(hex: "16213e"),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -34,16 +36,16 @@ struct DowntimeSetupView: View {
                     }
                     .padding(.horizontal, 24)
 
-                    if !viewModel.selectedApps.isEmpty {
+                    if viewModel.selectedAppsCount > 0 {
                         HStack(spacing: 8) {
-                            ForEach(Array(viewModel.selectedApps.prefix(5)), id: \.self) { _ in
+                            ForEach(0..<min(viewModel.selectedAppsCount, 5), id: \.self) { _ in
                                 Image(systemName: "app.fill")
                                     .font(.system(size: 16))
                                     .foregroundColor(Color(hex: "4facfe"))
                             }
 
-                            if viewModel.selectedApps.count > 5 {
-                                Text("+\(viewModel.selectedApps.count - 5)")
+                            if viewModel.selectedAppsCount > 5 {
+                                Text("+\(viewModel.selectedAppsCount - 5)")
                                     .font(.system(size: 12))
                                     .foregroundColor(.white.opacity(0.6))
                             }
@@ -51,11 +53,11 @@ struct DowntimeSetupView: View {
                     }
 
                     VStack(spacing: 12) {
-                        ForEach(DowntimeSchedule.PrayerTime.allCases, id: \.self) { prayer in
+                        ForEach(prayers, id: \.self) { prayer in
                             PrayerTimeCard(
                                 prayer: prayer,
                                 isSelected: viewModel.isSelected(prayer),
-                                timeRange: viewModel.getTimeRange(for: prayer)
+                                timeRange: getPrayerTimeRange(prayer)
                             ) {
                                 viewModel.togglePrayer(prayer)
                             }
@@ -65,32 +67,39 @@ struct DowntimeSetupView: View {
 
                     VStack(spacing: 12) {
                         Button {
-                            viewModel.save()
+                            print("Complete Setup pressed")
                             Task {
-                                await markDowntimeSetupComplete()
-                                router.reset()
+                                await viewModel.completeOnboarding()
+                                router.navigate(to: .mainTabs)
                             }
                         } label: {
-                            Text("Complete Setup")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                            HStack {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .padding(.trailing, 8)
+                                }
+                                Text("Complete Setup")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
                                 )
-                                .cornerRadius(16)
+                            )
+                            .cornerRadius(16)
                         }
+                        .disabled(viewModel.isLoading)
 
                         Button("Skip") {
-                            viewModel.skip()
                             Task {
-                                await markDowntimeSetupComplete()
-                                router.replaceWith(.mainTabs)
+                                await viewModel.completeOnboarding()
+                                router.navigate(to: .mainTabs)
                             }
                         }
                         .font(.system(size: 16))
@@ -98,36 +107,69 @@ struct DowntimeSetupView: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
+
+                    // Error message display
+                    if let error = viewModel.errorMessage {
+                        Text(error)
+                            .font(.system(size: 14))
+                            .foregroundColor(.red)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 16)
+                    }
                 }
             }
         }
         .navigationBarBackButtonHidden()
         .onAppear {
-            loadSelectedApps()
+            logDowntimeSettings()
         }
     }
 
-    private func loadSelectedApps() {
-        guard let sharedDefaults = UserDefaults(suiteName: AppGroupConstants.suiteName),
-              let appDataArray = sharedDefaults.array(forKey: "selectedAppsForSetup") as? [Data] else {
-            return
+    private func logDowntimeSettings() {
+        print("=== TIME BLOCK SETTINGS LOG ===")
+
+        let categoryCount = viewModel.selectedCategoriesCount
+        let appCount = viewModel.selectedAppsCount
+
+        for prayer in viewModel.selectedPrayers {
+            let range = getPrayerTimeRange(prayer)
+            print("\nType: Time of Day")
+            print("Name: During \(getPrayerDisplayName(prayer))")
+            print(
+                "App Selection: \(categoryCount) Category\(categoryCount == 1 ? "" : "es"), \(appCount) App\(appCount == 1 ? "" : "s")"
+            )
+            print("Time: \(range.start) - \(range.end)")
+            print("Days: All Days")
         }
 
-        viewModel.loadApps(appDataArray)
+        print("\n==============================")
     }
 
-    @MainActor
-    private func markDowntimeSetupComplete() async {
-        if let user = try? await DIContainer.shared.authService.getCurrentUser() {
-            user.hasCompletedDowntimeSetup = true
-            try? await DIContainer.shared.userRepository.updateUser(user)
+    private func getPrayerTimeRange(_ prayer: String) -> (start: String, end: String) {
+        switch prayer {
+        case "subuh": return ("04:30", "06:00")
+        case "zuhr": return ("12:15", "13:30")
+        case "asr": return ("15:45", "17:00")
+        case "maghrib": return ("18:15", "19:15")
+        case "isya": return ("19:30", "20:45")
+        default: return ("00:00", "23:59")
         }
-        NotificationCenter.default.post(name: .didSignIn, object: nil)
+    }
+
+    private func getPrayerDisplayName(_ prayer: String) -> String {
+        switch prayer {
+        case "subuh": return "Fajr"
+        case "zuhr": return "Dhuhr"
+        case "asr": return "Asr"
+        case "maghrib": return "Maghrib"
+        case "isya": return "Isha"
+        default: return prayer
+        }
     }
 }
 
 struct PrayerTimeCard: View {
-    let prayer: DowntimeSchedule.PrayerTime
+    let prayer: String
     let isSelected: Bool
     let timeRange: (start: String, end: String)
     let action: () -> Void
@@ -135,11 +177,11 @@ struct PrayerTimeCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                Text(prayer.emoji)
+                Text(getPrayerEmoji(prayer))
                     .font(.system(size: 32))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(prayer.displayName)
+                    Text(getPrayerDisplayName(prayer))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
 
@@ -179,17 +221,40 @@ struct PrayerTimeCard: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         guard let start = formatter.date(from: range.start),
-              let end = formatter.date(from: range.end) else {
+            let end = formatter.date(from: range.end)
+        else {
             return "\(range.start) - \(range.end)"
         }
 
         formatter.dateFormat = "h:mm a"
         return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
     }
+
+    private func getPrayerDisplayName(_ prayer: String) -> String {
+        switch prayer {
+        case "subuh": return "Fajr"
+        case "zuhr": return "Dhuhr"
+        case "asr": return "Asr"
+        case "maghrib": return "Maghrib"
+        case "isya": return "Isha"
+        default: return prayer
+        }
+    }
+
+    private func getPrayerEmoji(_ prayer: String) -> String {
+        switch prayer {
+        case "subuh": return "🌙"
+        case "zuhr": return "☀️"
+        case "asr": return "🌤️"
+        case "maghrib": return "🌅"
+        case "isya": return "🌃"
+        default: return "🕌"
+        }
+    }
 }
 
 #Preview {
     DowntimeSetupView()
         .environmentObject(Router())
-        .environmentObject(DowntimeSetupViewModel())
+        .environmentObject(OnboardingScreenTimeViewModel())
 }
