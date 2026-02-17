@@ -9,18 +9,22 @@ import SwiftUI
 import FamilyControls
 
 struct AppLimitView: View {
-    @StateObject private var viewModel: AppLimitViewModel
+    @StateObject private var viewModel: AppLimitConfigViewModel
     @Environment(\.dismiss) private var dismiss
 
     let days = ["S", "M", "T", "W", "T", "F", "S"]
 
     init(limitId: UUID? = nil, isAllDay: Bool = false, container: DIContainer = .shared) {
-        self._viewModel = StateObject(wrappedValue: AppLimitViewModel(
-            limitId: limitId,
-            isAllDay: isAllDay,
-            appLimitService: container.appLimitService,
-            userRepository: container.userRepository
-        ))
+        let vm = AppLimitConfigViewModel()
+        self._viewModel = StateObject(wrappedValue: vm)
+        
+        if let limitId = limitId {
+            Task { @MainActor in
+                if let rule = container.screenTimeRulesUseCase.getRule(id: limitId) {
+                    await vm.setupForEdit(rule: rule)
+                }
+            }
+        }
     }
 
     var body: some View {

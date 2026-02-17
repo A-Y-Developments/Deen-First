@@ -30,6 +30,10 @@ final class TimeOfDayConfigViewModel: ObservableObject {
         var id: String { rawValue }
     }
 
+    @Published var showDeleteConfirmation = false
+
+    var isEditMode: Bool { editingRuleId != nil }
+
     // MARK: - Edit Mode
 
     private(set) var editingRuleId: UUID?
@@ -47,11 +51,15 @@ final class TimeOfDayConfigViewModel: ObservableObject {
     // MARK: - Initialization
 
     init(
-        screenTimeRulesUseCase: ScreenTimeRulesUseCase = DIContainer.shared.screenTimeRulesUseCase,
+        screenTimeRulesUseCase: ScreenTimeRulesUseCase,
         authCenter: AuthorizationCenter = .shared
     ) {
         self.screenTimeRulesUseCase = screenTimeRulesUseCase
         self.authCenter = authCenter
+    }
+    
+    convenience init() {
+        self.init(screenTimeRulesUseCase: DIContainer.shared.screenTimeRulesUseCase)
     }
 
     // MARK: - Setup for Edit Mode
@@ -322,5 +330,21 @@ final class TimeOfDayConfigViewModel: ObservableObject {
             .sorted()
             .map { prayerNames[$0] ?? $0 }
             .joined(separator: "/")
+    }
+
+    func deleteCurrentLimit() async {
+        guard let limitId = editingRuleId else { return }
+        
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            try await screenTimeRulesUseCase.deleteTimeOfDay(id: limitId)
+            hasSetupCompleted = true
+            isLoading = false
+        } catch {
+            errorMessage = error.localizedDescription
+            isLoading = false
+        }
     }
 }

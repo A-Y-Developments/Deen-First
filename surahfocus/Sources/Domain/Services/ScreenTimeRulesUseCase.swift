@@ -32,18 +32,22 @@ protocol ScreenTimeRulesUseCase {
 
     // Shield Management
     func reapplyActiveShields() async
+
+    // Session Shield Management
+    func applySessionShield(for selection: FamilyActivitySelection) async
+    func removeSessionShield() async
 }
 
 // MARK: - Screen Time Use Case Implementation
 
 final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
     private let repository: ScreenTimeRulesRepository
-    private let activityCenter = DeviceActivityCenter()
-    private let managedSettingsStore = ManagedSettingsStore()
+    private let deviceActivityManager: DeviceActivityManager
     private let authCenter = AuthorizationCenter.shared
 
-    init(repository: ScreenTimeRulesRepository) {
+    init(repository: ScreenTimeRulesRepository, deviceActivityManager: DeviceActivityManager) {
         self.repository = repository
+        self.deviceActivityManager = deviceActivityManager
     }
 
     // MARK: - Authorization
@@ -87,7 +91,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // Start monitoring
         let name = DeviceActivityName("daily_\(ruleId.uuidString)")
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
 
         // Do NOT apply shield immediately for time limits
         // Shield will be applied by extension when threshold is reached
@@ -95,7 +99,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
     func deleteTimeLimit(id: UUID) async throws {
         let name = DeviceActivityName("daily_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
         repository.deleteTimeLimitRule(id: id)
         await reapplyActiveShields()
     }
@@ -129,11 +133,10 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // IMMEDIATE SHIELD APPLICATION - Key difference from Time Limit
         if config.isCurrentlyInBlockingPeriod {
-            managedSettingsStore.shield.applications = Set(selection.applicationTokens)
-            managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.specific(selection.categoryTokens)
+            await deviceActivityManager.applyShield(for: selection)
         } else {
             // Clear shields for these apps if not in blocking period
-            clearShieldsFor(selection: selection)
+            await deviceActivityManager.removeShield(for: selection)
         }
 
         // Create schedule with custom time window
@@ -148,12 +151,12 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // Start monitoring
         let name = DeviceActivityName("timeOfDay_\(ruleId.uuidString)")
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
     }
 
     func deleteTimeOfDay(id: UUID) async throws {
         let name = DeviceActivityName("timeOfDay_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
         repository.deleteTimeOfDayRule(id: id)
         await reapplyActiveShields()
     }
@@ -185,11 +188,10 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // IMMEDIATE SHIELD APPLICATION - Key difference
         if config.shouldBlockToday {
-            managedSettingsStore.shield.applications = Set(selection.applicationTokens)
-            managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.specific(selection.categoryTokens)
+            await deviceActivityManager.applyShield(for: selection)
         } else {
             // Clear shields for these apps if today is not active
-            clearShieldsFor(selection: selection)
+            await deviceActivityManager.removeShield(for: selection)
         }
 
         // Create full-day schedule
@@ -200,12 +202,12 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // Start monitoring
         let name = DeviceActivityName("allDay_\(ruleId.uuidString)")
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
     }
 
     func deleteAllDay(id: UUID) async throws {
         let name = DeviceActivityName("allDay_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
         repository.deleteAllDayRule(id: id)
         await reapplyActiveShields()
     }
@@ -235,111 +237,22 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
     // MARK: - Shield Management
 
     func reapplyActiveShields() async {
-        await MainActor.run {
-            let allRules = getAllRules()
-
-            var applicationTokens: Set<ApplicationToken> = []
-            var categoryTokens: Set<ActivityCategoryToken> = []
-
-            let todayName = DayHelper.getCurrentDayName()
-            let calendar = Calendar.current
-            let now = Date()
-            let comps = calendar.dateComponents([.hour, .minute], from: now)
-            let currentMinutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
-
-            func isWithin(start: DateComponents?, end: DateComponents?) -> Bool {
-                guard let s = start, let e = end else { return false }
-                let sMin = (s.hour ?? 0) * 60 + (s.minute ?? 0)
-                let eMin = (e.hour ?? 0) * 60 + (e.minute ?? 0)
-                if sMin <= eMin {
-                    return currentMinutes >= sMin && currentMinutes <= eMin
-                } else {
-                    return currentMinutes >= sMin || currentMinutes <= eMin
-                }
-            }
-
-            // Time-of-day rules
-            for rule in getTimeOfDayRules() {
-                let days = rule.daysActive ?? []
-                let isActiveDay = days.isEmpty || days.contains(todayName)
-                if isActiveDay && isWithin(start: rule.getStartTimeComponents(), end: rule.getEndTimeComponents()) {
-                    let selection = rule.getFamilyActivitySelection()
-                    applicationTokens.formUnion(selection.applicationTokens)
-                    categoryTokens.formUnion(selection.categoryTokens)
-                }
-            }
-
-            // All-day rules
-            for rule in getAllDayRules() {
-                let days = rule.daysActive ?? []
-                let isActiveDay = days.isEmpty || days.contains(todayName)
-                if isActiveDay {
-                    let selection = rule.getFamilyActivitySelection()
-                    applicationTokens.formUnion(selection.applicationTokens)
-                    categoryTokens.formUnion(selection.categoryTokens)
-                }
-            }
-
-            // Apply shields
-            if !applicationTokens.isEmpty || !categoryTokens.isEmpty {
-                managedSettingsStore.shield.applications = applicationTokens
-                if categoryTokens.isEmpty {
-                    managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.none
-                } else {
-                    managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.specific(categoryTokens)
-                }
-            } else {
-                managedSettingsStore.clearAllSettings()
-            }
-        }
+        let allRules = getAllRules()
+        await deviceActivityManager.reapplyActiveShields(rules: allRules)
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Session Shield Management
 
-    private func startActivityMonitoring(
-        name: DeviceActivityName,
-        schedule: DeviceActivitySchedule,
-        events: [DeviceActivityEvent.Name: DeviceActivityEvent]
-    ) async throws {
-        print("🚀 Starting monitoring for: \(name.rawValue) with \(events.count) events")
-        for (eventName, event) in events {
-            print("  Event: \(eventName.rawValue) threshold: \(event.threshold.second ?? 0)s")
-        }
-        try await MainActor.run {
-            if !events.isEmpty {
-                try activityCenter.startMonitoring(name, during: schedule, events: events)
-            } else {
-                try activityCenter.startMonitoring(name, during: schedule)
-            }
-        }
-        print("✅ Monitoring started successfully")
+    func applySessionShield(for selection: FamilyActivitySelection) async {
+        await deviceActivityManager.applyShield(for: selection)
     }
 
-    private func stopActivityMonitoring(_ names: [DeviceActivityName]) async throws {
-        try await MainActor.run {
-            try activityCenter.stopMonitoring(names)
-        }
-    }
+    func removeSessionShield() async {
+        // Remove all shields first
+        await deviceActivityManager.removeShield()
 
-    private func clearShieldsFor(selection: FamilyActivitySelection) {
-        // Get current tokens
-        let currentApps = managedSettingsStore.shield.applications ?? []
-        let currentCategories = getCurrentCategoryTokens()
-
-        // Remove the selection tokens from current shields
-        let newApps = currentApps.subtracting(selection.applicationTokens)
-
-        // For categories, we need to rebuild since it's a policy
-        managedSettingsStore.shield.applications = newApps.isEmpty ? [] : newApps
-
-        // Note: Category handling is more complex, simplified here
-        // In production, you'd need to track all category policies
-    }
-
-    private func getCurrentCategoryTokens() -> Set<ActivityCategoryToken> {
-        // This is a simplified version
-        // In production, you'd need to track the actual category tokens from policies
-        return []
+        // Reapply rule-based shields
+        await reapplyActiveShields()
     }
 
     // MARK: - Update Methods
@@ -347,7 +260,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
     func updateTimeLimit(id: UUID, for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {
         // 1. Stop existing monitoring
         let name = DeviceActivityName("daily_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
 
         // 2. Update rule in repository
         let rule = ScreenTimeRule(
@@ -375,7 +288,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
         let timeLimit = TimeLimit.fromMinutes(config.limitSeconds / 60)
         let events = ScreenTimeEvents.createEvents(for: timeLimit, selection: appLimits)
 
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
 
         // 4. Reapply shields
         await reapplyActiveShields()
@@ -384,7 +297,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
     func updateTimeOfDayBlock(id: UUID, for selection: FamilyActivitySelection, config: TimeOfDayConfig) async throws {
         // 1. Stop existing monitoring
         let name = DeviceActivityName("timeOfDay_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
 
         // 2. Update rule in repository
         let rule = ScreenTimeRule(
@@ -402,10 +315,9 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // 3. Apply shields if currently in blocking period
         if config.isCurrentlyInBlockingPeriod {
-            managedSettingsStore.shield.applications = Set(selection.applicationTokens)
-            managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.specific(selection.categoryTokens)
+            await deviceActivityManager.applyShield(for: selection)
         } else {
-            clearShieldsFor(selection: selection)
+            await deviceActivityManager.removeShield(for: selection)
         }
 
         // 4. Restart monitoring
@@ -424,7 +336,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
         )
         let events = ScreenTimeEvents.createTimeOfDayEvents(for: appLimits)
 
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
 
         // 5. Reapply shields
         await reapplyActiveShields()
@@ -433,7 +345,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
     func updateAllDayBlock(id: UUID, for selection: FamilyActivitySelection, config: AllDayConfig) async throws {
         // 1. Stop existing monitoring
         let name = DeviceActivityName("allDay_\(id.uuidString)")
-        try await stopActivityMonitoring([name])
+        try await deviceActivityManager.stopMonitoring(names: [name])
 
         // 2. Update rule in repository
         let rule = ScreenTimeRule(
@@ -449,10 +361,9 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // 3. Apply shields if today is active
         if config.shouldBlockToday {
-            managedSettingsStore.shield.applications = Set(selection.applicationTokens)
-            managedSettingsStore.shield.applicationCategories = ShieldSettings.ActivityCategoryPolicy<Application>.specific(selection.categoryTokens)
+            await deviceActivityManager.applyShield(for: selection)
         } else {
-            clearShieldsFor(selection: selection)
+            await deviceActivityManager.removeShield(for: selection)
         }
 
         // 4. Restart monitoring
@@ -467,7 +378,7 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
         let schedule = DeviceActivityScheduleHelper.createFullDaySchedule()
         let events = ScreenTimeEvents.createAllDayEvents(for: appLimits)
 
-        try await startActivityMonitoring(name: name, schedule: schedule, events: events)
+        try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
 
         // 5. Reapply shields
         await reapplyActiveShields()

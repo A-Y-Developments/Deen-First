@@ -7,23 +7,25 @@ import ManagedSettings
 @MainActor
 final class FocusSectionViewModel: ObservableObject {
     @Published var selectedSurahs: [SurahWithRange] = []
-    @Published var blockedApps: [BlockedApp] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isPickerPresented = false
     @Published var appSelection = FamilyActivitySelection()
 
     private let sessionService: SessionService
-    private let screenTimeRepository: ScreenTimeRepository
     private let userRepository: UserRepository
     private let quranService: QuranService
     private weak var router: Router?
 
-    init(router: Router? = nil) {
-        self.sessionService = DIContainer.shared.sessionService
-        self.screenTimeRepository = DIContainer.shared.screenTimeRepository
-        self.userRepository = DIContainer.shared.userRepository
-        self.quranService = DIContainer.shared.quranService
+    init(
+        sessionService: SessionService = DIContainer.shared.sessionService,
+        userRepository: UserRepository = DIContainer.shared.userRepository,
+        quranService: QuranService = DIContainer.shared.quranService,
+        router: Router? = nil
+    ) {
+        self.sessionService = sessionService
+        self.userRepository = userRepository
+        self.quranService = quranService
         self.router = router
     }
 
@@ -31,9 +33,6 @@ final class FocusSectionViewModel: ObservableObject {
         isLoading = true
 
         do {
-            guard let user = try await userRepository.getCurrentUser() else { return }
-            blockedApps = try await screenTimeRepository.getBlockedApps(for: user.id)
-
             if let surahNumbers = UserDefaults.standard.array(forKey: "lastSelectedSurahs") as? [Int] {
                 let allSurahs = try await quranService.loadAllSurahs()
                 selectedSurahs = surahNumbers.compactMap { number in
@@ -61,8 +60,9 @@ final class FocusSectionViewModel: ObservableObject {
     private func loadAppSelectionFromDefaults() {
         guard let sharedDefaults = AppGroupConstants.sharedDefaults else { return }
 
-        // Load application tokens
         var selection = FamilyActivitySelection()
+        
+        // Load application tokens
         if let tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data] {
             for (_, data) in tokenMapping {
                 if let token = try? JSONDecoder().decode(ApplicationToken.self, from: data) {
@@ -102,12 +102,10 @@ final class FocusSectionViewModel: ObservableObject {
     }
 
     func updateAppSelection(_ newSelection: FamilyActivitySelection) {
-        // Just update local state, don't save to shared defaults yet
         appSelection = newSelection
     }
 
     func saveAppSelection() {
-        // Save the selection to shared defaults when session starts
         guard let sharedDefaults = AppGroupConstants.sharedDefaults else { return }
 
         // Save application tokens

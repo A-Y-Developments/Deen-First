@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import ManagedSettings
+import FamilyControls
 
 protocol SessionRepository {
     func save(_ session: Session) async throws
@@ -68,13 +69,14 @@ enum SessionServiceError: LocalizedError {
 final class SessionServiceImpl: SessionService {
     let sessionRepository: SessionRepository
     let userRepository: UserRepository
-    let screenTimeService: ScreenTimeService
+    let screenTimeRulesUseCase: ScreenTimeRulesUseCase
 
-    init(sessionRepository: SessionRepository, userRepository: UserRepository, screenTimeService: ScreenTimeService) {
+    init(sessionRepository: SessionRepository, userRepository: UserRepository, screenTimeRulesUseCase: ScreenTimeRulesUseCase) {
         self.sessionRepository = sessionRepository
         self.userRepository = userRepository
-        self.screenTimeService = screenTimeService
+        self.screenTimeRulesUseCase = screenTimeRulesUseCase
     }
+
 
     func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int? = nil) async throws -> Session {
         guard let user = try await userRepository.getCurrentUser() else {
@@ -83,7 +85,7 @@ final class SessionServiceImpl: SessionService {
 
         // Apply shields for listening sessions
         if type == .listening {
-            try? await screenTimeService.applyShields()
+            await applySessionShields()
         }
 
         let session = Session(
@@ -114,7 +116,7 @@ final class SessionServiceImpl: SessionService {
 
         // Remove shields when session ends
         if session.type == .listening {
-            try? await screenTimeService.removeShields()
+            await removeSessionShields()
         }
 
         try await sessionRepository.updateSession(session)
@@ -150,5 +152,50 @@ final class SessionServiceImpl: SessionService {
 
         user.lastActiveDate = Date()
         try await userRepository.updateUser(user)
+    }
+
+    // MARK: - Session Shield Management
+    private func applySessionShields() async {
+        guard let sharedDefaults = UserDefaults(suiteName: AppGroupConstants.suiteName) else {
+            print("⚠️ Could not access AppGroup defaults")
+            return
+        }
+
+        var selection = FamilyActivitySelection()
+        
+        // Load application tokens
+        if let tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data] {
+            for (_, data) in tokenMapping {
+                if let token = try? JSONDecoder().decode(ApplicationToken.self, from: data) {
+                    selection.applicationTokens.insert(token)
+                }
+            }
+        }
+        
+        // Load category tokens
+        if let categoryMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.categoryTokensKey) as? [String: Data] {
+            for (_, data) in categoryMapping {
+                if let token = try? JSONDecoder().decode(ActivityCategoryToken.self, from: data) {
+                    selection.categoryTokens.insert(token)
+                }
+            }
+        }
+        
+        guard !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty else {
+            print("⚠️ No saved app selection found")
+            return
+        }
+        
+        do {
+            try await screenTimeRulesUseCase.applySessionShield(for: selection)
+            print("✅ Session shields applied")
+        } catch {
+            print("❌ Failed to apply session shields: \(error)")
+        }
+    }
+
+    private func removeSessionShields() async {
+        await screenTimeRulesUseCase.removeSessionShield()
+        print("✅ Session shields removed, rule-based shields reapplied")
     }
 }

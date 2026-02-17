@@ -2,7 +2,7 @@ import SwiftUI
 import FamilyControls
 
 struct BlockingTabView: View {
-    @StateObject private var viewModel = BlockingTabViewModelNew()
+    @StateObject private var viewModel = BlockingTabViewModel()
     @State private var showCreateSheet = false
     @EnvironmentObject var router: Router
 

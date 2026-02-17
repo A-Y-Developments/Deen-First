@@ -7,12 +7,10 @@ final class ActiveSessionViewModel: ObservableObject {
     @Published var currentAyahIndex = 0
     @Published var sessionDuration: TimeInterval = 0
     @Published var showEndConfirmation = false
-
     @Published var errorMessage: String?
 
     private let ayahAudioPlayer: AyahAudioPlayerServiceImpl
     private let sessionService: SessionService
-    private let screenTimeService: ScreenTimeService
     private let subscriptionService: SubscriptionService
     weak var router: Router?
 
@@ -22,13 +20,19 @@ final class ActiveSessionViewModel: ObservableObject {
     let surahs: [SurahWithRange]
     let ayahs: [Ayah]
 
-    init(surahs: [SurahWithRange], ayahs: [Ayah], router: Router? = nil) {
+    init(
+        surahs: [SurahWithRange],
+        ayahs: [Ayah],
+        ayahAudioPlayer: AyahAudioPlayerServiceImpl? = nil,
+        sessionService: SessionService = DIContainer.shared.sessionService,
+        subscriptionService: SubscriptionService = DIContainer.shared.subscriptionService,
+        router: Router? = nil
+    ) {
         self.surahs = surahs
         self.ayahs = ayahs
-        self.ayahAudioPlayer = DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl
-        self.sessionService = DIContainer.shared.sessionService
-        self.screenTimeService = DIContainer.shared.screenTimeService
-        self.subscriptionService = DIContainer.shared.subscriptionService
+        self.ayahAudioPlayer = ayahAudioPlayer ?? (DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl)
+        self.sessionService = sessionService
+        self.subscriptionService = subscriptionService
         self.router = router
 
         setupBindings()
@@ -56,7 +60,7 @@ final class ActiveSessionViewModel: ObservableObject {
         if let session {
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
         }
-        try? await screenTimeService.removeShields()
+        // Shields are automatically removed by SessionService
         router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))
     }
 
@@ -67,6 +71,7 @@ final class ActiveSessionViewModel: ObservableObject {
                 return
             }
 
+            // SessionService handles shield application
             session = try await sessionService.startSession(
                 type: .listening,
                 surahNumbers: surahs.map { $0.surah.number },
@@ -103,19 +108,11 @@ final class ActiveSessionViewModel: ObservableObject {
 
     func confirmEndSession() async {
         showEndConfirmation = false
-
         ayahAudioPlayer.stop()
 
         if let session {
+            // SessionService handles shield removal
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
-        }
-
-        let isPremium = try? await subscriptionService.checkSubscriptionStatus()
-
-        if isPremium == true {
-            try? await screenTimeService.removeShields()
-        } else {
-            try? await screenTimeService.removeShields()
         }
 
         router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))

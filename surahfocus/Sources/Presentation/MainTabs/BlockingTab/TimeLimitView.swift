@@ -9,7 +9,7 @@ import SwiftUI
 import FamilyControls
 
 struct TimeLimitView: View {
-    @StateObject private var viewModel: TimeLimitViewModel
+    @StateObject private var viewModel: TimeOfDayConfigViewModel
     @Environment(\.dismiss) private var dismiss
 
     let days = ["S", "M", "T", "W", "T", "F", "S"]
@@ -20,11 +20,16 @@ struct TimeLimitView: View {
     ]
 
     init(limitId: UUID? = nil, container: DIContainer = .shared) {
-        self._viewModel = StateObject(wrappedValue: TimeLimitViewModel(
-            limitId: limitId,
-            timeLimitService: container.timeLimitSettingsService,
-            userRepository: container.userRepository
-        ))
+        let vm = TimeOfDayConfigViewModel()
+        self._viewModel = StateObject(wrappedValue: vm)
+        
+        if let limitId = limitId {
+            Task { @MainActor in
+                if let rule = container.screenTimeRulesUseCase.getRule(id: limitId) {
+                    await vm.setupForEdit(rule: rule)
+                }
+            }
+        }
     }
 
     var body: some View {

@@ -3,51 +3,47 @@ import FamilyControls
 
 @MainActor
 final class BlockingTabViewModel: ObservableObject {
-    @Published var appLimits: [AppLimit] = []
-    @Published var timeLimits: [TimeLimitSettings] = []
+    // MARK: - Published Properties
+
+    @Published var appLimits: [ScreenTimeRule] = []
+    @Published var timeOfDayLimits: [ScreenTimeRule] = []
+    @Published var allDayLimits: [ScreenTimeRule] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showActivityPicker = false
     @Published var appSelection = FamilyActivitySelection()
 
-    private let appLimitService: AppLimitService
-    private let timeLimitService: TimeLimitService
-    private let userRepository: UserRepository
+    // MARK: - Dependencies
 
-    init(
-        appLimitService: AppLimitService,
-        timeLimitService: TimeLimitService,
-        userRepository: UserRepository
-    ) {
-        self.appLimitService = appLimitService
-        self.timeLimitService = timeLimitService
-        self.userRepository = userRepository
+    private let screenTimeRulesUseCase: ScreenTimeRulesUseCase
+
+    // MARK: - Initialization
+
+    init(screenTimeRulesUseCase: ScreenTimeRulesUseCase) {
+        self.screenTimeRulesUseCase = screenTimeRulesUseCase
     }
 
     convenience init() {
-        self.init(
-            appLimitService: DIContainer.shared.appLimitService,
-            timeLimitService: DIContainer.shared.timeLimitSettingsService,
-            userRepository: DIContainer.shared.userRepository
-        )
+        self.init(screenTimeRulesUseCase: DIContainer.shared.screenTimeRulesUseCase)
     }
+
+    // MARK: - Load Data
 
     func loadBlockedApps() async {
         isLoading = true
         errorMessage = nil
 
         do {
-            guard let user = try await userRepository.getCurrentUser() else {
-                errorMessage = "User not found"
-                isLoading = false
-                return
-            }
+            // Load all rules from the new unified system
+            appLimits = screenTimeRulesUseCase.getTimeLimitRules()
+            timeOfDayLimits = screenTimeRulesUseCase.getTimeOfDayRules()
+            allDayLimits = screenTimeRulesUseCase.getAllDayRules()
 
-            async let appLimitsResult = appLimitService.getAppLimits()
-            async let timeLimitsResult = timeLimitService.getTimeLimits(userId: user.id)
+            // Sort by creation date
+            appLimits.sort { $0.createdAt < $1.createdAt }
+            timeOfDayLimits.sort { $0.createdAt < $1.createdAt }
+            allDayLimits.sort { $0.createdAt < $1.createdAt }
 
-            appLimits = try await appLimitsResult.filter { $0.isActive }
-            timeLimits = try await timeLimitsResult.filter { $0.isActive }
             isLoading = false
 
             logTimeBlockSettings()
@@ -57,59 +53,92 @@ final class BlockingTabViewModel: ObservableObject {
         }
     }
 
-    func logTimeBlockSettings() {
+    // MARK: - Delete Operations
+
+    func deleteAppLimit(_ limit: ScreenTimeRule) async {
+        do {
+            try await screenTimeRulesUseCase.deleteTimeLimit(id: limit.id)
+            await loadBlockedApps()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteTimeOfDayLimit(_ limit: ScreenTimeRule) async {
+        do {
+            try await screenTimeRulesUseCase.deleteTimeOfDay(id: limit.id)
+            await loadBlockedApps()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func deleteAllDayLimit(_ limit: ScreenTimeRule) async {
+        do {
+            try await screenTimeRulesUseCase.deleteAllDay(id: limit.id)
+            await loadBlockedApps()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    var blockedAppsCount: Int {
+        appLimits.count + timeOfDayLimits.count + allDayLimits.count
+    }
+
+    var hasApps: Bool {
+        !appLimits.isEmpty || !timeOfDayLimits.isEmpty || !allDayLimits.isEmpty
+    }
+
+    var hasAppLimits: Bool {
+        !appLimits.isEmpty
+    }
+
+    var hasTimeOfDayLimits: Bool {
+        !timeOfDayLimits.isEmpty
+    }
+
+    var hasAllDayLimits: Bool {
+        !allDayLimits.isEmpty
+    }
+
+    // MARK: - Logging
+
+    private func logTimeBlockSettings() {
         print("=== TIME BLOCK SETTINGS LOG ===")
 
         for limit in appLimits {
             print("\nType: App Limit")
             print("Name: \(limit.name)")
-            print("App Selection: 0 Category, \(limit.appTokens.count) Apps")
-            let hours = limit.dailyLimitMinutes / 60
-            let mins = limit.dailyLimitMinutes % 60
-            if hours > 0 {
-                print("Time: \(hours) hour\(hours > 1 ? "s" : "")\(mins > 0 ? " \(mins) min" : "")")
-            } else {
-                print("Time: \(mins) min")
+            let selection = limit.getFamilyActivitySelection()
+            print("App Selection: \(selection.categoryTokens.count) Category(ies), \(selection.applicationTokens.count) App(s)")
+            if let display = limit.limitDisplayName {
+                print("Time: \(display)")
             }
-            print("Days: All Days")
+            print("Days: \(limit.daysDisplayText)")
         }
 
-        for limit in timeLimits {
-            print("\nType: Time Limit")
+        for limit in timeOfDayLimits {
+            print("\nType: Time Limit (Downtime)")
             print("Name: \(limit.name)")
-            print("App Selection: 0 Category, \(limit.appTokens.count) Apps")
-            print("Time: \(limit.startTime) - \(limit.endTime)")
-            print("Days: All Days")
+            let selection = limit.getFamilyActivitySelection()
+            print("App Selection: \(selection.categoryTokens.count) Category(ies), \(selection.applicationTokens.count) App(s)")
+            if let display = limit.timeRangeDisplay {
+                print("Time: \(display)")
+            }
+            print("Days: \(limit.daysDisplayText)")
+        }
+
+        for limit in allDayLimits {
+            print("\nType: All Day")
+            print("Name: \(limit.name)")
+            let selection = limit.getFamilyActivitySelection()
+            print("App Selection: \(selection.categoryTokens.count) Category(ies), \(selection.applicationTokens.count) App(s)")
+            print("Days: \(limit.daysDisplayText)")
         }
 
         print("\n==============================")
-    }
-
-    func deleteAppLimit(_ limit: AppLimit) async {
-        do {
-            limit.isActive = false
-            try await appLimitService.updateAppLimit(limit)
-            await loadBlockedApps()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    func deleteTimeLimit(_ limit: TimeLimitSettings) async {
-        do {
-            limit.isActive = false
-            try await timeLimitService.updateTimeLimit(limit)
-            await loadBlockedApps()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    var blockedAppsCount: Int {
-        appLimits.count + timeLimits.count
-    }
-
-    var hasApps: Bool {
-        !appLimits.isEmpty || !timeLimits.isEmpty
     }
 }

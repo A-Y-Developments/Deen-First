@@ -25,11 +25,15 @@ final class OnboardingScreenTimeViewModel: ObservableObject {
 
 	// MARK: - Initialization
 	init(
-		screenTimeRulesUseCase: ScreenTimeRulesUseCase = DIContainer.shared.screenTimeRulesUseCase,
+		screenTimeRulesUseCase: ScreenTimeRulesUseCase,
 		authCenter: AuthorizationCenter = .shared
 	) {
 		self.screenTimeRulesUseCase = screenTimeRulesUseCase
 		self.authCenter = authCenter
+	}
+	
+	convenience init() {
+		self.init(screenTimeRulesUseCase: DIContainer.shared.screenTimeRulesUseCase)
 	}
 
 	// MARK: - Selection Methods
