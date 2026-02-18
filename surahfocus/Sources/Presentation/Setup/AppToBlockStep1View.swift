@@ -10,40 +10,38 @@ import SwiftUI
 struct AppToBlockStep1View: View {
     
     var body: some View {
-        VStack(spacing: 20) {
-            
-            Spacer()
-            
-            // MARK: - Small Intro
-            Text("Let's go! We got your back")
-                .font(.callout)
-                .foregroundColor(Color(hex: "#AEAEB2"))
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            
-            // MARK: - Title
-            Text("Which app distracts you most?")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            
-            // MARK: - Subtitle
-            Text("You can select more apps or edit this later")
-                .font(.callout)
-                .foregroundColor(Color(hex: "#8E8E93"))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
+        VStack {
+            VStack(spacing: 20) {
+                // MARK: - Small Intro
+                Text("Let's go! We got your back")
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .foregroundColor(Color.gray4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // MARK: - Title
+                Text("Which app distracts you most?")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                
+                // MARK: - Subtitle
+                Text("You can select more apps or edit this later")
+                    .font(.callout)
+                    .foregroundColor(Color.gray4)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             
             // MARK: - Illustration
             Image("social-media")
                 .resizable()
                 .scaledToFit()
                 .frame(maxWidth: 220)
-                .padding(.vertical, 12)
+                .padding(.vertical, 48)
             
             
             // MARK: - Select App Field
@@ -58,14 +56,13 @@ struct AppToBlockStep1View: View {
                     .foregroundColor(.white.opacity(0.6))
             }
             .padding()
-            
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(hex: "#1A494D").opacity(0.4))
+                    .fill(Color.primary500.opacity(0.4))
             )
         
             Spacer()
         }
-        .padding(.horizontal, 20)
+        .padding(.top)
     }
 }

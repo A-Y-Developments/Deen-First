@@ -22,6 +22,11 @@ struct MainTabView: View {
                         .environmentObject(viewModel)
                         .environmentObject(router)
                 }
+                .customBackground(
+                    Color.primary900.cornerRadius(30)
+                )
+                .dragIndicatorColor(Color.gray4.opacity(0.2))
+            
                 .tabItem {
                     Label("Quran", systemImage: "book.fill")
                 }

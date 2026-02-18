@@ -19,17 +19,22 @@ struct AppToBlockStep3View: View {
             // MARK: - Small Intro
             Text("Let's set boundaries!")
                 .font(.callout)
-                .foregroundColor(Color(hex: "#AEAEB2"))
-            
+                .foregroundColor(Color.gray4)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             // MARK: - Title
             Text("Set your prayer times to stay focused and connected")
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
             
+            // MARK: - Subtitle
+            Text("You can select more than one")
+                .font(.callout)
+                .foregroundColor(Color.gray4)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             // MARK: - Prayer Options
             VStack(spacing: 16) {
@@ -39,16 +44,17 @@ struct AppToBlockStep3View: View {
                 prayerOption("Maghrib (6.15 PM - 7.15 PM)")
                 prayerOption("Isha (7.30 PM - 8.45 PM)")
             }
-            .padding(.horizontal)
-            .padding(.top, 40)
+            .padding(.top, 32)
             
             Spacer()
         }
+        .animation(.easeInOut(duration: 0.2), value: selectedPrayers)
     }
     
     
     // MARK: - Prayer Option Component
     private func prayerOption(_ title: String) -> some View {
+        
         let isSelected = selectedPrayers.contains(title)
         
         return Button {
@@ -63,7 +69,7 @@ struct AppToBlockStep3View: View {
                 Text(title)
                     .foregroundColor(
                         isSelected
-                        ? Color(hex: "#DBDABD")
+                        ? Color.secondary200
                         : .white
                     )
                     .font(.body)
@@ -71,22 +77,27 @@ struct AppToBlockStep3View: View {
                 Spacer()
                 
                 if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(Color(hex: "#DBDABD"))
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(.callout, weight: .medium))
+                        .foregroundColor(Color.secondary300.opacity(0.4))
                 }
             }
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(hex: "#102D30"))
+                    .fill(
+                        isSelected
+                        ? Color.primary600
+                        : Color.primary500.opacity(0.4)
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         isSelected
-                        ? Color(hex: "#DBDABD").opacity(0.4)
+                        ? Color.secondary300.opacity(0.4)
                         : Color.clear,
-                        lineWidth: 1.5
+                        lineWidth: 2
                     )
             )
         }

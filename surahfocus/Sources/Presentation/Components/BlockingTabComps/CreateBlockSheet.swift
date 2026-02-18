@@ -36,7 +36,7 @@ struct CreateBlockSheet: View {
             // Title
             VStack(alignment: .leading, spacing: 8) {
                 Text("Create New Blocks")
-                    .font(.system(.title2, design: .serif))
+                    .font(.system(.title2))
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -45,7 +45,7 @@ struct CreateBlockSheet: View {
                 
                 Text("Select the blocking types you want to set")
                     .font(.system(.subheadline))
-                    .foregroundColor(Color(hex: "ADA666"))
+                    .foregroundColor(Color.gray4)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
             }
@@ -83,6 +83,6 @@ struct CreateBlockSheet: View {
             Spacer()
         }
         .padding(24)
-        .background(Color(hex: "041315"))
+        .background(Color.primary900)
     }
 }

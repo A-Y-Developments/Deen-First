@@ -34,16 +34,8 @@ struct TimeLimitView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
-
+            Color.primary900
+                .ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
 
@@ -83,7 +75,7 @@ struct TimeLimitView: View {
                         // BLOCKED APP
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Blocked App")
-                                .foregroundColor(Color(hex: "ADA666"))
+                                .foregroundColor(Color.secondary400)
                                 .fontWeight(.semibold)
 
                             Button {
@@ -103,14 +95,16 @@ struct TimeLimitView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             .disabled(viewModel.isLoading)
+                            .padding()
+                            .background(Color.primary500.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
                         // TIME SETTINGS
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Time Settings")
-                                .foregroundColor(Color(hex: "ADA666"))
+                                .foregroundColor(Color.secondary400)
                                 .fontWeight(.semibold)
-
                             Text("Manual Set")
                                 .foregroundColor(Color(hex: "999999"))
                                 .font(.caption)
@@ -136,7 +130,9 @@ struct TimeLimitView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             .disabled(viewModel.isLoading)
-
+                            .padding()
+                            .background(Color.primary500.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                             // END TIME
                             Button {
                                 viewModel.showTimePicker = .end
@@ -158,6 +154,9 @@ struct TimeLimitView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             .disabled(viewModel.isLoading)
+                            .padding()
+                            .background(Color.primary500.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
 
                         // PRAYER TIME
@@ -165,6 +164,7 @@ struct TimeLimitView: View {
                             Text("During prayer time")
                                 .foregroundColor(Color(hex: "999999"))
                                 .font(.caption)
+
 
                             LazyVGrid(columns: columns, spacing: 12) {
                                 ForEach(DowntimeSchedule.PrayerTime.allCases, id: \.self) { prayer in
@@ -179,14 +179,10 @@ struct TimeLimitView: View {
                                             .padding()
                                             .background(
                                                 isSelected ?
-                                                Color(hex: "ADA666") :
-                                                Color(hex: "0c292b")
+                                            Color.primary600 :
+                                            Color.primary500.opacity(0.3)
                                             )
-                                            .foregroundColor(
-                                                isSelected ?
-                                                Color(hex: "0c292b") :
-                                                .white
-                                            )
+                                            .foregroundColor(.white)
                                             .clipShape(RoundedRectangle(cornerRadius: 14))
                                     }
                                 }
@@ -212,18 +208,14 @@ struct TimeLimitView: View {
 
                                     Text(days[index])
                                         .fontWeight(.semibold)
-                                        .frame(width: 36, height: 36)
+                                        .frame(width: 40, height: 40)
                                         .background(
                                             isSelected ?
-                                            Color(hex: "ADA666") :
-                                            Color(hex: "0c292b")
+                                            Color.primary600 :
+                                            Color.primary500.opacity(0.2)
                                         )
-                                        .foregroundColor(
-                                            isSelected ?
-                                            Color(hex: "0c292b") :
-                                            .white
-                                        )
-                                        .clipShape(Circle())
+                                        .foregroundColor(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                         .onTapGesture {
                                             viewModel.toggleDay(index)
                                         }
@@ -273,7 +265,7 @@ struct TimeLimitView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color(hex: "ADA666"))
+                            .background(.white)
                             .clipShape(Capsule())
                             .disabled(viewModel.isLoading)
                         }
@@ -350,6 +342,7 @@ struct TimeLimitView: View {
         }
     }
 }
+
 
 #Preview {
     TimeLimitView()

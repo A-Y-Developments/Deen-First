@@ -34,13 +34,13 @@ struct SelectSurahFocusView: View {
                                 .font(.system(.callout, design: .serif))
                                 .foregroundColor(.white)
                                 .frame(width: 36, height: 36)
-                                .background(Color(hex: "0e3034"))
+                                .background(Color.primary500.opacity(0.4))
                                 .clipShape(Circle())
                             
                             // Surah Name
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(surah.1)
-                                    .font(.system(.body, design: .serif))
+                                    .font(.system(.body))
                                     .foregroundColor(.white)
                                 
                                 Text(surah.2)
@@ -53,12 +53,12 @@ struct SelectSurahFocusView: View {
                             // Select Indicator
                             ZStack {
                                 Circle()
-                                    .stroke(Color.white.opacity(0.6), lineWidth: 1.5)
+                                    .stroke(Color.primary400, lineWidth: 2)
                                     .frame(width: 22, height: 22)
                                 
                                 if selectedSurah == surah.0 {
                                     Circle()
-                                        .fill(Color(hex: "ADA666"))
+                                        .fill(Color.primary400)
                                         .frame(width: 22, height: 22)
                                     
                                     Image(systemName: "checkmark")
@@ -68,7 +68,7 @@ struct SelectSurahFocusView: View {
                             }
                         }
                         .padding()
-                        .background(Color(hex: "062023"))
+                        .background(Color.primary500.opacity(0.3))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .onTapGesture {
                             selectedSurah = surah.0
@@ -107,12 +107,12 @@ struct SelectSurahFocusView: View {
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(hex: "ADA666"))
+                        .background(.white)
                         .clipShape(Capsule())
                         .padding(.horizontal)
                         .padding(.top, 8)
                 }
-                .background(Color(hex: "041315"))
+                .background(Color.primary900)
             }
         }
     }

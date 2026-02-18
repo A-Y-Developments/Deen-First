@@ -6,6 +6,7 @@ struct SettingsTabView: View {
 
     var body: some View {
         ZStack {
+<<<<<<< HEAD
             LinearGradient(
                 gradient: Gradient(stops: [
                     .init(color: Color(hex: "062629"), location: 0.0),
@@ -16,17 +17,26 @@ struct SettingsTabView: View {
             )
             .ignoresSafeArea()
 
+=======
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+            
+            // Main Content
+>>>>>>> 886c79a (ui: slicing details)
             VStack(spacing: 32) {
                 // MARK: - Profile Section
                 VStack(spacing: 12) {
                     // Avatar
                     Circle()
-                        .fill(Color(hex: "#ADA666"))
+                        .fill(Color.secondary400)
                         .frame(width: 80, height: 80)
                         .overlay(
                             Text(viewModel.displayInitial)
                                 .font(.system(size: 32, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                         )
 
                     // Name
@@ -35,11 +45,17 @@ struct SettingsTabView: View {
                         .foregroundColor(.white)
 
                     // Email
+<<<<<<< HEAD
                     if let email = viewModel.email {
                         Text(email)
                             .font(.subheadline)
                             .foregroundColor(Color(hex: "#8E8E93"))
                     }
+=======
+                    Text("jane.doe@icloud.com")
+                        .font(.subheadline)
+                        .foregroundColor(Color.gray4)
+>>>>>>> 886c79a (ui: slicing details)
                 }
                 .padding(.top, 40)
 
@@ -81,6 +97,7 @@ struct SettingsTabView: View {
                 Spacer()
             }
             .padding(.horizontal, 20)
+            .padding(.top, 48)
         }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {

@@ -19,9 +19,8 @@ struct AppToBlockStep2View: View {
             // MARK: - Small Intro
             Text("Let's set boundaries!")
                 .font(.callout)
-                .foregroundColor(Color(hex: "#AEAEB2"))
+                .foregroundColor(Color.gray4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
             
             
             // MARK: - Title
@@ -29,17 +28,15 @@ struct AppToBlockStep2View: View {
                 .font(.title)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
-                .padding(.horizontal)
             
             
             // MARK: - Subtitle
             Text("Let’s pick one")
                 .font(.callout)
-                .foregroundColor(Color(hex: "#8E8E93"))
+                .foregroundColor(Color.gray4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-            
             
             // MARK: - Time Options
             VStack(spacing: 16) {
@@ -48,7 +45,6 @@ struct AppToBlockStep2View: View {
                 timeOption(title: "1 hour")
                 timeOption(title: "2 hours")
             }
-            .padding(.horizontal)
             .padding(.top, 32)
             
             Spacer()
@@ -70,7 +66,7 @@ struct AppToBlockStep2View: View {
                 Text(title)
                     .foregroundColor(
                         isSelected
-                        ? Color(hex: "#DBDABD")
+                        ? Color.secondary200
                         : .white
                     )
                     .font(.body)
@@ -78,22 +74,23 @@ struct AppToBlockStep2View: View {
                 Spacer()
                 
                 if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(Color(hex: "#DBDABD"))
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(.callout, weight: .medium))
+                        .foregroundColor(Color.secondary300.opacity(0.4))
                 }
             }
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(hex: "#102D30").opacity(0.6))
+                    .fill(isSelected ? Color.primary600 : Color.primary500.opacity(0.4))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(
                         isSelected
-                        ? Color(hex: "#DBDABD").opacity(0.4)
+                        ? Color.secondary300.opacity(0.4)
                         : Color.clear,
-                        lineWidth: 1.5
+                        lineWidth: 2
                     )
             )
         }

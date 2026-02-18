@@ -25,4 +25,20 @@ extension Color {
             opacity: Double(a) / 255
         )
     }
+    
+    // MARK: - Primary Scale
+    static let primary900 = Color("Primary900")
+    static let primary800 = Color("Primary800")
+    static let primary700 = Color("Primary700")
+    static let primary600 = Color("Primary600")
+    static let primary500 = Color("Primary500")
+    static let primary400 = Color("Primary400")
+    
+    // MARK: - Secondary Scale
+    static let secondary400 = Color("Secondary400")
+    static let secondary300 = Color("Secondary300")
+    static let secondary200 = Color("Secondary200")
+    
+    // MARK: - Gray Scale
+    static let gray4 = Color("Gray4")
 }

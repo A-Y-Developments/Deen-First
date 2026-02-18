@@ -34,42 +34,21 @@ struct SurahToListen: View {
             
             
             // Ayah Range
-            HStack(spacing: 6) {
-                Text("Ayah")
+            HStack(spacing: 32) {
+                Text("Ayah \(startAyah) - \(endAyah)")
                     .foregroundColor(.white)
                 
-                Menu {
-                    Picker("Start Ayah", selection: $startAyah) {
-                        ForEach(1...286, id: \.self) { number in
-                            Text("\(number)").tag(number)
-                        }
-                    }
-                } label: {
-                    Text("\(startAyah)")
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "ADA666"))
-                }
-                
-                Text("To")
-                    .foregroundColor(.white)
-                
-                Menu {
-                    Picker("End Ayah", selection: $endAyah) {
-                        ForEach(1...286, id: \.self) { number in
-                            Text("\(number)").tag(number)
-                        }
-                    }
-                } label: {
-                    Text("\(endAyah)")
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "ADA666"))
-                }
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.white.opacity(0.6))
             }
             .font(.system(.body))
-            
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color.primary500.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .padding(20)
-        .background(Color(hex: "041315").ignoresSafeArea())
+        .background(Color.primary500.opacity(0.3)).ignoresSafeArea()
         .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }

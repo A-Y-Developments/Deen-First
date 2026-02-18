@@ -29,16 +29,8 @@ struct AppLimitView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
-
+            Color.primary900
+                    .ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
 
@@ -78,7 +70,7 @@ struct AppLimitView: View {
                         // BLOCKED APP
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Blocked App")
-                                .foregroundColor(Color(hex: "ADA666"))
+                                .foregroundColor(Color.secondary400)
                                 .fontWeight(.semibold)
 
                             Button {
@@ -98,12 +90,14 @@ struct AppLimitView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 14))
                             }
                             .disabled(viewModel.isLoading)
+                            .padding()
+                            .background(Color.primary500.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
-
                         // TIME SETTINGS
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Time Settings")
-                                .foregroundColor(Color(hex: "ADA666"))
+                                .foregroundColor(Color.secondary400)
                                 .fontWeight(.semibold)
 
                             Text("App Usage Duration")
@@ -120,8 +114,10 @@ struct AppLimitView: View {
                                 Image(systemName: "chevron.right")
                                     .foregroundColor(.white.opacity(0.4))
                             }
-                            .padding()
-                            .background(Color(hex: "0c292b"))
+                            // .padding()
+                            // .background(Color(hex: "0c292b")
+                            .frame(height: 120)
+                            .background(Color.primary500.opacity(0.3))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -148,18 +144,14 @@ struct AppLimitView: View {
 
                                     Text(days[index])
                                         .fontWeight(.semibold)
-                                        .frame(width: 36, height: 36)
+                                        .frame(width: 40, height: 40)
                                         .background(
                                             isSelected ?
-                                            Color(hex: "ADA666") :
-                                                Color(hex: "0c292b")
+                                            Color.primary600 :
+                                                Color.primary500.opacity(0.2)
                                         )
-                                        .foregroundColor(
-                                            isSelected ?
-                                            Color(hex: "0c292b") :
-                                                    .white
-                                        )
-                                        .clipShape(Circle())
+                                        .foregroundColor(.white)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                         .onTapGesture {
                                             viewModel.toggleDay(index)
                                         }
@@ -209,7 +201,7 @@ struct AppLimitView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color(hex: "ADA666"))
+                            .background(.white)
                             .clipShape(Capsule())
                             .disabled(viewModel.isLoading)
                         }
