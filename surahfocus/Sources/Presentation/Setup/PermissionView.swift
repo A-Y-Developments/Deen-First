@@ -11,21 +11,15 @@ struct PermissionView: View {
     
     var body: some View {
         ZStack {
-            
-            // MARK: - Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             
-            // MARK: - Content
-            VStack(spacing: 24) {
+            // Main Content
+            VStack {
                 
                 Spacer()
                 Spacer()
@@ -39,7 +33,7 @@ struct PermissionView: View {
                 
                 // MARK: - Title
                 Text("Screen Time Permission")
-                    .font(.system(.title, design: .serif))
+                    .font(.system(.title))
                     .fontWeight(.bold)
                     .foregroundColor(.white)
                 
@@ -47,9 +41,10 @@ struct PermissionView: View {
                 // MARK: - Description
                 Text("We need Screen Time permission to block distractions and help you reconnect with the Qur'an.")
                     .font(.subheadline)
-                    .foregroundColor(Color(hex: "#8E8E93"))
+                    .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
+                    .padding(.top)
                 
                 
                 // MARK: - Benefits Container
@@ -61,12 +56,19 @@ struct PermissionView: View {
                     
                     permissionRow(text: "We never access your personal data")
                 }
-                .padding()
-                .background(
+                .padding(20)
+                //                .background(
+                //                    RoundedRectangle(cornerRadius: 20)
+                //                        .stroke(Color.secondary400.opacity(0.4), lineWidth: 2)
+                //                )
+                .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color(hex: "#ADA666").opacity(0.2), lineWidth: 1.5)
+                        .stroke(Color(hex:"DBDABD").opacity(0.4), lineWidth: 3)
+                        .blur(radius: 4)
+                        .opacity(0.6)
                 )
                 .padding(.horizontal, 24)
+                .padding(.top, 48)
                 
                 
                 Spacer()
@@ -85,7 +87,7 @@ struct PermissionView: View {
                         .clipShape(Capsule())
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 32)
+                .padding(.bottom, 56)
             }
         }
     }
@@ -96,10 +98,10 @@ struct PermissionView: View {
         HStack(alignment: .top, spacing: 12) {
             
             Image(systemName: "checkmark")
-                .foregroundColor(Color(hex: "#ADA666"))
+                .foregroundColor(Color.secondary200)
             
             Text(text)
-                .foregroundColor(.white)
+                .foregroundColor(Color.secondary200)
                 .font(.subheadline)
             
             Spacer()

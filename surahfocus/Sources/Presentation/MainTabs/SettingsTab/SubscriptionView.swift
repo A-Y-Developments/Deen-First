@@ -11,15 +11,10 @@ struct SubscriptionView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Main Content
             VStack(spacing: 28) {
@@ -30,47 +25,48 @@ struct SubscriptionView: View {
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                     .padding(.top)
-                Image(systemName: "sparkles")
+                Image("app-logo")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 54, height: 100)
-                    .foregroundColor(Color(hex: "ADA666"))
                 Text("MashaAllah\nyou're the premium one")
-                    .font(.system(.body, design: .serif))
+                    .font(.system(.title3, weight: .semibold))
                     .italic()
                     .multilineTextAlignment(.center)
-                    .foregroundColor(Color(hex: "DBDABD"))
+                    .foregroundColor(Color.secondary200)
                 
                 VStack(spacing: 16) {
                     HStack {
                         Text("Your Plan")
                             .foregroundColor(.white)
                             .font(.callout)
+                            .fontWeight(.semibold)
                         
                         Spacer()
                         
                         Text("Yearly plan is active")
-                            .foregroundColor(Color(hex: "ADA666"))
+                            .foregroundColor(Color.secondary300)
                             .font(.callout)
                     }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.2))
+                            .stroke(Color.primary700, lineWidth: 2)
                     )
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Renewal")
                             .foregroundColor(.white)
                             .font(.callout)
+                            .fontWeight(.semibold)
                         
                         Text("Your plan will automatically renew on 9 Feb 2027. You’ll be charged $29.99/year")
-                            .foregroundColor(.white.opacity(0.7))
+                            .foregroundColor(Color.gray4)
                             .font(.caption)
                     }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.2))
+                            .stroke(Color.primary700, lineWidth: 2)
                     )
                     HStack {
                         Text("Explore Plans")
@@ -83,14 +79,15 @@ struct SubscriptionView: View {
                             .foregroundColor(.white.opacity(0.7))
                     }
                     .padding()
-                    .background(Color(hex: "062023"))
+                    .background(Color.primary700)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.top, 24)
                 
                 Spacer()
             }
-            .padding(24)
+            .padding(.vertical, 48)
+            .padding(.horizontal, 24)
         }
     }
 }

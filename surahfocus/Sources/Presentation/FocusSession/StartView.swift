@@ -50,8 +50,8 @@ struct StartView: View {
                             }
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color(hex: "0e3034"))
-                            .opacity(activeAyah == index ? 1 : 0.35)
+                            .background(Color.primary500.opacity(0.5))
+                            .opacity(activeAyah == index ? 1 : 0.3)
                             .blur(radius: activeAyah == index ? 0 : 2)
                             .animation(.easeInOut(duration: 0.4), value: activeAyah)
                             .id(index)
@@ -106,12 +106,12 @@ struct StartView: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Al-Baqara")
-                            .font(.system(.headline, design: .serif))
+                            .font(.system(.headline))
                             .foregroundColor(.white)
                         
                         Text("The Cow")
                             .font(.subheadline)
-                            .foregroundColor(Color(hex: "8E8E93"))
+                            .foregroundColor(.white)
                     }
                     
                     Spacer()
@@ -121,12 +121,14 @@ struct StartView: View {
                     } label: {
                         Image(systemName: "play.circle.fill")
                             .font(.system(size: 44))
-                            .foregroundColor(Color(hex: "ADA666"))
+                            .foregroundColor(Color.secondary200)
                     }
                 }
                 .padding()
-                .background(Color(hex: "1a494d"))
+                .background(Color.primary500)
+                .clipShape(RoundedRectangle(cornerRadius: 18))
             }
+            .padding()
         }
     }
 }

@@ -25,39 +25,21 @@ struct BlockTimeLimitCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(settingsName.isEmpty ? appName : settingsName)
-                    .foregroundColor(.white)
-                    .fontWeight(.semibold)
-                    .font(.system(.callout, design: .serif))
-
-                Spacer()
-            }
-            Text("\(appsCount) app\(appsCount == 1 ? "" : "s") selected")
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ],
-                spacing: 12
-            ) {
-
-                Text(timeRange)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(hex: "0c292b"))
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                Text(daysText)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(Color(hex: "0c292b"))
-                    .foregroundColor(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(settingsName.isEmpty ? appName : settingsName)
+                        .foregroundColor(.white)
+                        .fontWeight(.semibold)
+                        .font(.system(.callout))
+                    
+                    Spacer()
+                    
+                    Image(systemName: "pencil")
+                        .foregroundColor(.white.opacity(0.7))
+                }
+                Text("\(appsCount) app\(appsCount == 1 ? "" : "s") selected" + " • \(timeRange) • \(daysText)")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.7))
             }
             Text(prayersText)
                 .frame(maxWidth: .infinity, alignment: .leading)

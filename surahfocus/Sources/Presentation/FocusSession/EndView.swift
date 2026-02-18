@@ -11,9 +11,10 @@ struct EndView: View {
     
     var body: some View {
         ZStack {
-            
             // Background
-            Color(hex: "041315")
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
                 .ignoresSafeArea()
             
             VStack(spacing: 24) {
@@ -23,44 +24,46 @@ struct EndView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     
                     Text("MashaAllah...")
-                        .font(.title)
+                        .font(.system(.title, weight: .semibold))
                         .italic()
                         .foregroundColor(.white)
                     
                     Text("You’re doing better than 99% of people who just scroll through their phones aimlessly.")
                         .font(.callout)
-                        .foregroundColor(Color(hex: "ADA666"))
+                        .foregroundColor(Color.secondary200)
                         .multilineTextAlignment(.leading)
                     
                     Text("May your effort be accepted by Allah")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
+                        .font(.system(.subheadline, weight: .semibold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
                 
                 Spacer()
+                
+                // ✅ Button di dalam VStack
+                Button {
+                    print("Aameen tapped")
+                } label: {
+                    Text("Aameen")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                }
+                .padding(.bottom, 16) 
+                .shadow(
+                    color: Color.primary400,
+                    radius: 12
+                )
             }
             .padding(24)
         }
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                print("Aameen tapped")
-            } label: {
-                Text("Aameen")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(hex: "ADA666"))
-                    .clipShape(Capsule())
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
-            .background(Color(hex: "041315"))
-        }
     }
 }
+
 
 #Preview {
     EndView()

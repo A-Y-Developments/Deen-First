@@ -16,13 +16,13 @@ struct BlockRow: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(.body, design: .serif))
+                    .font(.system(.body))
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                 
                 Text(description)
                     .font(.system(.caption))
-                    .foregroundColor(Color(hex: "ADA666"))
+                    .foregroundColor(Color.gray4)
             }
             
             Spacer()
@@ -31,7 +31,7 @@ struct BlockRow: View {
                 .foregroundColor(.white.opacity(0.6))
         }
         .padding()
-        .background(Color(hex: "0c292b"))
+        .background(Color.primary500.opacity(0.3))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture {
             action()

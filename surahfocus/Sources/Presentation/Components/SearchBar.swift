@@ -29,6 +29,6 @@ struct SearchBar: View {
         }
         .padding(12)
         .background(Color.white.opacity(0.05))
-        .cornerRadius(10)
+        .clipShape(Capsule())
     }
 }

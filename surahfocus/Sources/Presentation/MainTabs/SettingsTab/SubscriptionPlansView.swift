@@ -8,18 +8,20 @@
 import SwiftUI
 
 struct SubscriptionPlansView: View {
+    @State private var selectedPlan: Plan = .yearly
+    
+    enum Plan {
+        case yearly
+        case monthly
+    }
+    
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Main Content
             VStack(spacing: 28) {
@@ -29,105 +31,181 @@ struct SubscriptionPlansView: View {
                 // Title
                 VStack(spacing: 8) {
                     Text("Unlock Your Quran Journey")
-                        .font(.system(.largeTitle, design: .serif))
+                        .font(.system(.largeTitle))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     
-                    Text("Start your free trial, cancel anytime.")
+                    Text("Surah Focus is your way to a better relationship with your faith. Start your free trial, cancel anytime.")
                         .font(.subheadline)
-                        .foregroundColor(Color(hex: "8E8E93"))
+                        .foregroundColor(Color.secondary400)
                 }
                 .padding(.horizontal, 32)
                 
                 // Feature Box
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
                     
                     PlanFeatureRow(text: "Block distracting apps")
                     PlanFeatureRow(text: "Track your daily streak")
                     PlanFeatureRow(text: "Set time limits & schedules")
+                    PlanFeatureRow(text: "Listen to the Quran with Focus Session")
+                    PlanFeatureRow(text: "Build a deeper connection with Allah")
                     
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color(hex: "ADA666").opacity(0.2), lineWidth: 1)
+                        .stroke(Color.primary500.opacity(0.4), lineWidth: 2)
                 )
                 .padding(.horizontal, 24)
                 
-                // Yearly Plan
-                ZStack(alignment: .topTrailing) {
-                    
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Yearly")
-                                .font(.system(.title, design: .serif))
-                                .italic()
-                                .foregroundColor(Color(hex: "DBDABD"))
-                            
-                            Text("$29.99")
-                                .font(.title3)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "DBDABD"))
+                VStack {
+                    // Yearly Plan
+                    ZStack(alignment: .topTrailing) {
+                        
+                        Button {
+                            selectedPlan = .yearly
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 16) {
+                                    Text("Yearly")
+                                        .font(.system(.title))
+                                        .fontWeight(.bold)
+                                        .foregroundColor(
+                                            selectedPlan == .yearly
+                                            ? .black
+                                            : Color.gray4
+                                        )
+                                    
+                                    Text("$29.99")
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(
+                                            selectedPlan == .yearly
+                                            ? .black
+                                            : Color.gray4
+                                        )
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .trailing, spacing: 16) {
+                                    Text("7-days Free Trial")
+                                        .font(.subheadline)
+                                        .foregroundColor(
+                                            selectedPlan == .yearly
+                                            ? .black
+                                            : Color.gray4
+                                        )
+                                    
+                                    Text("$2.49/Mo")
+                                        .font(.callout)
+                                        .foregroundColor(
+                                            selectedPlan == .yearly
+                                            ? .black
+                                            : Color.gray4
+                                        )
+                                }
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(
+                                        selectedPlan == .yearly
+                                        ? Color.secondary200
+                                        : Color.primary500.opacity(0.4)
+                                    )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18)
+                                    .stroke(
+                                        Color.primary500.opacity(0.4),
+                                        lineWidth: 2
+                                    )
+                            )
                         }
                         
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("7-days Free Trial")
-                                .font(.subheadline)
-                                .foregroundColor(Color(hex: "DBDABD"))
-                            
-                            Text("$2.49/Mo")
-                                .font(.callout)
-                                .foregroundColor(Color(hex: "DBDABD"))
-                        }
+                        // Save Badge
+                        Text("Save 50%")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.black)
+                            .foregroundColor(.white)
+                            .rotationEffect(.degrees(5))
+                            .offset(x: -24, y: -12)
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18)
-                            .stroke(Color(hex: "ADA666").opacity(0.2), lineWidth: 1)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 48)
+                    .shadow(
+                        color: Color.secondary200.opacity(0.4),
+                        radius: 16
                     )
                     
-                    // Save 50% label
-                    Text("Save 50%")
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(hex: "ADA666"))
-                        .foregroundColor(Color(hex: "1A494D"))
-                        .rotationEffect(.degrees(5))
-                        .offset(x: -24, y: -12)
+                    
+                    // Monthly Plan
+                    Button {
+                        selectedPlan = .monthly
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Monthly")
+                                    .font(.system(.headline, design: .serif))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(
+                                        selectedPlan == .monthly
+                                        ? Color(hex: "1A494D")
+                                        : .white
+                                    )
+                            }
+                            
+                            Spacer()
+                            
+                            VStack(alignment: .trailing, spacing: 16) {
+                                Text("3-days Free Trial")
+                                    .font(.subheadline)
+                                    .foregroundColor(
+                                        selectedPlan == .monthly
+                                        ? .black
+                                        : Color.gray4
+                                    )
+                                
+                                Text("$4.99/Mo")
+                                    .font(.callout)
+                                    .foregroundColor(
+                                        selectedPlan == .monthly
+                                        ? .black
+                                        : Color.gray4
+                                    )
+                            }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(
+                                    selectedPlan == .monthly
+                                    ? Color.secondary200
+                                    : Color.primary500.opacity(0.4)
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(
+                                    Color.primary500.opacity(0.4),
+                                    lineWidth: 2
+                                )
+                        )
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top)
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 48)
                 
-                // Monthly Plan
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Monthly")
-                            .font(.system(.headline, design: .serif))
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("3-days Free Trial")
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "AEAEB2"))
-                        
-                        Text("$4.99/Mo")
-                            .font(.callout)
-                            .foregroundColor(Color(hex: "AEAEB2"))
-                    }
-                }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 24)
                 
                 // CTA Button
                 Button {
@@ -162,11 +240,11 @@ struct PlanFeatureRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark")
-                .foregroundColor(Color(hex: "ADA666"))
+                .foregroundColor(Color.secondary200)
             
             Text(text)
-                .foregroundColor(Color(hex: "DBDABD"))
-                .font(.callout)
+                .foregroundColor(Color.secondary200)
+                .font(.subheadline)
             
             Spacer()
         }

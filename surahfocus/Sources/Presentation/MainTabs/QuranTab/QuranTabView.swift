@@ -6,15 +6,11 @@ struct QuranTabView: View {
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Main Content
             VStack {
@@ -22,7 +18,7 @@ struct QuranTabView: View {
                     .font(.system(.title, design: .serif))
                     .italic()
                     .foregroundColor(.white)
-                    .padding(.top, 54)
+                    .padding(.top, 124)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                 
@@ -39,19 +35,23 @@ struct QuranTabView: View {
                         .font(.system(.footnote))
                         .foregroundStyle(Color(hex: "DBDABD"))
                 }
-                .padding(.top, 24)
                 
                 Button {
                     router.navigate(to: .focusSection)
                 } label: {
                     Text("Start Focus Session")
-                        .padding()
-                        .background(Color(hex: "1A494D"))
-                        .foregroundColor(Color(hex: "DBDABD"))
-                        .font(.system(.body, weight: .regular))
+                        .padding(.vertical)
+                        .padding(.horizontal, 48)
+                        .background(Color.white)
+                        .foregroundColor(Color.primary600)
+                        .font(.system(.body, weight: .semibold))
                         .clipShape(Capsule())
                 }
-                .padding(.top, 48)
+                .padding(.top, 32)
+                .shadow(
+                    color: Color.primary400,
+                    radius: 12
+                )
                 
                 Spacer()
             }

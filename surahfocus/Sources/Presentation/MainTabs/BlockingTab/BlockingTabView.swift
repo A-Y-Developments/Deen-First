@@ -8,22 +8,19 @@ struct BlockingTabView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
-
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+            
+            // Main Content
             ScrollView {
                 VStack {
                     HStack {
                         Text("Blocks")
-                            .font(.system(.title, design: .serif))
-                            .fontWeight(.semibold)
+                            .font(.system(.title))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
 
                         Spacer()
@@ -47,20 +44,55 @@ struct BlockingTabView: View {
                     .padding(.top, 16)
                     .padding(.bottom, 24)
 
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .frame(height: 200)
-                    } else if !viewModel.hasApps {
-                        emptyStateView
-                    } else {
-                        blockedAppsContent
-                    }
 
+            //         if viewModel.isLoading {
+            //             ProgressView()
+            //                 .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
+            //                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            //                 .frame(height: 200)
+            //         } else if !viewModel.hasApps {
+            //             emptyStateView
+            //         } else {
+            //             blockedAppsContent
+            //         }
+
+            //         Spacer()
+            //     }
+            // }
+
+                    
+                    // if blocks empty
+                    //                    Spacer()
+                    //                    EmptyBlocksView(showCreateSheet: $showCreateSheet)
+                    
+                    // if blocks exist
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("App Limit")
+                            .font(.callout)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "ADA666"))
+                        BlockAppLimitCard()
+                        BlockAppLimitCard()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Time Limit")
+                            .font(.system(.callout))
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "ADA666"))
+                        BlockTimeLimitCard()
+                        BlockTimeLimitCard()
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 20)
+                    
                     Spacer()
                 }
             }
+            .padding(.top, 52)
+
         }
         .sheet(isPresented: $showCreateSheet) {
             CreateBlockSheet()

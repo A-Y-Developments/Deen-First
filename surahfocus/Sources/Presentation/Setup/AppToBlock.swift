@@ -9,24 +9,19 @@ import SwiftUI
 
 struct AppToBlock: View {
     
-    @State private var currentStep: Int = 0
+    @State private var currentStep: Int = 2
     
     private let totalSteps = 3
     
     var body: some View {
         ZStack {
+            // Background
+            Image("main-background")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
             
-            // MARK: - Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
-            
+            // Main Content
             VStack(spacing: 0) {
 
                 // MARK: - Header
@@ -43,6 +38,14 @@ struct AppToBlock: View {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 18, weight: .medium))
                                     .foregroundColor(.white)
+                            }
+                        } else {
+                            // prevent glitch
+                            Button {
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundColor(.white.opacity(0))
                             }
                         }
                         
@@ -69,8 +72,8 @@ struct AppToBlock: View {
                                 .animation(.easeInOut(duration: 0.25), value: currentStep)
                         }
                     }
+                    .padding(.top, 8)
                 }
-                .padding(.horizontal, 24)
                 .padding(.top, 16)
                 .padding(.bottom, 36)
                 
@@ -105,19 +108,22 @@ struct AppToBlock: View {
                         HStack(spacing: 8) {
                             Text("Next")
                                 .fontWeight(.semibold)
-                            
-                            Image(systemName: "chevron.right")
+                            Image(systemName: "arrow.right")
                         }
-                        .foregroundColor(Color(hex: "031315"))
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 20)
-                        .background(Color.white)
+//                        .foregroundColor(.white)
+                        .foregroundColor(.black)
+                        .padding(.vertical)
+                        .padding(.horizontal, 28)
+//                        .background(Color.primary900)
+                        .background(.white)
                         .clipShape(Capsule())
                     }
                 }
-                .padding(.horizontal, 24)
                 .padding(.bottom, 32)
             }
+            .padding(.top, 40)
+            .padding(.bottom, 28)
+            .padding(.horizontal, 24)
         }
     }
 }

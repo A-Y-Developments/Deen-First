@@ -31,16 +31,16 @@ struct QuranReadingView: View {
                             ForEach(surahs, id: \.self) { surah in
                                 VStack(spacing: 6) {
                                     Text(surah)
-                                        .font(.system(.callout, design: .serif))
+                                        .font(.system(.callout))
                                         .foregroundColor(
                                             selectedSurah == surah
-                                            ? Color(hex: "ADA666")
+                                            ? Color.secondary400
                                             : .white.opacity(0.6)
                                         )
                                         .padding(.bottom, 8)
                                     
                                     Rectangle()
-                                        .fill(Color(hex: "ADA666"))
+                                        .fill(Color.secondary400)
                                         .frame(height: 2)
                                         .opacity(selectedSurah == surah ? 1 : 0)
                                 }
@@ -66,7 +66,7 @@ struct QuranReadingView: View {
                 // MARK: Surah Info Header
                 HStack {
                     Text("1. \(selectedSurah)")
-                        .font(.system(.callout, design: .serif))
+                        .font(.system(.callout))
                         .foregroundColor(.black)
                     
                     Spacer()
@@ -76,7 +76,7 @@ struct QuranReadingView: View {
                         .foregroundColor(.black.opacity(0.8))
                 }
                 .padding()
-                .background(Color(hex: "ADA666"))
+                .background(Color.secondary400)
                 
                 
                 // MARK: Ayah Content
@@ -96,7 +96,7 @@ struct QuranReadingView: View {
 
                                 
                                 Text("بِسْمِ ٱللَّٰهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ")
-                                    .font(.system(size: 24, design: .serif))
+                                    .font(.system(size: 24))
                                     .multilineTextAlignment(.trailing)
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                                     .foregroundColor(.white)

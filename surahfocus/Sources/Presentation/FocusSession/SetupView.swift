@@ -11,86 +11,86 @@ struct SetupView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            Image("secondary-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Main Content
             VStack(alignment: .leading, spacing: 24) {
                 
                 Text("Focus Session")
-                    .font(.system(.title3))
-                    .fontWeight(.medium)
+                    .font(.system(.headline))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
                     .padding(.top)
                 
                 // MARK: Blocked App
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading) {
                     Text("Blocked App")
-                        .font(.callout)
-                        .foregroundColor(Color(hex: "ADA666"))
+                        .font(.system(.callout, weight: .medium))
+                        .foregroundColor(Color.secondary400)
                     
                     HStack {
                         Text("Select App to Block")
-                            .foregroundColor(Color(hex: "8E8E93"))
+                            .foregroundColor(.white)
                         
                         Spacer()
                         
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(.white)
                     }
                     .padding()
-                    .background(Color(hex: "062023"))
+                    .background(Color.primary500.opacity(0.3))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 
                 // MARK: Surah to Listen
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading) {
                     Text("Surah to Listen")
-                        .font(.callout)
-                        .foregroundColor(Color(hex: "ADA666"))
+                        .font(.system(.callout, weight: .medium))
+                        .foregroundColor(Color.secondary400)
                     
                     SurahToListen()
                     
                     HStack {
                         Spacer()
                         Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(.white)
                         Text("Add Surah")
-                            .foregroundColor(Color(hex: "8E8E93"))
+                            .foregroundColor(.white)
                         Spacer()
                     }
                     .padding()
-                    .background(Color(hex: "062023"))
+                    .background(Color.primary500.opacity(0.3))
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
+                .padding(.top)
                 
                 Spacer()
+                
+                // MARK: Start Session Button
+                Button {
+                    print("Start Session tapped")
+                } label: {
+                    Text("Start Session")
+                        .font(.headline)
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.white)
+                        .clipShape(Capsule())
+                }
+                .padding(.top, 8)
+                // glow effect
+                .shadow(
+                    color: Color.primary400,
+                    radius: 12
+                )
             }
-            .padding(24)
-        }
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                print("Start Session tapped")
-            } label: {
-                Text("Start Session")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(hex: "ADA666"))
-                    .clipShape(Capsule())
-                    .padding(.horizontal, 24)
-                    .padding(.top, 8)
-            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 40)
         }
     }
 }

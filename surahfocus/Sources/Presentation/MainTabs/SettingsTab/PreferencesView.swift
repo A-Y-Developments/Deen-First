@@ -11,15 +11,10 @@ struct PreferencesView: View {
     var body: some View {
         ZStack {
             // Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
             
             // Main Content
             VStack(alignment: .leading, spacing: 24) {
@@ -48,7 +43,7 @@ struct PreferencesView: View {
                             .foregroundColor(.white.opacity(0.6))
                     }
                     .padding()
-                    .background(Color(hex: "062023"))
+                    .background(Color.primary700)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 
@@ -68,13 +63,14 @@ struct PreferencesView: View {
                             .foregroundColor(.white.opacity(0.6))
                     }
                     .padding()
-                    .background(Color(hex: "062023"))
+                    .background(Color.primary700)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 
                 Spacer()
             }
-            .padding(24)
+            .padding(.horizontal, 24)
+            .padding(.top, 48)
         }
     }
 }

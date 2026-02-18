@@ -22,7 +22,7 @@ struct SettingsRow: View {
                 .foregroundColor(.white.opacity(0.6))
         }
         .padding()
-        .background(Color(hex: "#062023"))
+        .background(Color.primary700)
         .cornerRadius(14)
     }
 }
