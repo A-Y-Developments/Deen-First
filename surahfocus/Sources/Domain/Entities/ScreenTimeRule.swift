@@ -166,15 +166,16 @@ extension ScreenTimeRule {
     /// Get display name for limit (for timeLimit type)
     var limitDisplayName: String? {
         guard let limitSeconds = limitSeconds else { return nil }
-        if limitSeconds < 60 {
-            return "\(limitSeconds / 60) min/day"
-        }
         let hours = limitSeconds / 3600
         let mins = (limitSeconds % 3600) / 60
-        if mins == 0 {
-            return "\(hours) hour\(hours > 1 ? "s" : "")/day"
+
+        if hours > 0 && mins > 0 {
+            return "\(hours)h \(mins)m/day"
+        } else if hours > 0 {
+            return "\(hours)h/day"
+        } else {
+            return "\(mins)m/day"
         }
-        return "\(hours)h \(mins)m/day"
     }
 
     /// Get display time range (for timeOfDay type)
@@ -202,13 +203,26 @@ extension ScreenTimeRule {
     /// Get days display text
     var daysDisplayText: String {
         guard let daysActive = daysActive, !daysActive.isEmpty else {
-            return "Every day"
+            return "Everyday"
+        }
+
+        let allDays: Set<String> = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let weekdays: Set<String> = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+        let weekend: Set<String> = ["Saturday", "Sunday"]
+
+        if daysActive == allDays {
+            return "Everyday"
+        }
+        if daysActive == weekdays {
+            return "Weekdays"
+        }
+        if daysActive == weekend {
+            return "Weekends"
         }
 
         let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         let fullDayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-        // Map full day names to abbreviations
         let sortedDays = daysActive.sorted().compactMap { fullDay -> String? in
             guard let index = fullDayNames.firstIndex(of: fullDay) else { return nil }
             return dayNames[index]

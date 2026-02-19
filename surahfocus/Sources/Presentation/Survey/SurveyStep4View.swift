@@ -15,13 +15,41 @@ struct SurveyStep4View: View {
         ("veryMuch", "1-2 hours"),
         ("prettyMuch", "2-4 hours"),
         ("little", "4-6 hours"),
-        ("notAtAll", "6-8 hours")
+        ("notAtAll", "6-8 hours"),
+        ("moreThan8", "> 8 hours")
     ]
+
+    private var questionText: String {
+        let selectedApps = viewModel.answers.apps.map { getAppName($0) }
+
+        if selectedApps.isEmpty {
+            return "How long do you use these apps?"
+        } else if selectedApps.count == 1 {
+            return "How long do you use \(selectedApps[0])?"
+        } else if selectedApps.count == 2 {
+            return "How long do you use \(selectedApps[0]) and \(selectedApps[1])?"
+        } else {
+            let allButLast = selectedApps.dropLast().joined(separator: ", ")
+            let last = selectedApps.last!
+            return "How long do you use \(allButLast), and \(last)?"
+        }
+    }
+
+    private func getAppName(_ value: String) -> String {
+        let appNames: [String: String] = [
+            "socialMedia": "social media",
+            "videoStreaming": "video/streaming",
+            "games": "games",
+            "messaging": "messaging",
+            "news": "news"
+        ]
+        return appNames[value] ?? value
+    }
 
     var body: some View {
         VStack(alignment: .leading) {
             // MARK: - Title
-            Text("How long do you use social media app?")
+            Text(questionText)
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
@@ -54,7 +82,7 @@ struct SurveyStep4View: View {
     // MARK: - Option View
     private func surveyOption(value: String, title: String) -> some View {
 
-        let isSelected = viewModel.answers.lifeImpact == value
+        let isSelected = viewModel.answers.dailyHoursUsage == value
 
         return HStack {
             Text(title)
@@ -81,7 +109,7 @@ struct SurveyStep4View: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.answers.lifeImpact = value
+                viewModel.answers.dailyHoursUsage = value
             }
         }
     }

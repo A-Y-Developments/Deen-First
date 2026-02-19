@@ -8,16 +8,9 @@
 import SwiftUI
 
 struct EndView: View {
-    
+
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            VStack(spacing: 24) {
+        VStack(spacing: 24) {
                 
                 Spacer()
                 
@@ -58,8 +51,14 @@ struct EndView: View {
                     color: Color.primary400,
                     radius: 12
                 )
-            }
-            .padding(24)
+        }
+        .padding(24)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

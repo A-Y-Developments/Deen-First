@@ -5,15 +5,7 @@ struct SettingsTabView: View {
     @State private var showDeleteConfirmation = false
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack(spacing: 32) {
+        VStack(spacing: 32) {
                 // MARK: - Profile Section
                 VStack(spacing: 12) {
                     // Avatar
@@ -76,9 +68,15 @@ struct SettingsTabView: View {
                 .padding(.top, 16)
 
                 Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 48)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 48)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {

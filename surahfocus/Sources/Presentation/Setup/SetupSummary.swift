@@ -13,32 +13,8 @@ struct SetupSummary: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            
-            // Main Content
-            VStack(spacing: 0) {
-
-                // Header
-                VStack(spacing: 16) {
-                    // Navigation
-                    HStack {
-                        Button {
-                            router.navigateBack()
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.white)
-                        }
-                        Spacer()
-                    }
-                }
-                .padding(.top, 16)
-                .padding(.bottom, 36)
+        // Main Content
+        VStack(spacing: 0) {
 
                 VStack(spacing: 16) {
                     Text("Here's a great blocking setup for you to start")
@@ -53,6 +29,7 @@ struct SetupSummary: View {
                 }
                 .padding(.top, 24)
 
+                // ScrollView for card list only
                 ScrollView {
                     VStack(spacing: 0) {
                         // App Limit Section
@@ -65,11 +42,11 @@ struct SetupSummary: View {
                                     .padding(.horizontal, 24)
 
                                 if let rule = viewModel.previewAppLimitRule {
-                                    BlockAppLimitCard(
+                                    BlockRuleCard(
                                         settingsName: rule.name,
-                                        appName: selectionText(for: rule),
                                         appsCount: rule.applicationTokenData.count,
-                                        timeLimit: rule.limitDisplayName ?? "N/A",
+                                        categoriesCount: rule.categoryTokenData.count,
+                                        timeInfo: rule.limitDisplayName ?? "N/A",
                                         daysText: rule.daysDisplayText
                                     )
                                     .padding(.horizontal, 24)
@@ -88,13 +65,12 @@ struct SetupSummary: View {
                                     .padding(.horizontal, 24)
 
                                 ForEach(viewModel.previewTimeOfDayRules) { rule in
-                                    BlockTimeLimitCard(
+                                    BlockRuleCard(
                                         settingsName: rule.name,
-                                        appName: selectionText(for: rule),
                                         appsCount: rule.applicationTokenData.count,
-                                        timeRange: rule.timeRangeDisplay ?? "N/A",
-                                        daysText: rule.daysDisplayText,
-                                        prayersText: ""
+                                        categoriesCount: rule.categoryTokenData.count,
+                                        timeInfo: rule.timeRangeDisplay ?? "N/A",
+                                        daysText: rule.daysDisplayText
                                     )
                                     .padding(.horizontal, 24)
                                 }
@@ -109,7 +85,7 @@ struct SetupSummary: View {
                 Button {
                     Task {
                         await viewModel.saveSetup()
-                        router.replaceWith(.mainTabs)
+                        router.navigate(to: .mainTabs)
                     }
                 } label: {
                     HStack {
@@ -129,11 +105,14 @@ struct SetupSummary: View {
                     .clipShape(Capsule())
                 }
                 .disabled(viewModel.isLoading || !viewModel.hasAnyRules)
-                .padding(.bottom)
-            }
-            .padding(.top, 40)
-            .padding(.bottom, 28)
-            .padding(.horizontal, 24)
+                .padding(.bottom, 48)
+        }
+        .padding(.horizontal, 24)
+        .background {
+            Image("main-background")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
         }
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK", role: .cancel) {
@@ -141,22 +120,6 @@ struct SetupSummary: View {
             }
         } message: {
             Text(viewModel.errorMessage ?? "An error occurred")
-        }
-    }
-
-    private func selectionText(for rule: ScreenTimeRule) -> String {
-        let selection = rule.getFamilyActivitySelection()
-        let apps = selection.applicationTokens.count
-        let categories = selection.categoryTokens.count
-
-        if apps == 0 && categories == 0 {
-            return "No selection"
-        } else if apps > 0 && categories > 0 {
-            return "\(apps) app\(apps == 1 ? "" : "s"), \(categories) categor\(categories == 1 ? "y" : "ies")"
-        } else if apps > 0 {
-            return "\(apps) app\(apps == 1 ? "" : "s")"
-        } else {
-            return "\(categories) categor\(categories == 1 ? "y" : "ies")"
         }
     }
 }

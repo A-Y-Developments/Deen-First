@@ -18,7 +18,7 @@ let project = Project(
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": "1.0.0",
-                "CFBundleDisplayName": "Surah Focus",
+                "CFBundleDisplayName": "Deen First",
                 "CFBundleVersion": "1",
                 "UISupportedInterfaceOrientations": [
                     "UIInterfaceOrientationPortrait"
@@ -26,7 +26,7 @@ let project = Project(
                 "ITSAppUsesNonExemptEncryption": false,
                 "UILaunchScreen": [:],
                 "NSFamilyControlsUsageDescription":
-                    "Surah Focus needs permission to block distracting apps during your Quran focus sessions.",
+                    "Deen First needs permission to block distracting apps during your Quran focus sessions.",
                 "UIBackgroundModes": ["audio"],
             ]),
             sources: ["surahfocus/Sources/**"],
@@ -56,10 +56,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution")
                         ]
                     ),
                 ]
@@ -74,6 +75,7 @@ let project = Project(
             bundleId: "\(baseBundleId).ScreenTimeMonitor",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "ScreenTimeMonitor",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.deviceactivity.monitor-extension",
                     "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",
@@ -88,9 +90,6 @@ let project = Project(
             ],
             settings: .settings(
                 base: [
-                    "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                    "CODE_SIGN_STYLE": .string("Automatic"),
-                    "DEVELOPMENT_TEAM": .string(teamId),
                     "PRODUCT_MODULE_NAME": .string("ScreenTimeMonitor")
                 ],
                 configurations: [
@@ -106,10 +105,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus ScreenTimeMonitor Distribution")
                         ]
                     ),
                 ]
@@ -124,6 +124,7 @@ let project = Project(
             bundleId: "\(baseBundleId).Shield",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "Shield",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.ManagedSettingsUI.shield-configuration-service",
                     "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShieldConfigurationExtension",
@@ -134,13 +135,9 @@ let project = Project(
             dependencies: [
                 .sdk(name: "ManagedSettings", type: .framework),
                 .sdk(name: "ManagedSettingsUI", type: .framework),
-                .sdk(name: "FamilyControls", type: .framework)
             ],
             settings: .settings(
                 base: [
-                    "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                    "CODE_SIGN_STYLE": .string("Automatic"),
-                    "DEVELOPMENT_TEAM": .string(teamId),
                     "PRODUCT_MODULE_NAME": .string("Shield")
                 ],
                 configurations: [
@@ -156,10 +153,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Shield Distribution")
                         ]
                     ),
                 ]

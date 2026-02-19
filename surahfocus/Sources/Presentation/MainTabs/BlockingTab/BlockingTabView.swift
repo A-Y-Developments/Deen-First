@@ -7,15 +7,7 @@ struct BlockingTabView: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            ScrollView {
+        ScrollView {
                 VStack {
                     HStack {
                         Text("Blocks")
@@ -45,54 +37,26 @@ struct BlockingTabView: View {
                     .padding(.bottom, 24)
 
 
-            //         if viewModel.isLoading {
-            //             ProgressView()
-            //                 .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
-            //                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            //                 .frame(height: 200)
-            //         } else if !viewModel.hasApps {
-            //             emptyStateView
-            //         } else {
-            //             blockedAppsContent
-            //         }
-
-            //         Spacer()
-            //     }
-            // }
-
-                    
-                    // if blocks empty
-                    //                    Spacer()
-                    //                    EmptyBlocksView(showCreateSheet: $showCreateSheet)
-                    
-                    // if blocks exist
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("App Limit")
-                            .font(.callout)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: "ADA666"))
-                        BlockAppLimitCard()
-                        BlockAppLimitCard()
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(height: 200)
+                    } else if !viewModel.hasApps {
+                        EmptyBlocksView(showCreateSheet: $showCreateSheet)
+                    } else {
+                        blockedAppsContent
                     }
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Time Limit")
-                            .font(.system(.callout))
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: "ADA666"))
-                        BlockTimeLimitCard()
-                        BlockTimeLimitCard()
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    
+
                     Spacer()
                 }
             }
-            .padding(.top, 52)
-
+            .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
         .sheet(isPresented: $showCreateSheet) {
             CreateBlockSheet()
@@ -121,6 +85,7 @@ struct BlockingTabView: View {
                 await viewModel.loadBlockedApps()
             }
         }
+
     }
 
     private var emptyStateView: some View {
@@ -157,56 +122,35 @@ struct BlockingTabView: View {
     }
 
     private var blockedAppsContent: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            if !viewModel.appLimits.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("App Limit")
-                        .font(.system(.callout))
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "ADA666"))
-
-                    ForEach(viewModel.appLimits) { limit in
-                        Button {
-                            router.navigate(to: .editAppLimit(id: limit.id))
-                        } label: {
-                            BlockAppLimitCard(
-                                settingsName: limit.name,
-                                appName: selectionText(for: limit),
-                                appsCount: limit.applicationTokenData.count,
-                                timeLimit: limit.limitDisplayName ?? "N/A",
-                                daysText: limit.daysDisplayText
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(viewModel.appLimits) { limit in
+                Button {
+                    router.navigate(to: .editAppLimit(id: limit.id))
+                } label: {
+                    BlockRuleCard(
+                        settingsName: limit.name,
+                        appsCount: limit.applicationTokenData.count,
+                        categoriesCount: limit.categoryTokenData.count,
+                        timeInfo: limit.limitDisplayName ?? "N/A",
+                        daysText: limit.daysDisplayText
+                    )
                 }
-                .padding(.horizontal)
+                .buttonStyle(PlainButtonStyle())
             }
 
-            if !viewModel.timeOfDayLimits.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Time of Day")
-                        .font(.system(.callout, design: .serif))
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "ADA666"))
-
-                    ForEach(viewModel.timeOfDayLimits) { limit in
-                        Button {
-                            router.navigate(to: .editTimeLimit(id: limit.id))
-                        } label: {
-                            BlockTimeLimitCard(
-                                settingsName: limit.name,
-                                appName: selectionText(for: limit),
-                                appsCount: limit.applicationTokenData.count,
-                                timeRange: limit.timeRangeDisplay ?? "N/A",
-                                daysText: limit.daysDisplayText,
-                                prayersText: "None"
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
+            ForEach(viewModel.timeOfDayLimits) { limit in
+                Button {
+                    router.navigate(to: .editTimeLimit(id: limit.id))
+                } label: {
+                    BlockRuleCard(
+                        settingsName: limit.name,
+                        appsCount: limit.applicationTokenData.count,
+                        categoriesCount: limit.categoryTokenData.count,
+                        timeInfo: limit.timeRangeDisplay ?? "N/A",
+                        daysText: limit.daysDisplayText
+                    )
                 }
-                .padding(.horizontal)
+                .buttonStyle(PlainButtonStyle())
             }
 
             if !viewModel.allDayLimits.isEmpty {
@@ -220,11 +164,11 @@ struct BlockingTabView: View {
                         Button {
                             router.navigate(to: .editAllDay(id: limit.id))
                         } label: {
-                            BlockAppLimitCard(
+                            BlockRuleCard(
                                 settingsName: limit.name,
-                                appName: selectionText(for: limit),
                                 appsCount: limit.applicationTokenData.count,
-                                timeLimit: "All Day",
+                                categoriesCount: limit.categoryTokenData.count,
+                                timeInfo: "All Day",
                                 daysText: limit.daysDisplayText
                             )
                         }
@@ -234,22 +178,7 @@ struct BlockingTabView: View {
                 .padding(.horizontal)
             }
         }
+        .padding(.horizontal)
         .padding(.top)
-    }
-
-    private func selectionText(for rule: ScreenTimeRule) -> String {
-        let selection = rule.getFamilyActivitySelection()
-        let apps = selection.applicationTokens.count
-        let categories = selection.categoryTokens.count
-
-        if apps == 0 && categories == 0 {
-            return "No selection"
-        } else if apps > 0 && categories > 0 {
-            return "\(apps) app\(apps == 1 ? "" : "s"), \(categories) categor\(categories == 1 ? "y" : "ies")"
-        } else if apps > 0 {
-            return "\(apps) app\(apps == 1 ? "" : "s")"
-        } else {
-            return "\(categories) categor\(categories == 1 ? "y" : "ies")"
-        }
     }
 }

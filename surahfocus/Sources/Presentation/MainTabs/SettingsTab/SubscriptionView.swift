@@ -9,15 +9,7 @@ import SwiftUI
 
 struct SubscriptionView: View {
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack(spacing: 28) {
+        VStack(spacing: 28) {
                 Text("Subscription")
                     .font(.system(.title3))
                     .fontWeight(.semibold)
@@ -85,9 +77,15 @@ struct SubscriptionView: View {
                 .padding(.top, 24)
                 
                 Spacer()
-            }
-            .padding(.vertical, 48)
-            .padding(.horizontal, 24)
+        }
+        .padding(.vertical, 48)
+        .padding(.horizontal, 24)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

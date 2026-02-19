@@ -11,14 +11,7 @@ struct FinalSummaryView: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading) {
                 Spacer()
                 // Impact text
                 Text("IMPACT")
@@ -32,6 +25,8 @@ struct FinalSummaryView: View {
                     .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
                     .padding(.top, 4)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // Image Container
                 ZStack {
@@ -68,12 +63,16 @@ struct FinalSummaryView: View {
                 .font(.callout)
                 .multilineTextAlignment(.leading)
                 .padding(.top, 2)
+                .lineLimit(nil)
+                .fixedSize(horizontal: false, vertical: true)
                 
                 Text("Now, it’s your turn.")
                     .font(.callout)
                     .foregroundColor(Color.secondary300)
                     .multilineTextAlignment(.leading)
                     .padding(.top, 16)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
@@ -89,10 +88,17 @@ struct FinalSummaryView: View {
                         .background(.white)
                         .clipShape(Capsule())
                 }
-            }
-            .padding(.top)
-            .padding(.bottom, 48)
-            .padding(.horizontal,20)
+                .padding(.bottom, 16)
+        }
+        .padding(.top)
+        .padding(.bottom, 48)
+        .padding(.horizontal,20)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 
@@ -100,7 +106,7 @@ struct FinalSummaryView: View {
         guard let user = try? await DIContainer.shared.userRepository.getCurrentUser() else { return }
         user.hasCompletedOnboarding = true
         try? await DIContainer.shared.userRepository.updateUser(user)
-        router.replaceWith(.paywall)
+        router.navigate(to: .paywall)
     }
 }
 

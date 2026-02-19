@@ -43,7 +43,7 @@
                 
                 
 //                 // MARK: - Small Title
-//                 Text("How does Surah Focus work?")
+//                 Text("How does Deen First work?")
 //                     .font(.callout)
 //                     .foregroundColor(Color(hex: "#DBDABD"))
                 

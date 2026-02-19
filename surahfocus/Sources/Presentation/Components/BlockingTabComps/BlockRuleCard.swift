@@ -1,40 +1,55 @@
 import SwiftUI
 
-struct BlockAppLimitCard: View {
+struct BlockRuleCard: View {
     let settingsName: String
-    let appName: String
     let appsCount: Int
-    let timeLimit: String
+    let categoriesCount: Int
+    let timeInfo: String
     let daysText: String
 
     init(
         settingsName: String = "",
-        appName: String = "Music",
         appsCount: Int = 2,
-        timeLimit: String = "30 mins/day",
+        categoriesCount: Int = 0,
+        timeInfo: String = "30 mins/day",
         daysText: String = "Every day"
     ) {
         self.settingsName = settingsName
-        self.appName = appName
         self.appsCount = appsCount
-        self.timeLimit = timeLimit
+        self.categoriesCount = categoriesCount
+        self.timeInfo = timeInfo
         self.daysText = daysText
+    }
+
+    private var selectionText: String {
+        var parts: [String] = []
+        if categoriesCount > 0 {
+            parts.append("\(categoriesCount) categor\(categoriesCount == 1 ? "y" : "ies")")
+        }
+        if appsCount > 0 {
+            parts.append("\(appsCount) app\(appsCount == 1 ? "" : "s")")
+        }
+        return parts.isEmpty ? "Nothing selected" : parts.joined(separator: " and ") + " selected"
+    }
+
+    private var displayName: String {
+        settingsName.isEmpty ? "Block" : settingsName
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text(settingsName.isEmpty ? appName : settingsName)
+                Text(displayName)
                     .foregroundColor(.white)
                     .fontWeight(.semibold)
                     .font(.system(.callout))
-                
+
                 Spacer()
-                
+
                 Image(systemName: "pencil")
                     .foregroundColor(.white.opacity(0.7))
             }
-            Text("\(appsCount) app\(appsCount == 1 ? "" : "s") selected" + " • \(timeLimit) • \(daysText)")
+            Text(selectionText + " • \(timeInfo) • \(daysText)")
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.7))
         }

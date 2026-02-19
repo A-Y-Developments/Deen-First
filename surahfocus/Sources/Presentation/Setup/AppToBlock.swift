@@ -17,15 +17,7 @@ struct AppToBlock: View {
     private let totalSteps = 3
     
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            
-            // Main Content
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
 
                 // MARK: - Header
                 VStack(spacing: 16) {
@@ -79,15 +71,24 @@ struct AppToBlock: View {
                 
                 // MARK: - Content (Dummy Views)
                 TabView(selection: $currentStep) {
-                    
+
                     AppToBlockStep1View()
                         .tag(0)
-                    
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
+
                     AppToBlockStep2View()
                         .tag(1)
-                    
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
+
                     AppToBlockStep3View()
                         .tag(2)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -119,16 +120,23 @@ struct AppToBlock: View {
                     .disabled(shouldDisableNextButton())
                 }
                 .padding(.bottom, 32)
-            }
-            .padding(.top, 40)
-            .padding(.bottom, 28)
-            .padding(.horizontal, 24)
+        }
+        .padding(.top, 40)
+        .padding(.horizontal, 24)
+        .ignoresSafeArea(.all, edges: .top)
+        .background {
+            // Background
+            Image("main-background")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
         }
         .alert("Required", isPresented: $showValidationError) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Please select at least one app or category to continue.")
         }
+        .navigationBarBackButtonHidden(true)
     }
 
     private func shouldDisableNextButton() -> Bool {

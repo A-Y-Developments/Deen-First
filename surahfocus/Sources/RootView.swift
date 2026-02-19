@@ -163,6 +163,7 @@ struct RootView: View {
             switch step {
             case 1: HowAppWork1View()
             case 2: HowAppWork2View()
+            case 3: HowAppWork3View()
             default: EmptyView()
             }
         case .finalSummary:

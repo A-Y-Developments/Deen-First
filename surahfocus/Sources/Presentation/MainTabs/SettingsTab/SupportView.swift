@@ -9,15 +9,7 @@ import SwiftUI
 
 struct SupportView: View {
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 24) {
                 Text("Help & Support")
                     .font(.system(.title3))
                     .fontWeight(.medium)
@@ -66,9 +58,15 @@ struct SupportView: View {
                 }
                 .padding(.top, 32)
                 Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 48)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 48)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

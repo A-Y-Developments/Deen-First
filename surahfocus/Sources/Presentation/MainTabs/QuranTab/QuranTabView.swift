@@ -5,15 +5,7 @@ struct QuranTabView: View {
     @EnvironmentObject var viewModel: QuranTabViewModel
     
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack {
+        VStack {
                 Text("As-salamu alaykum, Jane!")
                     .font(.system(.title, design: .serif))
                     .italic()
@@ -54,8 +46,15 @@ struct QuranTabView: View {
                 )
                 
                 Spacer()
-            }
-            .navigationTitle("Quran")
+        }
+        .ignoresSafeArea(.all, edges: .top)
+        .navigationBarHidden(true)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
         .task {
             if viewModel.surahs.isEmpty {

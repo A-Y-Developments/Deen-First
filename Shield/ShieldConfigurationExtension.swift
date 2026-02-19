@@ -15,7 +15,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             icon: UIImage(systemName: "moon.stars.fill"),
             title: ShieldConfiguration.Label(
-                text: "Surah Focus",
+                text: "Deen First",
                 color: .label
             ),
             subtitle: ShieldConfiguration.Label(
@@ -37,7 +37,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             icon: UIImage(systemName: "moon.stars.fill"),
             title: ShieldConfiguration.Label(
-                text: "Surah Focus",
+                text: "Deen First",
                 color: .label
             ),
             subtitle: ShieldConfiguration.Label(
@@ -59,7 +59,7 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         return ShieldConfiguration(
             icon: UIImage(systemName: "moon.stars.fill"),
             title: ShieldConfiguration.Label(
-                text: "Surah Focus",
+                text: "Deen First",
                 color: .label
             ),
             subtitle: ShieldConfiguration.Label(

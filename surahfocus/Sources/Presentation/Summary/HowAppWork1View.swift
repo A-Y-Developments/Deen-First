@@ -12,14 +12,7 @@ struct HowAppWork1View: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 20) {
 
                 Spacer()
 
@@ -34,6 +27,8 @@ struct HowAppWork1View: View {
                     .bold()
                     .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // Image Container
                 ZStack {
@@ -56,6 +51,7 @@ struct HowAppWork1View: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 10)
+                    .lineLimit(nil)
 
                 Spacer()
 
@@ -78,11 +74,17 @@ struct HowAppWork1View: View {
                         .background(Color.white)
                         .clipShape(Capsule())
                     }
+                    .padding(.bottom, 16)
                 }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top)
-            .padding(.bottom, 48)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top)
+        .padding(.bottom, 48)
+        .background {
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

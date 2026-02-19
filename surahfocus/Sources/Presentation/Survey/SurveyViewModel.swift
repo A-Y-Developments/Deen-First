@@ -2,7 +2,7 @@ import SwiftUI
 
 @MainActor
 final class SurveyViewModel: ObservableObject {
-    @Published var currentStep: Int = 4
+    @Published var currentStep: Int = 1
     @Published var answers: SurveyAnswers = SurveyAnswers()
 
     var canGoNext: Bool {
@@ -10,7 +10,7 @@ final class SurveyViewModel: ObservableObject {
         case 1: return answers.phoneFrequency != nil
         case 2: return !answers.feelings.isEmpty
         case 3: return !answers.apps.isEmpty
-        case 4: return answers.lifeImpact != nil
+        case 4: return answers.dailyHoursUsage != nil
         default: return false
         }
     }

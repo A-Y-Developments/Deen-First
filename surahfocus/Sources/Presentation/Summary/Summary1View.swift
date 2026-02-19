@@ -13,18 +13,11 @@ struct Summary1View: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+        VStack(alignment: .leading) {
 
-            VStack(alignment: .leading) {
+            Spacer()
 
-                Spacer()
-
-                VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 16) {
                     // MARK: - Header
                     Text("MashaAllah...")
                         .font(.title)
@@ -33,7 +26,7 @@ struct Summary1View: View {
 
                     // MARK: - Time Highlight (DYNAMIC)
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(viewModel.calculatedHours)
+                        Text(viewModel.selectedRangeLabel)
                             .font(.system(size: 60, weight: .bold))
                             .foregroundStyle(.white)
 
@@ -42,10 +35,9 @@ struct Summary1View: View {
                             .foregroundStyle(.white)
                             .italic()
                     }
-                    .padding(.leading, 8)
 
                     // MARK: - Subtitle
-                    Text("on social media?")
+                    Text("on \(viewModel.selectedAppsDisplay)?")
                         .font(.title2)
                         .fontWeight(.medium)
                         .italic()
@@ -70,12 +62,12 @@ struct Summary1View: View {
                             .frame(width: 28, height: 28)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Read 2 Juz")
+                            Text("Read \(viewModel.juzAchievement) Juz")
                                 .font(.callout)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color.gray4)
 
-                            Text("Finished ~40 pages of Quran")
+                            Text(viewModel.pagesDescription)
                                 .font(.caption2)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
@@ -94,7 +86,7 @@ struct Summary1View: View {
                             .frame(width: 28, height: 28)
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Memorized a Surah")
+                            Text(viewModel.surahAchievement)
                                 .font(.callout)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color.gray4)
@@ -123,7 +115,7 @@ struct Summary1View: View {
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color.gray4)
 
-                            Text("Had real conversation with family")
+                            Text("Spend time with your Creator")
                                 .font(.caption2)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
@@ -146,30 +138,32 @@ struct Summary1View: View {
 
                 Spacer()
 
-                HStack {
-                    Spacer()
-                    
-                    Button(action: {
-                        print("tapped")
-                    }) {
-                        HStack(spacing: 8) {
-                            Text("Next")
-                                .fontWeight(.semibold)
-                            Image(systemName: "arrow.right")
-                        }
-                        .foregroundColor(.black)
-                        .padding(.vertical)
-                        .padding(.horizontal, 28)
-                        .background(.white)
-                        .clipShape(Capsule())
+                Button(action: {
+                    router.navigate(to: .summary(step: 2, answers: viewModel.answers))
+                }) {
+                    HStack(spacing: 8) {
+                        Text("Next")
+                            .fontWeight(.semibold)
+                        Image(systemName: "arrow.right")
                     }
+                    .foregroundColor(.black)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 28)
+                    .background(.white)
+                    .clipShape(Capsule())
                 }
-                .padding(.bottom, 32)
+                .frame(maxWidth: .infinity, alignment: .trailing)
 
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical)
         }
+        .padding(.horizontal, 20)
+        .padding(.vertical)
+        .background {
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        }
+        .navigationBarBackButtonHidden(true)
     }
 }
 

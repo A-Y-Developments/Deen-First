@@ -13,14 +13,7 @@ struct SurveyView: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
 
                 // MARK: - Header
                 VStack(spacing: 16) {
@@ -41,7 +34,7 @@ struct SurveyView: View {
 
                         Spacer()
 
-                        Spacer() // Skip button removed
+                        Spacer()  // Skip button removed
                     }
 
                     // MARK: - Indicator (4 Steps)
@@ -50,8 +43,8 @@ struct SurveyView: View {
                             Rectangle()
                                 .fill(
                                     index < viewModel.currentStep
-                                    ? Color.white
-                                    : Color.white.opacity(0.2)
+                                        ? Color.white
+                                        : Color.white.opacity(0.2)
                                 )
                                 .frame(height: 4)
                                 .frame(maxWidth: .infinity)
@@ -64,21 +57,32 @@ struct SurveyView: View {
                 .padding(.top, 48)
                 .padding(.bottom, 36)
 
-
                 // MARK: - Content
                 TabView(selection: $viewModel.currentStep) {
 
                     SurveyStep1View(viewModel: viewModel)
                         .tag(1)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
 
                     SurveyStep2View(viewModel: viewModel)
                         .tag(2)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
 
                     SurveyStep3View(viewModel: viewModel)
                         .tag(3)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
 
                     SurveyStep4View(viewModel: viewModel)
                         .tag(4)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(DragGesture())
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
 
@@ -87,7 +91,7 @@ struct SurveyView: View {
 
                     Button(action: {
                         if viewModel.goNext() {
-                            router.replaceWith(.calculateSurvey(answers: viewModel.answers))
+                            router.navigate(to: .calculateSurvey(answers: viewModel.answers))
                         }
                     }) {
                         HStack(spacing: 8) {
@@ -106,8 +110,14 @@ struct SurveyView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 48)
-            }
         }
+        .background {
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        }
+        .navigationBarBackButtonHidden(true)
     }
 }
 

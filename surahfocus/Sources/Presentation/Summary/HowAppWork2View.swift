@@ -12,14 +12,7 @@ struct HowAppWork2View: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 20) {
 
                 Spacer()
 
@@ -34,6 +27,8 @@ struct HowAppWork2View: View {
                     .bold()
                     .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 // Image Container
                 ZStack {
@@ -55,33 +50,37 @@ struct HowAppWork2View: View {
                     .foregroundColor(Color.secondary200)
                     .multilineTextAlignment(.center)
                     .padding(.top, 10)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
-                // Right-aligned Button
-                HStack {
-                    Spacer()
+                Button(action: {
+                    router.navigate(to: .howAppWork(step: 3))
+                }) {
+                    HStack(spacing: 8) {
+                        Text("Next")
+                            .fontWeight(.semibold)
 
-                    Button(action: {
-                        router.navigate(to: .howAppWork(step: 2))
-                    }) {
-                        HStack(spacing: 8) {
-                            Text("Next")
-                                .fontWeight(.semibold)
-
-                            Image(systemName: "chevron.right")
-                        }
-                        .foregroundColor(Color(hex: "031315"))
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 20)
-                        .background(Color.white)
-                        .clipShape(Capsule())
+                        Image(systemName: "chevron.right")
                     }
+                    .foregroundColor(Color(hex: "031315"))
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
+                    .background(Color.white)
+                    .clipShape(Capsule())
                 }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top)
-            .padding(.bottom, 48)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.bottom, 16)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top)
+        .padding(.bottom, 48)
+        .background {
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

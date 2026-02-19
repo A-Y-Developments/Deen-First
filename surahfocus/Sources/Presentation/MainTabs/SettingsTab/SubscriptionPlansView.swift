@@ -16,15 +16,7 @@ struct SubscriptionPlansView: View {
     }
     
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack(spacing: 28) {
+        VStack(spacing: 28) {
                 
                 Spacer().frame(height: 40)
                 
@@ -38,7 +30,7 @@ struct SubscriptionPlansView: View {
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     
-                    Text("Surah Focus is your way to a better relationship with your faith. Start your free trial, cancel anytime.")
+                    Text("Deen First is your way to a better relationship with your faith. Start your free trial, cancel anytime.")
                         .font(.subheadline)
                         .foregroundColor(Color.secondary400)
                 }
@@ -229,7 +221,13 @@ struct SubscriptionPlansView: View {
                     .padding(.top, 4)
                 
                 Spacer()
-            }
+        }
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
     }
 }

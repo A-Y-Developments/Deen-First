@@ -24,26 +24,19 @@ enum DistractionApp: String, Codable, CaseIterable {
     case news = "News"
 }
 
-enum LifeImpact: String, Codable, CaseIterable {
-    case veryMuch = "Very Much"
-    case prettyMuch = "Pretty Much"
-    case little = "Yes, a little"
-    case notAtAll = "Not at all"
-}
-
 // MARK: - Survey Answers for in-memory storage
 
 struct SurveyAnswers: Codable, Hashable {
     var phoneFrequency: String?
     var feelings: [String]
     var apps: [String]
-    var lifeImpact: String?
+    var dailyHoursUsage: String?
 
     init() {
         self.phoneFrequency = nil
         self.feelings = []
         self.apps = []
-        self.lifeImpact = nil
+        self.dailyHoursUsage = nil
     }
 }
 
@@ -53,7 +46,6 @@ struct OnboardingSurvey: Codable {
     var phoneDistractionFrequency: PhoneDistractionFrequency?
     var postScrollingFeelings: Set<PostScrollingFeeling>
     var distractionApps: Set<DistractionApp>
-    var lifeImpact: LifeImpact?
     var isCompleted: Bool
     var completedAt: Date?
 
@@ -61,7 +53,6 @@ struct OnboardingSurvey: Codable {
         self.phoneDistractionFrequency = nil
         self.postScrollingFeelings = []
         self.distractionApps = []
-        self.lifeImpact = nil
         self.isCompleted = false
         self.completedAt = nil
     }

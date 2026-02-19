@@ -13,16 +13,7 @@ struct PermissionView: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ZStack {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            
-            // Main Content
-            VStack {
+        VStack {
                 
                 Spacer()
                 Spacer()
@@ -91,7 +82,7 @@ struct PermissionView: View {
                             ProgressView()
                                 .tint(Color(hex: "031315"))
                         } else {
-                            Text("Give permission to Surah Focus")
+                            Text("Give permission to Deen First")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(Color(hex: "031315"))
                         }
@@ -103,8 +94,14 @@ struct PermissionView: View {
                 }
                 .disabled(viewModel.isLoading)
                 .padding(.horizontal, 24)
-                .padding(.bottom, 56)
-            }
+                .padding(.bottom, 48)
+        }
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
         }
         .alert("Error", isPresented: $viewModel.showError) {
             Button("Retry", role: .cancel) {
@@ -124,6 +121,7 @@ struct PermissionView: View {
                 router.navigate(to: .setupAppToBlock)
             }
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     
