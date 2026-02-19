@@ -11,34 +11,46 @@ struct CalculateSurveyView: View {
 
     @EnvironmentObject var router: Router
     let answers: SurveyAnswers
+    
+    @State private var progress: CGFloat = 0.0
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+            
             VStack(spacing: 24) {
-
-                // MARK: - Header
-                Text("COMMUNITY INSIGHT")
-                    .font(.callout)
-                    .foregroundColor(Color(hex: "#ADA666"))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text("A lot of users have chosen Surah Focus for Ramadan prep.")
-                    .font(.title)
+                // MARK: - Percentage
+                Text("19%")
+                    .font(.system(size: 40, weight: .bold))
                     .fontWeight(.bold)
-                    .foregroundColor(Color(hex: "#DBDABD"))
-                    .multilineTextAlignment(.leading)
-
-
+                    .foregroundColor(Color.secondary200)
+                
+                // MARK: - Progress Bar
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.gray4.opacity(0.2))
+                        .frame(height: 5)
+                        .clipShape(Capsule())
+                    
+                    Rectangle()
+                        .fill(Color.secondary200)
+                        .frame(width: progress, height: 5)
+                        .clipShape(Capsule())
+                }
+                .frame(height: 2)
+                .onAppear {
+                    startLoading()
+                }
+                
+                // MARK: - Calculating
+                Text("Calculating...")
+                    .font(.callout)
+                    .foregroundColor(Color.white)
+                
                 // MARK: - Mosque with Double Circle
                 ZStack {
 
@@ -64,34 +76,47 @@ struct CalculateSurveyView: View {
                         .scaledToFit()
                         .frame(width: 90, height: 90)
                 }
-                .padding(.top, 32)
+                .padding(.top, 56)
                 .padding(.bottom, 48)
+                
+                Text("COMMUNITY INSIGHT")
+                    .font(.callout)
+                    .foregroundStyle(Color.secondary400)
 
-
-
-                // MARK: - Percentage
-                Text("19%")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(Color(hex: "#DBDABD"))
-
-
-                // MARK: - Footer Text
-                Text("Calculating time saved...")
-                    .foregroundColor(Color(hex: "#ADA666"))
-
-
+                Text("A lot of users have chosen Deen First for Ramadan prep.")
+                    .font(.body)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(16)
+                
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical)
+            .padding(.horizontal, 72)
+            .padding(.top, 100)
         }
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
                 router.replaceWith(.summary(step: 1, answers: answers))
             }
         }
     }
+    
+    private func startLoading() {
+        let screenWidth = UIScreen.main.bounds.width - 144
+
+        progress = 0
+
+        withAnimation(.linear(duration: 2)) {
+            progress = screenWidth
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            startLoading()
+        }
+    }
+
+
 }
 
 #Preview {

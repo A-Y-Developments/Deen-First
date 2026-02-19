@@ -14,67 +14,55 @@ struct Summary2View: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
 
                 Spacer()
+                
+                Text("We are with you!")
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(Color.secondary200)
+                    .multilineTextAlignment(.center)
 
                 Image("dua-hands")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 210, height: 120)
-
-                Text("We are with you!")
-                    .font(.title)
-                    .bold()
-                    .foregroundColor(Color(hex: "#DBDABD"))
-                    .multilineTextAlignment(.center)
+                    .frame(width: 400, height: 120)
 
                 Text("You are a few steps away from a distraction-free relationship with the Quran.")
-                    .font(.callout)
-                    .foregroundColor(Color(hex: "#ADA666"))
+                    .font(.subheadline)
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
 
                 Spacer()
-
-                // Animated Button
-                Button(action: {
-                    router.replaceWith(.howAppWork(step: 1))
-                }) {
-                    ZStack {
-
-                        // Base background
-                        Capsule()
-                            .fill(Color(hex: "#031315"))
-
-                        // White fill animation
-                        GeometryReader { geo in
-                            Capsule()
-                                .fill(Color.white)
-                                .frame(width: geo.size.width * fillProgress)
-                                .animation(.easeInOut(duration: 5), value: fillProgress)
+                
+                HStack {
+                    Spacer()
+                    
+                    Button(action: {
+                        print("tapped")
+                    }) {
+                        HStack(spacing: 8) {
+                            Text("Next")
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right")
                         }
+                        .foregroundColor(.black)
+                        .padding(.vertical)
+                        .padding(.horizontal, 28)
+                        .background(.white)
                         .clipShape(Capsule())
-
-                        // Text
-                        Text("Next")
-                            .fontWeight(.semibold)
-                            .foregroundColor(fillProgress == 1 ? .black : .white)
                     }
-                    .frame(height: 50)
                 }
-                .disabled(fillProgress < 1)
-                .opacity(fillProgress < 1 ? 0.7 : 1)
+                .padding(.bottom, 64)
+                .padding(.trailing, 32)
 
             }
             .padding(.horizontal, 20)

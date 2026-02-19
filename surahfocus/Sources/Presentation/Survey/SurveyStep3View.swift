@@ -21,9 +21,6 @@ struct SurveyStep3View: View {
 
     var body: some View {
         VStack(alignment: .leading) {
-
-            Spacer()
-
             // MARK: - Title
             Text("Which apps usually interrupt your connection with Allah?")
                 .font(.title2)
@@ -49,11 +46,10 @@ struct SurveyStep3View: View {
                 }
             }
             .padding(.top, 48)
-
-            Spacer()
             Spacer()
         }
         .padding(.horizontal, 24)
+        .padding(.top, 32)
     }
 
     // MARK: - Option View
@@ -63,20 +59,24 @@ struct SurveyStep3View: View {
 
         return HStack {
             Text(title)
-                .foregroundColor(.white)
+                .foregroundColor(isSelected ? Color.secondary200 : Color.gray4)
+                .font(.system(.callout, weight: .medium))
 
             Spacer()
+            
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(.callout, weight: .medium))
+                .foregroundColor(isSelected ? Color.secondary300.opacity(0.4) : Color.clear)
         }
         .padding()
         .background(
-            Color(hex: "#102D30")
-                .opacity(isSelected ? 1 : 0.6)
+            isSelected ? Color.primary600 : Color.primary500.opacity(0.4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(
-                    isSelected ? Color.white : Color.clear,
-                    lineWidth: 1.5
+                    isSelected ? Color.secondary300.opacity(0.4) : Color.clear,
+                    lineWidth: 2
                 )
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))

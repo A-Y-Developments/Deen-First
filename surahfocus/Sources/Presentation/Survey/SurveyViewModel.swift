@@ -2,7 +2,7 @@ import SwiftUI
 
 @MainActor
 final class SurveyViewModel: ObservableObject {
-    @Published var currentStep: Int = 1
+    @Published var currentStep: Int = 4
     @Published var answers: SurveyAnswers = SurveyAnswers()
 
     var canGoNext: Bool {

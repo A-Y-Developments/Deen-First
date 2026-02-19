@@ -14,17 +14,11 @@ struct SurveyView: View {
 
     var body: some View {
         ZStack {
-
-            // MARK: - Background
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
 
@@ -64,9 +58,10 @@ struct SurveyView: View {
                                 .animation(.easeInOut(duration: 0.25), value: viewModel.currentStep)
                         }
                     }
+                    .padding(.top)
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 16)
+                .padding(.top, 48)
                 .padding(.bottom, 36)
 
 
@@ -110,7 +105,7 @@ struct SurveyView: View {
                     .disabled(!viewModel.canGoNext)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 32)
+                .padding(.bottom, 48)
             }
         }
     }
