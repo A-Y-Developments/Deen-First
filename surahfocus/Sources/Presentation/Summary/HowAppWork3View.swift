@@ -1,5 +1,5 @@
 //
-//  HowAppWork1View.swift
+//  HowAppWork2View.swift
 //  SurahFocus
 //
 //  Created by Aditya Rizki on 13/02/26.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct HowAppWork1View: View {
-
+struct HowAppWork3View: View {
+    @State private var selectedIndex: Int? = nil
     @EnvironmentObject var router: Router
 
     var body: some View {
@@ -24,12 +24,12 @@ struct HowAppWork1View: View {
                 Spacer()
 
                 // Small Label
-                Text("HOW IT WORKS?")
+                Text("FOCUS SESSION")
                     .font(.callout)
                     .foregroundColor(Color.secondary400)
 
                 // Title
-                Text("Select the app that distracting you")
+                Text("Immerse yourself in the Quran")
                     .font(.title)
                     .bold()
                     .foregroundColor(.white)
@@ -40,7 +40,7 @@ struct HowAppWork1View: View {
                     RoundedRectangle(cornerRadius: 20)
                         .fill(Color.primary500.opacity(0.2))
 
-                    Image("how-app-work-1")
+                    Image("how-app-work-3")
                         .resizable()
                         .scaledToFit()
                         .padding(.top, 40)
@@ -49,12 +49,11 @@ struct HowAppWork1View: View {
                 .padding(.top, 10)
 
                 // Description
-                Text("You identify the problem. We provide the solution.")
+                Text("Whenever you want to listen to the Quran, we block your selected apps so you can spend quality time with Allah")
                     .font(.subheadline)
                     .fontWeight(.regular)
                     .foregroundColor(Color.secondary200)
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 10)
 
                 Spacer()
@@ -88,6 +87,6 @@ struct HowAppWork1View: View {
 }
 
 #Preview {
-    HowAppWork1View()
+    HowAppWork3View()
         .environmentObject(Router())
 }

@@ -13,76 +13,57 @@ struct HowAppWork2View: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 20) {
 
                 Spacer()
 
-                // Label
-                Text("THE EXCHANGE")
+                // Small Label
+                Text("BUILD A HABIT")
                     .font(.callout)
-                    .foregroundColor(Color(hex: "#ADA666"))
+                    .foregroundColor(Color.secondary400)
 
                 // Title
-                Text("Turn wasted screen time into eternal rewards")
+                Text("Locked out? Recite an ayah to enter")
                     .font(.title)
                     .bold()
-                    .foregroundColor(Color(hex: "#DBDABD"))
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
 
-                // OPTIONS STACK
-                VStack(spacing: 32) {
+                // Image Container
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.primary500.opacity(0.2))
 
-                    ExchangeOptionCard(
-                        index: 0,
-                        selectedIndex: $selectedIndex,
-                        title: "30m social media",
-                        subtitle: "Recite surah Yasin",
-                        isHighlighted: false
-                    )
-
-                    ExchangeOptionCard(
-                        index: 1,
-                        selectedIndex: $selectedIndex,
-                        title: "1h doomscrolling",
-                        subtitle: "Complete 1 Juz",
-                        isHighlighted: true
-                    )
-
-                    ExchangeOptionCard(
-                        index: 2,
-                        selectedIndex: $selectedIndex,
-                        title: "15m Shorts/Reels",
-                        subtitle: "Read 4 pages of Quran",
-                        isHighlighted: false
-                    )
+                    Image("how-app-work-2")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(.top, 40)
                 }
+                .frame(height: 360)
                 .padding(.top, 10)
 
-                // Bottom Text
-                Text("Small blocks of time add up to a Khatam.")
-                    .font(.callout)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color(hex: "#ADA666"))
+                // Description
+                Text("When you try to open a blocked app, we intervene. By reciting, you build a better habit.")
+                    .font(.subheadline)
+                    .fontWeight(.regular)
+                    .foregroundColor(Color.secondary200)
+                    .multilineTextAlignment(.center)
                     .padding(.top, 10)
 
                 Spacer()
 
-                // Button Right
+                // Right-aligned Button
                 HStack {
                     Spacer()
 
                     Button(action: {
-                        router.navigate(to: .finalSummary)
+                        router.navigate(to: .howAppWork(step: 2))
                     }) {
                         HStack(spacing: 8) {
                             Text("Next")
@@ -99,7 +80,8 @@ struct HowAppWork2View: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical)
+            .padding(.top)
+            .padding(.bottom, 48)
         }
     }
 }
@@ -107,79 +89,4 @@ struct HowAppWork2View: View {
 #Preview {
     HowAppWork2View()
         .environmentObject(Router())
-}
-
-struct ExchangeOptionCard: View {
-
-    let index: Int
-    @Binding var selectedIndex: Int?
-
-    let title: String
-    let subtitle: String
-    let isHighlighted: Bool
-
-    var isSelected: Bool {
-        selectedIndex == index
-    }
-
-    var body: some View {
-        ZStack(alignment: .topLeading) {
-
-            // CARD CONTENT
-            VStack(alignment: .leading, spacing: 8) {
-
-                Text(title)
-                    .strikethrough()
-                    .foregroundColor(Color(hex: "#8E8E93"))
-
-                Text(subtitle)
-                    .font(.callout)
-                    .foregroundColor(
-                        isSelected
-                        ? Color(hex: "#DBDABD")
-                        : (isHighlighted
-                           ? Color(hex: "#DBDABD")
-                           : Color(hex: "#D1D1D6"))
-                    )
-            }
-            .padding()
-            .padding(.top, isHighlighted ? 10 : 0)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                isSelected
-                ? Color(hex: "#102D30")
-                : Color(hex: "#102D30").opacity(0.4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        isSelected
-                        ? Color(hex: "#DBDABD")
-                        : Color.clear,
-                        lineWidth: 1.5
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-
-
-            // FLOATING BADGE
-            if isHighlighted {
-                Text("Most Common")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color(hex: "#1A494D"))
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 12)
-                    .background(Color(hex: "#ADA666"))
-                    .clipShape(Capsule())
-                    .offset(x: 16, y: -12)
-            }
-        }
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.2)) {
-                selectedIndex = index
-            }
-        }
-    }
-
 }
