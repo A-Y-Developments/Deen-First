@@ -14,15 +14,11 @@ struct Summary1View: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
             VStack(alignment: .leading) {
 
@@ -33,17 +29,17 @@ struct Summary1View: View {
                     Text("MashaAllah...")
                         .font(.title)
                         .italic()
-                        .foregroundColor(Color(hex: "#ADA666"))
+                        .foregroundColor(Color.secondary200)
 
                     // MARK: - Time Highlight (DYNAMIC)
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(viewModel.calculatedHours)
                             .font(.system(size: 60, weight: .bold))
-                            .foregroundStyle(Color(hex: "#DBDABD"))
+                            .foregroundStyle(.white)
 
                         Text("hours")
                             .font(.system(size: 36))
-                            .foregroundStyle(Color(hex: "#DBDABD"))
+                            .foregroundStyle(.white)
                             .italic()
                     }
                     .padding(.leading, 8)
@@ -53,14 +49,14 @@ struct Summary1View: View {
                         .font(.title2)
                         .fontWeight(.medium)
                         .italic()
-                        .foregroundColor(Color(hex: "#ADA666"))
+                        .foregroundColor(Color.secondary200)
                 }
 
                 // MARK: - Subheading
                 Text("That's actually enough time to get:")
                     .font(.subheadline)
                     .fontWeight(.regular)
-                    .foregroundColor(Color(hex: "#8E8E93"))
+                    .foregroundColor(Color.gray4)
                     .padding(.top, 48)
 
                 // MARK: - Container
@@ -77,11 +73,11 @@ struct Summary1View: View {
                             Text("Read 2 Juz")
                                 .font(.callout)
                                 .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "#D1D1D6"))
+                                .foregroundColor(Color.gray4)
 
                             Text("Finished ~40 pages of Quran")
                                 .font(.caption2)
-                                .foregroundColor(Color(hex: "#8E8E93"))
+                                .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
                         Spacer()
@@ -101,11 +97,11 @@ struct Summary1View: View {
                             Text("Memorized a Surah")
                                 .font(.callout)
                                 .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "#D1D1D6"))
+                                .foregroundColor(Color.gray4)
 
                             Text("Learned surah Mulk completely")
                                 .font(.caption2)
-                                .foregroundColor(Color(hex: "#8E8E93"))
+                                .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
                         Spacer()
@@ -125,11 +121,11 @@ struct Summary1View: View {
                             Text("Connected Deeply")
                                 .font(.callout)
                                 .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "#D1D1D6"))
+                                .foregroundColor(Color.gray4)
 
                             Text("Had real conversation with family")
                                 .font(.caption2)
-                                .foregroundColor(Color(hex: "#8E8E93"))
+                                .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
                         Spacer()
@@ -137,25 +133,38 @@ struct Summary1View: View {
                 }
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color(hex: "#1A494D").opacity(0.4), lineWidth: 1.5)
-                )
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.secondary400.opacity(0.6), lineWidth: 2)
 
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.secondary400.opacity(0.6), lineWidth: 4)
+                            .blur(radius: 8)
+                    }
+                )
+                .padding(.top)
 
                 Spacer()
 
-                // MARK: - Continue Button
-                Button(action: {
-                    router.navigate(to: .summary(step: 2, answers: viewModel.answers))
-                }) {
-                    Text("Continue")
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "#031315"))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
+                HStack {
+                    Spacer()
+                    
+                    Button(action: {
+                        print("tapped")
+                    }) {
+                        HStack(spacing: 8) {
+                            Text("Next")
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right")
+                        }
+                        .foregroundColor(.black)
+                        .padding(.vertical)
+                        .padding(.horizontal, 28)
+                        .background(.white)
                         .clipShape(Capsule())
+                    }
                 }
+                .padding(.bottom, 32)
 
             }
             .padding(.horizontal, 20)

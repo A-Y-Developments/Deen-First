@@ -12,19 +12,16 @@ struct SurveyStep4View: View {
     @ObservedObject var viewModel: SurveyViewModel
 
     private let options: [(value: String, title: String)] = [
-        ("veryMuch", "😔 Very Much"),
-        ("prettyMuch", "😶 Pretty Much"),
-        ("little", "😐 Yes, a little"),
-        ("notAtAll", "😌 Not at all")
+        ("veryMuch", "1-2 hours"),
+        ("prettyMuch", "2-4 hours"),
+        ("little", "4-6 hours"),
+        ("notAtAll", "6-8 hours")
     ]
 
     var body: some View {
         VStack(alignment: .leading) {
-
-            Spacer()
-
             // MARK: - Title
-            Text("Does inconsistent recitation impact your everyday life?")
+            Text("How long do you use social media app?")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
@@ -48,11 +45,10 @@ struct SurveyStep4View: View {
                 }
             }
             .padding(.top, 48)
-
-            Spacer()
             Spacer()
         }
         .padding(.horizontal, 24)
+        .padding(.top, 32)
     }
 
     // MARK: - Option View
@@ -62,20 +58,24 @@ struct SurveyStep4View: View {
 
         return HStack {
             Text(title)
-                .foregroundColor(.white)
+                .foregroundColor(isSelected ? Color.secondary200 : Color.gray4)
+                .font(.system(.callout, weight: .medium))
 
             Spacer()
+            
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(.callout, weight: .medium))
+                .foregroundColor(isSelected ? Color.secondary300.opacity(0.4) : Color.clear)
         }
         .padding()
         .background(
-            Color(hex: "#102D30")
-                .opacity(isSelected ? 1 : 0.6)
+            isSelected ? Color.primary600 : Color.primary500.opacity(0.4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(
-                    isSelected ? Color.white : Color.clear,
-                    lineWidth: 1.5
+                    isSelected ? Color.secondary300.opacity(0.4) : Color.clear,
+                    lineWidth: 2
                 )
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
