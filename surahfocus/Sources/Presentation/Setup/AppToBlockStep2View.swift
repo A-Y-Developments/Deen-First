@@ -8,9 +8,8 @@
 import SwiftUI
 
 struct AppToBlockStep2View: View {
-    
-    @State private var selectedTime: String? = nil
-    
+    @EnvironmentObject private var viewModel: SetupViewModel
+
     var body: some View {
         VStack(spacing: 20) {
             
@@ -40,39 +39,31 @@ struct AppToBlockStep2View: View {
             
             // MARK: - Time Options
             VStack(spacing: 16) {
-                timeOption(title: "15 minutes")
-                timeOption(title: "30 minutes")
-                timeOption(title: "1 hour")
-                timeOption(title: "2 hours")
+                timeOption(limit: .fifteenMin)
+                timeOption(limit: .thirtyMin)
+                timeOption(limit: .oneHour)
+                timeOption(limit: .twoHours)
             }
             .padding(.top, 32)
-            
+
             Spacer()
         }
-        .animation(.easeInOut(duration: 0.2), value: selectedTime)
     }
-    
-    
+
     // MARK: - Time Option Component
-    private func timeOption(title: String) -> some View {
-        
-        let isSelected = selectedTime == title
-        
+    private func timeOption(limit: TimeLimit) -> some View {
+        let isSelected = viewModel.selectedDailyLimit == limit
+
         return Button {
-            selectedTime = title
+            viewModel.selectLimit(limit)
         } label: {
             HStack {
-                
-                Text(title)
-                    .foregroundColor(
-                        isSelected
-                        ? Color.secondary200
-                        : .white
-                    )
+                Text(limit.displayName)
+                    .foregroundColor(isSelected ? Color.secondary200 : .white)
                     .font(.body)
-                
+
                 Spacer()
-                
+
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(.callout, weight: .medium))
@@ -86,12 +77,7 @@ struct AppToBlockStep2View: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isSelected
-                        ? Color.secondary300.opacity(0.4)
-                        : Color.clear,
-                        lineWidth: 2
-                    )
+                    .stroke(isSelected ? Color.secondary300.opacity(0.4) : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)

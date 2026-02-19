@@ -2,7 +2,7 @@ import SwiftUI
 import FamilyControls
 
 @MainActor
-final class ScreenTimePermissionViewModel: ObservableObject {
+final class PermissionSetupViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var isAuthorized = false
     @Published var errorMessage: String?
@@ -32,9 +32,5 @@ final class ScreenTimePermissionViewModel: ObservableObject {
             errorMessage = "Failed to request permission: \(error.localizedDescription)"
             showError = true
         }
-    }
-
-    func skip() {
-        // User can skip, but they'll need to grant permission later
     }
 }

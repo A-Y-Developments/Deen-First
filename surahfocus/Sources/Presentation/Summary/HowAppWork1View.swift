@@ -1,5 +1,5 @@
 //
-//  Summary3.swift
+//  HowAppWork1View.swift
 //  SurahFocus
 //
 //  Created by Aditya Rizki on 13/02/26.
@@ -7,8 +7,10 @@
 
 import SwiftUI
 
-struct Summary3: View {
-    
+struct HowAppWork1View: View {
+
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -20,28 +22,28 @@ struct Summary3: View {
                 endPoint: .top
             )
             .ignoresSafeArea()
-            
+
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 Spacer()
-                
+
                 // Small Label
                 Text("THE MECHANISM")
                     .font(.callout)
                     .foregroundColor(Color(hex: "#ADA666"))
-                
+
                 // Title
                 Text("We interrupt the scroll to open the Quran")
                     .font(.title)
                     .bold()
                     .foregroundColor(Color(hex: "#DBDABD"))
                     .multilineTextAlignment(.leading)
-                
+
                 // Image Container
                 ZStack {
                     RoundedRectangle(cornerRadius: 20)
                         .fill(Color(hex: "#173E41"))
-                    
+
                     Image("phone-to-quran")
                         .resizable()
                         .scaledToFit()
@@ -49,7 +51,7 @@ struct Summary3: View {
                 }
                 .frame(height: 220)
                 .padding(.top, 10)
-                
+
                 // Description
                 Text("When you try to open social apps, we gently guide you to your Quran goal.")
                     .font(.callout)
@@ -57,20 +59,20 @@ struct Summary3: View {
                     .foregroundColor(Color(hex: "#ADA666"))
                     .multilineTextAlignment(.leading)
                     .padding(.top, 10)
-                
+
                 Spacer()
-                
+
                 // Right-aligned Button
                 HStack {
                     Spacer()
-                    
+
                     Button(action: {
-                        print("Next tapped")
+                        router.navigate(to: .howAppWork(step: 2))
                     }) {
                         HStack(spacing: 8) {
                             Text("Next")
                                 .fontWeight(.semibold)
-                            
+
                             Image(systemName: "chevron.right")
                         }
                         .foregroundColor(Color(hex: "031315"))
@@ -88,5 +90,6 @@ struct Summary3: View {
 }
 
 #Preview {
-    Summary3()
+    HowAppWork1View()
+        .environmentObject(Router())
 }

@@ -8,69 +8,62 @@
 import SwiftUI
 
 struct SurveyStep1View: View {
-    
-    @State private var selectedOptions: Set<Int> = []
-    
+
+    @ObservedObject var viewModel: SurveyViewModel
+
+    private let options: [(value: String, title: String)] = [
+        ("almostNever", "😖 Almost Never"),
+        ("sometimes", "😟 Sometimes"),
+        ("prettyOften", "🤲 Pretty often"),
+        ("everyTime", "🙌 Every time I try")
+    ]
+
     var body: some View {
         VStack(alignment: .leading) {
-            
+
             Spacer()
-            
+
             // MARK: - Title
             Text("How often does your phone distract you from your Quran recitation?")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-            
-            
+
+
             // MARK: - Subtitle
             Text("Select all that apply")
                 .font(.subheadline)
                 .foregroundColor(Color(hex: "#8E8E93"))
                 .padding(.top, 12)
-            
-            
+
+
             // MARK: - Options
             VStack(spacing: 16) {
-                
-                surveyOption(
-                    index: 0,
-                    title: "😖 Almost Never"
-                )
-                
-                surveyOption(
-                    index: 1,
-                    title: "😟 Sometimes"
-                )
-                
-                surveyOption(
-                    index: 2,
-                    title: "🤲 Pretty often"
-                )
-                
-                surveyOption(
-                    index: 3,
-                    title: "🙌 Every time I try"
-                )
-                // Tambahkan option lain nanti di sini
+
+                ForEach(options, id: \.value) { option in
+                    surveyOption(
+                        value: option.value,
+                        title: option.title
+                    )
+                }
             }
             .padding(.top, 48)
-            
+
             Spacer()
             Spacer()
         }
         .padding(.horizontal, 24)
     }
-    
+
     // MARK: - Option View
-    private func surveyOption(index: Int, title: String) -> some View {
-        
-        let isSelected = selectedOptions.contains(index)
-        
+    private func surveyOption(value: String, title: String) -> some View {
+
+        let isSelected = viewModel.answers.phoneFrequency == value
+
         return HStack {
             Text(title)
                 .foregroundColor(.white)
-            
+
             Spacer()
         }
         .padding()
@@ -87,12 +80,9 @@ struct SurveyStep1View: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture {
-            if isSelected {
-                selectedOptions.remove(index)
-            } else {
-                selectedOptions.insert(index)
+            withAnimation(.easeInOut(duration: 0.2)) {
+                viewModel.answers.phoneFrequency = value
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: selectedOptions)
     }
 }

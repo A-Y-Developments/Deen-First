@@ -7,15 +7,14 @@
 
 import SwiftUI
 
-struct Survey: View {
-    
-    @State private var currentStep: Int = 0
-    
-    private let totalSteps = 4
-    
+struct SurveyView: View {
+
+    @EnvironmentObject private var viewModel: SurveyViewModel
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
-            
+
             // MARK: - Background
             LinearGradient(
                 gradient: Gradient(stops: [
@@ -26,18 +25,18 @@ struct Survey: View {
                 endPoint: .top
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
 
                 // MARK: - Header
                 VStack(spacing: 16) {
-                    
+
                     // Navigation
                     HStack {
-                        if currentStep > 0 {
+                        if viewModel.canGoBack {
                             Button {
                                 withAnimation {
-                                    currentStep -= 1
+                                    viewModel.goBack()
                                 }
                             } label: {
                                 Image(systemName: "chevron.left")
@@ -45,77 +44,70 @@ struct Survey: View {
                                     .foregroundColor(.white)
                             }
                         }
-                        
+
                         Spacer()
-                        
-                        Button("Skip") {
-                            currentStep = totalSteps - 1
-                        }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
+
+                        Spacer() // Skip button removed
                     }
-                    
-                    // MARK: - Indicator (5 Steps)
+
+                    // MARK: - Indicator (4 Steps)
                     HStack(spacing: 6) {
-                        ForEach(0..<totalSteps, id: \.self) { index in
+                        ForEach(0..<viewModel.totalSteps, id: \.self) { index in
                             Rectangle()
                                 .fill(
-                                    index <= currentStep
+                                    index < viewModel.currentStep
                                     ? Color.white
                                     : Color.white.opacity(0.2)
                                 )
                                 .frame(height: 4)
                                 .frame(maxWidth: .infinity)
-                                .animation(.easeInOut(duration: 0.25), value: currentStep)
+                                .animation(.easeInOut(duration: 0.25), value: viewModel.currentStep)
                         }
                     }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
                 .padding(.bottom, 36)
-                
-                
-                // MARK: - Content (Dummy Views)
-                TabView(selection: $currentStep) {
-                    
-                    SurveyStep1View()
-                        .tag(0)
-                    
-                    SurveyStep2View()
+
+
+                // MARK: - Content
+                TabView(selection: $viewModel.currentStep) {
+
+                    SurveyStep1View(viewModel: viewModel)
                         .tag(1)
-                    
-                    SurveyStep3View()
-                            .tag(2)
-                        
-                        SurveyStep4View()
-                            .tag(3)
+
+                    SurveyStep2View(viewModel: viewModel)
+                        .tag(2)
+
+                    SurveyStep3View(viewModel: viewModel)
+                        .tag(3)
+
+                    SurveyStep4View(viewModel: viewModel)
+                        .tag(4)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                
+
                 HStack {
                     Spacer()
-                    
+
                     Button(action: {
-                        if currentStep < totalSteps - 1 {
-                            withAnimation {
-                                currentStep += 1
-                            }
-                        } else {
-                            print("Survey Finished")
+                        if viewModel.goNext() {
+                            router.replaceWith(.calculateSurvey(answers: viewModel.answers))
                         }
                     }) {
                         HStack(spacing: 8) {
                             Text("Next")
                                 .fontWeight(.semibold)
-                            
+
                             Image(systemName: "chevron.right")
                         }
                         .foregroundColor(Color(hex: "031315"))
                         .padding(.vertical, 12)
                         .padding(.horizontal, 20)
-                        .background(Color.white)
+                        .background(viewModel.canGoNext ? Color.white : Color.gray.opacity(0.5))
                         .clipShape(Capsule())
                     }
+                    .disabled(!viewModel.canGoNext)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
@@ -125,5 +117,7 @@ struct Survey: View {
 }
 
 #Preview {
-    Survey()
+    SurveyView()
+        .environmentObject(SurveyViewModel())
+        .environmentObject(Router())
 }

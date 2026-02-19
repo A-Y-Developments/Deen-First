@@ -1,5 +1,5 @@
 //
-//  Summary2.swift
+//  Summary2View.swift
 //  SurahFocus
 //
 //  Created by Aditya Rizki on 13/02/26.
@@ -7,10 +7,11 @@
 
 import SwiftUI
 
-struct Summary2: View {
-    
+struct Summary2View: View {
+
     @State private var fillProgress: CGFloat = 0
-    
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -22,40 +23,40 @@ struct Summary2: View {
                 endPoint: .top
             )
             .ignoresSafeArea()
-            
+
             VStack(spacing: 24) {
-                
+
                 Spacer()
-                
+
                 Image("dua-hands")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 210, height: 120)
-                
+
                 Text("We are with you!")
                     .font(.title)
                     .bold()
                     .foregroundColor(Color(hex: "#DBDABD"))
                     .multilineTextAlignment(.center)
-                
+
                 Text("You are a few steps away from a distraction-free relationship with the Quran.")
                     .font(.callout)
                     .foregroundColor(Color(hex: "#ADA666"))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
-                
+
                 Spacer()
-                
+
                 // Animated Button
                 Button(action: {
-                    print("Next tapped")
+                    router.replaceWith(.howAppWork(step: 1))
                 }) {
                     ZStack {
-                        
+
                         // Base background
                         Capsule()
                             .fill(Color(hex: "#031315"))
-                        
+
                         // White fill animation
                         GeometryReader { geo in
                             Capsule()
@@ -64,7 +65,7 @@ struct Summary2: View {
                                 .animation(.easeInOut(duration: 5), value: fillProgress)
                         }
                         .clipShape(Capsule())
-                        
+
                         // Text
                         Text("Next")
                             .fontWeight(.semibold)
@@ -74,7 +75,7 @@ struct Summary2: View {
                 }
                 .disabled(fillProgress < 1)
                 .opacity(fillProgress < 1 ? 0.7 : 1)
-                
+
             }
             .padding(.horizontal, 20)
             .padding(.vertical)
@@ -86,5 +87,6 @@ struct Summary2: View {
 }
 
 #Preview {
-    Summary2()
+    Summary2View()
+        .environmentObject(Router())
 }

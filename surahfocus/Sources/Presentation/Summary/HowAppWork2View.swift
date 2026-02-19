@@ -1,5 +1,5 @@
 //
-//  Summary4.swift
+//  HowAppWork2View.swift
 //  SurahFocus
 //
 //  Created by Aditya Rizki on 13/02/26.
@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-struct Summary4: View {
+struct HowAppWork2View: View {
     @State private var selectedIndex: Int? = nil
-    
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -21,26 +22,26 @@ struct Summary4: View {
                 endPoint: .top
             )
             .ignoresSafeArea()
-            
+
             VStack(alignment: .leading, spacing: 20) {
-                
+
                 Spacer()
-                
+
                 // Label
                 Text("THE EXCHANGE")
                     .font(.callout)
                     .foregroundColor(Color(hex: "#ADA666"))
-                
+
                 // Title
                 Text("Turn wasted screen time into eternal rewards")
                     .font(.title)
                     .bold()
                     .foregroundColor(Color(hex: "#DBDABD"))
                     .multilineTextAlignment(.leading)
-                
+
                 // OPTIONS STACK
                 VStack(spacing: 32) {
-                    
+
                     ExchangeOptionCard(
                         index: 0,
                         selectedIndex: $selectedIndex,
@@ -48,7 +49,7 @@ struct Summary4: View {
                         subtitle: "Recite surah Yasin",
                         isHighlighted: false
                     )
-                    
+
                     ExchangeOptionCard(
                         index: 1,
                         selectedIndex: $selectedIndex,
@@ -56,7 +57,7 @@ struct Summary4: View {
                         subtitle: "Complete 1 Juz",
                         isHighlighted: true
                     )
-                    
+
                     ExchangeOptionCard(
                         index: 2,
                         selectedIndex: $selectedIndex,
@@ -66,27 +67,27 @@ struct Summary4: View {
                     )
                 }
                 .padding(.top, 10)
-                
+
                 // Bottom Text
                 Text("Small blocks of time add up to a Khatam.")
                     .font(.callout)
                     .fontWeight(.semibold)
                     .foregroundColor(Color(hex: "#ADA666"))
                     .padding(.top, 10)
-                
+
                 Spacer()
-                
+
                 // Button Right
                 HStack {
                     Spacer()
-                    
+
                     Button(action: {
-                        print("Next tapped")
+                        router.navigate(to: .finalSummary)
                     }) {
                         HStack(spacing: 8) {
                             Text("Next")
                                 .fontWeight(.semibold)
-                            
+
                             Image(systemName: "chevron.right")
                         }
                         .foregroundColor(Color(hex: "031315"))
@@ -104,32 +105,33 @@ struct Summary4: View {
 }
 
 #Preview {
-    Summary4()
+    HowAppWork2View()
+        .environmentObject(Router())
 }
 
 struct ExchangeOptionCard: View {
-    
+
     let index: Int
     @Binding var selectedIndex: Int?
-    
+
     let title: String
     let subtitle: String
     let isHighlighted: Bool
-    
+
     var isSelected: Bool {
         selectedIndex == index
     }
-    
+
     var body: some View {
         ZStack(alignment: .topLeading) {
-            
+
             // CARD CONTENT
             VStack(alignment: .leading, spacing: 8) {
-                
+
                 Text(title)
                     .strikethrough()
                     .foregroundColor(Color(hex: "#8E8E93"))
-                
+
                 Text(subtitle)
                     .font(.callout)
                     .foregroundColor(
@@ -141,7 +143,7 @@ struct ExchangeOptionCard: View {
                     )
             }
             .padding()
-            .padding(.top, isHighlighted ? 10 : 0) // kasih ruang untuk badge
+            .padding(.top, isHighlighted ? 10 : 0)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 isSelected
@@ -158,8 +160,8 @@ struct ExchangeOptionCard: View {
                     )
             )
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            
-            
+
+
             // FLOATING BADGE
             if isHighlighted {
                 Text("Most Common")
@@ -170,7 +172,7 @@ struct ExchangeOptionCard: View {
                     .padding(.horizontal, 12)
                     .background(Color(hex: "#ADA666"))
                     .clipShape(Capsule())
-                    .offset(x: 16, y: -12) // 👈 overflow ke atas
+                    .offset(x: 16, y: -12)
             }
         }
         .onTapGesture {
@@ -181,4 +183,3 @@ struct ExchangeOptionCard: View {
     }
 
 }
-

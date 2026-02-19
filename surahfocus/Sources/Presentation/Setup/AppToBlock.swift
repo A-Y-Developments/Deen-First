@@ -8,9 +8,12 @@
 import SwiftUI
 
 struct AppToBlock: View {
-    
-    @State private var currentStep: Int = 2
-    
+    @EnvironmentObject private var viewModel: SetupViewModel
+    @EnvironmentObject var router: Router
+
+    @State private var currentStep: Int = 0
+    @State private var showValidationError = false
+
     private let totalSteps = 3
     
     var body: some View {
@@ -50,12 +53,8 @@ struct AppToBlock: View {
                         }
                         
                         Spacer()
-                        
-                        Button("Skip") {
-                            currentStep = totalSteps - 1
-                        }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white.opacity(0.7))
+
+                        // Skip button removed per user request
                     }
                     
                     // MARK: - Indicator (5 Steps)
@@ -102,7 +101,8 @@ struct AppToBlock: View {
                                 currentStep += 1
                             }
                         } else {
-                            print("Survey Finished")
+                            // Navigate to SetupSummary
+                            router.navigate(to: .setupSummary)
                         }
                     }) {
                         HStack(spacing: 8) {
@@ -110,20 +110,37 @@ struct AppToBlock: View {
                                 .fontWeight(.semibold)
                             Image(systemName: "arrow.right")
                         }
-//                        .foregroundColor(.white)
                         .foregroundColor(.black)
                         .padding(.vertical)
                         .padding(.horizontal, 28)
-//                        .background(Color.primary900)
                         .background(.white)
                         .clipShape(Capsule())
                     }
+                    .disabled(shouldDisableNextButton())
                 }
                 .padding(.bottom, 32)
             }
             .padding(.top, 40)
             .padding(.bottom, 28)
             .padding(.horizontal, 24)
+        }
+        .alert("Required", isPresented: $showValidationError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please select at least one app or category to continue.")
+        }
+    }
+
+    private func shouldDisableNextButton() -> Bool {
+        switch currentStep {
+        case 0: // App selection
+            return viewModel.selectedAppsCount == 0 && viewModel.selectedCategoriesCount == 0
+        case 1: // Time limit
+            return false // Can skip
+        case 2: // Prayer times
+            return false // Can skip
+        default:
+            return false
         }
     }
 }

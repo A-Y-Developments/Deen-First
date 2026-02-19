@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct SetupSummary: View {
+    @EnvironmentObject private var viewModel: SetupViewModel
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
             // Background
@@ -24,7 +28,7 @@ struct SetupSummary: View {
                     // Navigation
                     HStack {
                         Button {
-                            print("chevron left")
+                            router.navigateBack()
                         } label: {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 18, weight: .medium))
@@ -35,9 +39,9 @@ struct SetupSummary: View {
                 }
                 .padding(.top, 16)
                 .padding(.bottom, 36)
-                
+
                 VStack(spacing: 16) {
-                    Text("Here’s a great blocking setup for you to start")
+                    Text("Here's a great blocking setup for you to start")
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .multilineTextAlignment(.leading)
                         .font(.system(.title2, weight: .bold))
@@ -48,44 +52,111 @@ struct SetupSummary: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(.top, 24)
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Music")
-                        .font(.callout)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                    
-                    Text("1 app selected • 30 mins/day • Every day")
-                        .font(.footnote)
-                        .foregroundColor(Color.gray4)
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // App Limit Section
+                        if viewModel.previewAppLimitRule != nil {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("App Limit")
+                                    .font(.callout)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "ADA666"))
+                                    .padding(.horizontal, 24)
+
+                                if let rule = viewModel.previewAppLimitRule {
+                                    BlockAppLimitCard(
+                                        settingsName: rule.name,
+                                        appName: selectionText(for: rule),
+                                        appsCount: rule.applicationTokenData.count,
+                                        timeLimit: rule.limitDisplayName ?? "N/A",
+                                        daysText: rule.daysDisplayText
+                                    )
+                                    .padding(.horizontal, 24)
+                                }
+                            }
+                            .padding(.top, 32)
+                        }
+
+                        // Prayer Times Section
+                        if !viewModel.previewTimeOfDayRules.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Prayer Times")
+                                    .font(.callout)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "ADA666"))
+                                    .padding(.horizontal, 24)
+
+                                ForEach(viewModel.previewTimeOfDayRules) { rule in
+                                    BlockTimeLimitCard(
+                                        settingsName: rule.name,
+                                        appName: selectionText(for: rule),
+                                        appsCount: rule.applicationTokenData.count,
+                                        timeRange: rule.timeRangeDisplay ?? "N/A",
+                                        daysText: rule.daysDisplayText,
+                                        prayersText: ""
+                                    )
+                                    .padding(.horizontal, 24)
+                                }
+                            }
+                            .padding(.top, viewModel.previewAppLimitRule == nil ? 32 : 20)
+                        }
+                    }
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.primary900)
-                )
-                .padding(.top, 56)
-                
+
                 Spacer()
-                
+
                 Button {
-                    // Action here
+                    Task {
+                        await viewModel.saveSetup()
+                        router.replaceWith(.mainTabs)
+                    }
                 } label: {
-                    Text("Done")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white)
-                        .clipShape(Capsule())
+                    HStack {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.black)
+                                .padding(.trailing, 8)
+                        }
+                        Text("Done")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.black)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.white)
+                    .clipShape(Capsule())
                 }
+                .disabled(viewModel.isLoading || !viewModel.hasAnyRules)
                 .padding(.bottom)
             }
             .padding(.top, 40)
             .padding(.bottom, 28)
             .padding(.horizontal, 24)
+        }
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK", role: .cancel) {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "An error occurred")
+        }
+    }
+
+    private func selectionText(for rule: ScreenTimeRule) -> String {
+        let selection = rule.getFamilyActivitySelection()
+        let apps = selection.applicationTokens.count
+        let categories = selection.categoryTokens.count
+
+        if apps == 0 && categories == 0 {
+            return "No selection"
+        } else if apps > 0 && categories > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s"), \(categories) categor\(categories == 1 ? "y" : "ies")"
+        } else if apps > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s")"
+        } else {
+            return "\(categories) categor\(categories == 1 ? "y" : "ies")"
         }
     }
 }

@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct AppToBlockStep3View: View {
-    
-    @State private var selectedPrayers: Set<String> = []
-    
+    @EnvironmentObject private var viewModel: SetupViewModel
+
+    private let prayerOrder = ["subuh", "zuhr", "asr", "maghrib", "isya"]
+
     var body: some View {
         VStack(spacing: 20) {
             
@@ -38,44 +39,30 @@ struct AppToBlockStep3View: View {
             
             // MARK: - Prayer Options
             VStack(spacing: 16) {
-                prayerOption("Fajr (4.30 AM - 6.00 AM)")
-                prayerOption("Dhuhr (12.15 PM - 1.30 PM)")
-                prayerOption("Asr (3.45 PM - 5.00 PM)")
-                prayerOption("Maghrib (6.15 PM - 7.15 PM)")
-                prayerOption("Isha (7.30 PM - 8.45 PM)")
+                ForEach(prayerOrder, id: \.self) { prayer in
+                    prayerOption(prayer: prayer)
+                }
             }
             .padding(.top, 32)
-            
+
             Spacer()
         }
-        .animation(.easeInOut(duration: 0.2), value: selectedPrayers)
     }
-    
-    
+
     // MARK: - Prayer Option Component
-    private func prayerOption(_ title: String) -> some View {
-        
-        let isSelected = selectedPrayers.contains(title)
-        
+    private func prayerOption(prayer: String) -> some View {
+        let isSelected = viewModel.isSelected(prayer)
+
         return Button {
-            if isSelected {
-                selectedPrayers.remove(title)
-            } else {
-                selectedPrayers.insert(title)
-            }
+            viewModel.togglePrayer(prayer)
         } label: {
             HStack {
-                
-                Text(title)
-                    .foregroundColor(
-                        isSelected
-                        ? Color.secondary200
-                        : .white
-                    )
+                Text(getPrayerTitle(prayer))
+                    .foregroundColor(isSelected ? Color.secondary200 : .white)
                     .font(.body)
-                
+
                 Spacer()
-                
+
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(.callout, weight: .medium))
@@ -85,22 +72,24 @@ struct AppToBlockStep3View: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        isSelected
-                        ? Color.primary600
-                        : Color.primary500.opacity(0.4)
-                    )
+                    .fill(isSelected ? Color.primary600 : Color.primary500.opacity(0.4))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        isSelected
-                        ? Color.secondary300.opacity(0.4)
-                        : Color.clear,
-                        lineWidth: 2
-                    )
+                    .stroke(isSelected ? Color.secondary300.opacity(0.4) : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func getPrayerTitle(_ prayer: String) -> String {
+        switch prayer {
+        case "subuh": return "Fajr (4.30 AM - 6.00 AM)"
+        case "zuhr": return "Dhuhr (12.15 PM - 1.30 PM)"
+        case "asr": return "Asr (3.45 PM - 5.00 PM)"
+        case "maghrib": return "Maghrib (6.15 PM - 7.15 PM)"
+        case "isya": return "Isha (7.30 PM - 8.45 PM)"
+        default: return prayer
+        }
     }
 }

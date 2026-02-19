@@ -6,9 +6,11 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct AppToBlockStep1View: View {
-    
+    @EnvironmentObject private var viewModel: SetupViewModel
+
     var body: some View {
         VStack {
             VStack(spacing: 20) {
@@ -45,24 +47,50 @@ struct AppToBlockStep1View: View {
             
             
             // MARK: - Select App Field
-            HStack {
-                Text("Select App")
-                    .foregroundColor(.white)
-                    .font(.body)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundColor(.white.opacity(0.6))
+            Button {
+                viewModel.openPicker()
+            } label: {
+                HStack {
+                    Text(selectionText)
+                        .foregroundColor(.white)
+                        .font(.body)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.white.opacity(0.6))
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.primary500.opacity(0.4))
+                )
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.primary500.opacity(0.4))
-            )
-        
+
             Spacer()
         }
         .padding(.top)
+        .familyActivityPicker(
+            isPresented: $viewModel.isPickerPresented,
+            selection: $viewModel.selection
+        )
+        .onChange(of: viewModel.selection) { oldValue, newValue in
+            viewModel.updateSelection(newValue)
+        }
+    }
+
+    private var selectionText: String {
+        let apps = viewModel.selectedAppsCount
+        let categories = viewModel.selectedCategoriesCount
+
+        if apps == 0 && categories == 0 {
+            return "Select App"
+        } else if apps > 0 && categories > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s"), \(categories) categor\(categories == 1 ? "y" : "ies")"
+        } else if apps > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s") selected"
+        } else {
+            return "\(categories) categor\(categories == 1 ? "y" : "ies") selected"
+        }
     }
 }

@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import FamilyControls
 
 struct PermissionView: View {
-    
+    @EnvironmentObject private var viewModel: PermissionSetupViewModel
+    @EnvironmentObject var router: Router
+
     var body: some View {
         ZStack {
             // Background
@@ -76,18 +79,49 @@ struct PermissionView: View {
                 
                 // MARK: - Button
                 Button(action: {
-                    print("Give permission tapped")
+                    Task {
+                        await viewModel.requestAuthorization()
+                        if viewModel.isAuthorized {
+                            router.navigate(to: .setupAppToBlock)
+                        }
+                    }
                 }) {
-                    Text("Give permission to Surah Focus")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color(hex: "031315"))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.white)
-                        .clipShape(Capsule())
+                    HStack {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(Color(hex: "031315"))
+                        } else {
+                            Text("Give permission to Surah Focus")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(Color(hex: "031315"))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.white)
+                    .clipShape(Capsule())
                 }
+                .disabled(viewModel.isLoading)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 56)
+            }
+        }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("Retry", role: .cancel) {
+                Task {
+                    await viewModel.requestAuthorization()
+                    if viewModel.isAuthorized {
+                        router.navigate(to: .setupAppToBlock)
+                    }
+                }
+            }
+        } message: {
+            Text(viewModel.errorMessage ?? "An error occurred")
+        }
+        .onAppear {
+            viewModel.checkAuthorization()
+            if viewModel.isAuthorized {
+                router.navigate(to: .setupAppToBlock)
             }
         }
     }

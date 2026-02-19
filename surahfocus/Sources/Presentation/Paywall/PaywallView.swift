@@ -222,18 +222,18 @@ struct PaywallView: View {
     @MainActor
     private func navigateAfterPurchase() async {
         if AuthorizationCenter.shared.authorizationStatus == .approved {
-            router.replaceWith(.appSelection)
+            router.replaceWith(.setupAppToBlock)
         } else {
-            router.replaceWith(.screenTimePermission)
+            router.replaceWith(.permissionSetup)
         }
     }
 
     @MainActor
     private func navigateAfterRestore() async {
         if AuthorizationCenter.shared.authorizationStatus == .approved {
-            router.replaceWith(.appSelection)
+            router.replaceWith(.setupAppToBlock)
         } else {
-            router.replaceWith(.screenTimePermission)
+            router.replaceWith(.permissionSetup)
         }
     }
 }

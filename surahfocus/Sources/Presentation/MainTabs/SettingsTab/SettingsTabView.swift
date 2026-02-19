@@ -6,18 +6,6 @@ struct SettingsTabView: View {
 
     var body: some View {
         ZStack {
-<<<<<<< HEAD
-            LinearGradient(
-                gradient: Gradient(stops: [
-                    .init(color: Color(hex: "062629"), location: 0.0),
-                    .init(color: Color(hex: "041315"), location: 1.0)
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
-
-=======
             // Background
             Image("main-background")
                 .resizable()
@@ -25,7 +13,6 @@ struct SettingsTabView: View {
                 .ignoresSafeArea()
             
             // Main Content
->>>>>>> 886c79a (ui: slicing details)
             VStack(spacing: 32) {
                 // MARK: - Profile Section
                 VStack(spacing: 12) {
@@ -45,17 +32,11 @@ struct SettingsTabView: View {
                         .foregroundColor(.white)
 
                     // Email
-<<<<<<< HEAD
                     if let email = viewModel.email {
                         Text(email)
                             .font(.subheadline)
-                            .foregroundColor(Color(hex: "#8E8E93"))
+                            .foregroundColor(Color.gray4)
                     }
-=======
-                    Text("jane.doe@icloud.com")
-                        .font(.subheadline)
-                        .foregroundColor(Color.gray4)
->>>>>>> 886c79a (ui: slicing details)
                 }
                 .padding(.top, 40)
 

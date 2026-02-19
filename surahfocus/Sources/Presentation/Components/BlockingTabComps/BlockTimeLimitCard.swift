@@ -41,14 +41,6 @@ struct BlockTimeLimitCard: View {
                     .font(.caption)
                     .foregroundColor(.white.opacity(0.7))
             }
-            Text(prayersText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .background(Color(hex: "0c292b"))
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-        }
         .padding()
         .frame(maxWidth: .infinity)
         .background(Color(hex: "062023"))

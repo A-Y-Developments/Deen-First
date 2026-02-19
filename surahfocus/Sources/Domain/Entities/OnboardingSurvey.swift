@@ -1,61 +1,68 @@
 import Foundation
 
-struct OnboardingSurvey: Codable {
-    var motivations: Set<Motivation>
-    var distractionTimes: Set<DistractionTime>
-    var goals: Set<Goal>
-    var isCompleted: Bool
-    var completedAt: Date?
+// MARK: - New Survey Enums matching SurveyStep1-4
 
-    enum Motivation: String, Codable, CaseIterable {
-        case consistency = "I want more consistency with the Quran"
-        case distracted = "I get distracted too easily"
-        case routine = "I want a simple daily routine"
-        case focus = "I need help focusing"
-        case reconnect = "I want to reconnect with my faith"
-    }
+enum PhoneDistractionFrequency: String, Codable, CaseIterable {
+    case almostNever = "Almost Never"
+    case sometimes = "Sometimes"
+    case prettyOften = "Pretty often"
+    case everyTime = "Every time I try"
+}
 
-    enum DistractionTime: String, Codable, CaseIterable {
-        case lateNight = "Late at night"
-        case overwhelmed = "When I feel overwhelmed"
-        case throughout = "Throughout the day"
-        case stressed = "When I feel stressed"
-        case quickCheck = "For a minute (turns into hours)"
-    }
+enum PostScrollingFeeling: String, Codable, CaseIterable {
+    case guilty = "Guilty and drained"
+    case numb = "Numb"
+    case exhausted = "Mentally exhausted"
+    case indifferent = "Indifferent"
+}
 
-    enum Goal: String, Codable, CaseIterable {
-        case quranConsistency = "More consistency with the Quran"
-        case presence = "More presence and focus"
-        case betterHabits = "Better phone habits"
-    }
+enum DistractionApp: String, Codable, CaseIterable {
+    case socialMedia = "Social Media"
+    case videoStreaming = "Video/Streaming"
+    case games = "Games"
+    case messaging = "Messaging"
+    case news = "News"
+}
+
+enum LifeImpact: String, Codable, CaseIterable {
+    case veryMuch = "Very Much"
+    case prettyMuch = "Pretty Much"
+    case little = "Yes, a little"
+    case notAtAll = "Not at all"
+}
+
+// MARK: - Survey Answers for in-memory storage
+
+struct SurveyAnswers: Codable, Hashable {
+    var phoneFrequency: String?
+    var feelings: [String]
+    var apps: [String]
+    var lifeImpact: String?
 
     init() {
-        self.motivations = []
-        self.distractionTimes = []
-        self.goals = []
-        self.isCompleted = false
-        self.completedAt = nil
+        self.phoneFrequency = nil
+        self.feelings = []
+        self.apps = []
+        self.lifeImpact = nil
     }
 }
 
-final class SurveyStorage {
-    private static let key = "onboarding_survey"
+// MARK: - OnboardingSurvey (deprecated, kept for potential future use)
 
-    static func save(_ survey: OnboardingSurvey) {
-        if let encoded = try? JSONEncoder().encode(survey) {
-            UserDefaults.standard.set(encoded, forKey: key)
-        }
-    }
+struct OnboardingSurvey: Codable {
+    var phoneDistractionFrequency: PhoneDistractionFrequency?
+    var postScrollingFeelings: Set<PostScrollingFeeling>
+    var distractionApps: Set<DistractionApp>
+    var lifeImpact: LifeImpact?
+    var isCompleted: Bool
+    var completedAt: Date?
 
-    static func load() -> OnboardingSurvey? {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let survey = try? JSONDecoder().decode(OnboardingSurvey.self, from: data) else {
-            return nil
-        }
-        return survey
-    }
-
-    static func clear() {
-        UserDefaults.standard.removeObject(forKey: key)
+    init() {
+        self.phoneDistractionFrequency = nil
+        self.postScrollingFeelings = []
+        self.distractionApps = []
+        self.lifeImpact = nil
+        self.isCompleted = false
+        self.completedAt = nil
     }
 }
