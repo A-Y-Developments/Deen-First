@@ -8,40 +8,35 @@
 import SwiftUI
 
 struct FinalSummaryView: View {
-    @State private var animateButton = false
     @EnvironmentObject var router: Router
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(hex: "062629"),
-                    Color(hex: "041315")
-                ]),
-                startPoint: .bottom,
-                endPoint: .top
-            )
-            .ignoresSafeArea()
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
             VStack(alignment: .leading) {
                 Spacer()
                 // Impact text
                 Text("IMPACT")
                     .font(.callout)
-                    .foregroundColor(Color(hex: "#ADA666"))
+                    .foregroundColor(Color.secondary400)
 
                 // Title
                 Text("Reclaim your faith in just 1 days")
                     .font(.title)
                     .bold()
-                    .foregroundColor(Color(hex: "#DBDABD"))
+                    .foregroundColor(.white)
                     .multilineTextAlignment(.leading)
                     .padding(.top, 4)
 
                 // Image Container
                 ZStack {
                     RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(hex: "#173E41"))
+                        .fill(Color.primary500.opacity(0.4))
 
                     Image("khushoo-graph")
                         .resizable()
@@ -55,15 +50,30 @@ struct FinalSummaryView: View {
                 Text("87%")
                     .font(.title)
                     .bold()
-                    .foregroundColor(Color(hex: "#DBDABD"))
+                    .foregroundColor(Color.secondary200)
                     .padding(.top, 40)
 
                 // Description
-                Text("of our users finish their daily Juz consistently after enabling App Blocking.")
+                (
+                    Text("of our users finish their daily ")
+                        .foregroundColor(Color.secondary300)
+                    +
+                    Text("Ayah")
+                        .bold()
+                        .foregroundColor(Color.secondary200)
+                    +
+                    Text(" consistently after enabling App Blocking.")
+                        .foregroundColor(Color.secondary300)
+                )
+                .font(.callout)
+                .multilineTextAlignment(.leading)
+                .padding(.top, 2)
+                
+                Text("Now, it’s your turn.")
                     .font(.callout)
-                    .foregroundColor(Color(hex: "#ADA666"))
+                    .foregroundColor(Color.secondary300)
                     .multilineTextAlignment(.leading)
-                    .padding(.top, 2)
+                    .padding(.top, 16)
 
                 Spacer()
 
@@ -71,24 +81,18 @@ struct FinalSummaryView: View {
                 Button(action: {
                     Task { await completeOnboarding() }
                 }) {
-                    Text("Next")
+                    Text("I’m Ready to Start")
                         .fontWeight(.semibold)
-                        .foregroundColor(animateButton ? .black : .white)
+                        .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(
-                            (animateButton ? Color.white : Color(hex: "#031315"))
-                        )
+                        .background(.white)
                         .clipShape(Capsule())
-                        .animation(.easeInOut(duration: 6), value: animateButton)
                 }
-                .disabled(!animateButton)
             }
-            .padding(.vertical)
+            .padding(.top)
+            .padding(.bottom, 48)
             .padding(.horizontal,20)
-        }
-        .onAppear {
-            animateButton = true
         }
     }
 
