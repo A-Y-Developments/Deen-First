@@ -17,26 +17,15 @@ struct SurahCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(surah.name)
+                    Text(surah.englishName)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
-                    HStack(spacing: 4) {
-                        Text(surah.englishName)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.7))
-                        Text("·")
-                            .foregroundColor(.white.opacity(0.7))
-                        Text("\(surah.numberOfAyahs) ayahs")
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.7))
-                    }
+                    Text(surah.englishNameTranslation)
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.7))
                 }
 
                 Spacer()
-
-                Text(surah.surahNameArabicLong)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.white)
             }
             .padding(16)
             .background(Color.white.opacity(0.05))

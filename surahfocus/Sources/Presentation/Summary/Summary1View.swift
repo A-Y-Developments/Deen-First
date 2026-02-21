@@ -56,10 +56,9 @@ struct Summary1View: View {
 
                     // Item 1
                     HStack(spacing: 12) {
-                        Image("book")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 28, height: 28)
+                        Image(systemName: "book.pages")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(hex: "#AEF29B"))
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Read \(viewModel.juzAchievement) Juz")
@@ -80,10 +79,9 @@ struct Summary1View: View {
 
                     // Item 2
                     HStack(spacing: 12) {
-                        Image("archive")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 28, height: 28)
+                        Image(systemName: "bookmark.circle")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(hex: "#AEF29B"))
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(viewModel.surahAchievement)
@@ -104,10 +102,9 @@ struct Summary1View: View {
 
                     // Item 3
                     HStack(spacing: 12) {
-                        Image("people")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 28, height: 28)
+                        Image(systemName: "person.2.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(hex: "#AEF29B"))
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Connected Deeply")

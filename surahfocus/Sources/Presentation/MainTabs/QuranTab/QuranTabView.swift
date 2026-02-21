@@ -3,25 +3,29 @@ import SwiftUI
 struct QuranTabView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject var viewModel: QuranTabViewModel
-    
+    @EnvironmentObject var settingsViewModel: SettingsTabViewModel
+
     var body: some View {
         VStack {
-                Text("As-salamu alaykum, Jane!")
-                    .font(.system(.title, design: .serif))
+                Text("As-salamu alaykum, \(settingsViewModel.displayName.components(separatedBy: " ").first ?? "")!")
+                    .font(.system(.title2, design: .serif))
                     .italic()
                     .foregroundColor(.white)
                     .padding(.top, 124)
                     .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
                 
                 VStack {
-                    HStack(spacing: 0) {
+                    HStack(spacing: -4) {
                         Image("fire")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 64)
                         Text("0 days")
                             .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(Color(hex: "ADA666"))
+                            .foregroundStyle(Color(hex: "AEF29B"))
                     }
-                    .padding(.trailing, 32)
+                    .padding(.trailing, 16)
                     
                     Text("Start a new streak")
                         .font(.system(.footnote))
@@ -60,6 +64,7 @@ struct QuranTabView: View {
             if viewModel.surahs.isEmpty {
                 await viewModel.loadSurahs()
             }
+            await settingsViewModel.loadUserData()
         }
         .onChange(of: viewModel.searchQuery) { oldValue, newValue in
             viewModel.searchSurahs()

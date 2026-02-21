@@ -11,8 +11,6 @@ final class User {
     var hasCompletedAppSelection: Bool
     var hasCompletedAppLimitSetup: Bool
     var hasCompletedDowntimeSetup: Bool
-    var isPremium: Bool
-    var subscriptionExpiryDate: Date?
     var currentStreak: Int
     var longestStreak: Int
     var createdAt: Date
@@ -21,7 +19,8 @@ final class User {
     init(
         appleUserId: String,
         email: String? = nil,
-        name: String? = nil
+        name: String? = nil,
+        createdAt: Date = Date()
     ) {
         self.id = UUID()
         self.appleUserId = appleUserId
@@ -31,44 +30,9 @@ final class User {
         self.hasCompletedAppSelection = false
         self.hasCompletedAppLimitSetup = false
         self.hasCompletedDowntimeSetup = false
-        self.isPremium = false
-        self.subscriptionExpiryDate = nil
         self.currentStreak = 0
         self.longestStreak = 0
-        self.createdAt = Date()
+        self.createdAt = createdAt
         self.lastActiveDate = nil
-    }
-
-    // Helper methods
-    func updateStreak(isActiveToday: Bool) {
-        if isActiveToday {
-            let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-
-            if let lastActive = lastActiveDate {
-                let lastActiveDay = calendar.startOfDay(for: lastActive)
-                let daysDiff = calendar.dateComponents([.day], from: lastActiveDay, to: today).day ?? 0
-
-                if daysDiff == 0 {
-                    // Already active today
-                    return
-                } else if daysDiff == 1 {
-                    // Consecutive day
-                    currentStreak += 1
-                    if currentStreak > longestStreak {
-                        longestStreak = currentStreak
-                    }
-                } else {
-                    // Streak broken
-                    currentStreak = 1
-                }
-            } else {
-                // First activity
-                currentStreak = 1
-                longestStreak = 1
-            }
-
-            lastActiveDate = Date()
-        }
     }
 }

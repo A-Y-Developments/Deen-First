@@ -111,10 +111,10 @@ struct AppToBlock: View {
                                 .fontWeight(.semibold)
                             Image(systemName: "arrow.right")
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(shouldDisableNextButton() ? .white.opacity(0.5) : .black)
                         .padding(.vertical)
                         .padding(.horizontal, 28)
-                        .background(.white)
+                        .background(shouldDisableNextButton() ? Color.white.opacity(0.3) : Color.white)
                         .clipShape(Capsule())
                     }
                     .disabled(shouldDisableNextButton())
@@ -143,8 +143,8 @@ struct AppToBlock: View {
         switch currentStep {
         case 0: // App selection
             return viewModel.selectedAppsCount == 0 && viewModel.selectedCategoriesCount == 0
-        case 1: // Time limit
-            return false // Can skip
+        case 1: // Time limit - must select one
+            return viewModel.selectedDailyLimit == nil
         case 2: // Prayer times
             return false // Can skip
         default:

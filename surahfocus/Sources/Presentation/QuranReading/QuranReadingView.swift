@@ -1,150 +1,174 @@
-//
-//  QuranReadingView.swift
-//  SurahFocus
-//
-//  Created by Aditya Rizki on 12/02/26.
-//
-
 import SwiftUI
 
 struct QuranReadingView: View {
-    
-    let surahs = [
-        "Al-An'am",
-        "Al-Ma'idah",
-        "An-Nisa",
-        "Ali Imraan",
-        "Al-Baqara",
-        "Al-Faatiha"
-    ]
-    
-    @State private var selectedSurah: String = "Al-Faatiha"
-    
+    let surahId: Int
+    @EnvironmentObject private var viewModel: QuranReadingViewModel
+    @EnvironmentObject var router: Router
+
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                
-                // MARK: Horizontal Surah Scroll
-                ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 24) {
-                            ForEach(surahs, id: \.self) { surah in
-                                VStack(spacing: 6) {
-                                    Text(surah)
-                                        .font(.system(.callout))
-                                        .foregroundColor(
-                                            selectedSurah == surah
-                                            ? Color.secondary400
-                                            : .white.opacity(0.6)
-                                        )
-                                        .padding(.bottom, 8)
-                                    
-                                    Rectangle()
-                                        .fill(Color.secondary400)
-                                        .frame(height: 2)
-                                        .opacity(selectedSurah == surah ? 1 : 0)
-                                }
-                                .animation(.easeInOut(duration: 0.2), value: selectedSurah)
-                                .onTapGesture {
-                                    selectedSurah = surah
-                                }
-                                .id(surah)
-                            }
-
-                        }
-                        .padding(.horizontal)
-                        .padding(.top)
-                    }
-                    .onAppear {
-                        if let last = surahs.last {
-                            proxy.scrollTo(last, anchor: .trailing)
-                        }
-                    }
-                }
-                
-                
-                // MARK: Surah Info Header
-                HStack {
-                    Text("1. \(selectedSurah)")
-                        .font(.system(.callout))
-                        .foregroundColor(.black)
-                    
-                    Spacer()
-                    
-                    Text("7 Ayah, Makkiyah")
-                        .font(.callout)
-                        .foregroundColor(.black.opacity(0.8))
-                }
-                .padding()
-                .background(Color.secondary400)
-                
-                
-                // MARK: Ayah Content
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(1...7, id: \.self) { index in
-                            VStack(alignment: .leading, spacing: 12) {
-                                
-                                Text("1:\(index)")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(Color.black)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color(hex: "8E8E93"))
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-
-                                
-                                Text("بِسْمِ ٱللَّٰهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ")
-                                    .font(.system(size: 24))
-                                    .multilineTextAlignment(.trailing)
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                                    .foregroundColor(.white)
-                                
-                                Text("Bismillah hir rahman nir raheem")
-                                    .font(.callout)
-                                    .foregroundColor(.white)
-                                
-                                Text("In the Name of Allah—the Most Compassionate, Most Merciful")
-                                    .font(.footnote)
-                                    .foregroundColor(Color(hex: "8E8E93"))
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                index % 2 == 0
-                                ? Color(hex: "0e3034")
-                                : Color(hex: "062023")
-                            )
-                        }
-                    }
+        Group {
+                if viewModel.isLoading && viewModel.ayahs.isEmpty {
+                    ProgressView()
+                        .tint(.secondary400)
+                } else {
+                    mainContent
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        print("More tapped")
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundColor(.white)
-                    }
-                    
-                    Button {
-                        print("Search tapped")
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.white)
-                    }
-                }
-            }
-            .toolbarBackground(Color(hex: "062629"), for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
             .background(Color(hex: "062629").ignoresSafeArea())
+            .searchable(text: $viewModel.searchQuery, prompt: "Search ayahs...")
+            .onChange(of: viewModel.searchQuery) { _, _ in
+                viewModel.searchAyahs()
         }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Color(hex: "062629"), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .errorAlert(isError: $viewModel.showError, errorMessage: $viewModel.errorMessage)
+        .task {
+            await viewModel.setup(with: surahId)
+        }
+    }
+
+    @ViewBuilder
+    private var mainContent: some View {
+        VStack(spacing: 0) {
+            horizontalSurahList
+            surahInfoHeader
+            ayahContent
+        }
+    }
+
+    @ViewBuilder
+    private var horizontalSurahList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 24) {
+                    ForEach(viewModel.allSurahs) { surah in
+                        VStack(spacing: 6) {
+                            Text(surah.englishName)
+                                .font(.system(.callout))
+                                .foregroundColor(
+                                    viewModel.selectedSurah?.number == surah.number
+                                    ? Color.secondary400
+                                    : .white.opacity(0.6)
+                                )
+                                .padding(.bottom, 8)
+
+                            Rectangle()
+                                .fill(Color.secondary400)
+                                .frame(height: 2)
+                                .opacity(viewModel.selectedSurah?.number == surah.number ? 1 : 0)
+                        }
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.selectedSurah?.number)
+                        .onTapGesture {
+                            Task {
+                                await viewModel.loadSurah(number: surah.number)
+                            }
+                        }
+                        .id(surah.number)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+            }
+            .onChange(of: viewModel.selectedSurah) { _, newSurah in
+                if let number = newSurah?.number {
+                    proxy.scrollTo(number, anchor: .center)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var surahInfoHeader: some View {
+        if let surah = viewModel.selectedSurah {
+            HStack {
+                Text("\(surah.number). \(surah.englishName)")
+                    .font(.system(.callout))
+                    .foregroundColor(.black)
+
+                Spacer()
+
+                Text("\(surah.numberOfAyahs) Ayah, \(surah.revelationPlace)")
+                    .font(.callout)
+                    .foregroundColor(.black.opacity(0.8))
+            }
+            .padding()
+            .background(Color.secondary400)
+        }
+    }
+
+    @ViewBuilder
+    private var ayahContent: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                if let surah = viewModel.selectedSurah, surah.number != 1 && surah.number != 9 {
+                    bismillahView
+                }
+
+                if viewModel.filteredAyahs.isEmpty && !viewModel.searchQuery.isEmpty {
+                    emptySearchView
+                } else {
+                    ForEach(Array(viewModel.filteredAyahs.enumerated()), id: \.element.id) { index, ayah in
+                        ayahRow(for: ayah, index: index)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var bismillahView: some View {
+        Text("بِسْمِ ٱللَّٰهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ")
+            .font(.system(size: 24))
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding()
+            .background(Color(hex: "062023"))
+    }
+
+    @ViewBuilder
+    private var emptySearchView: some View {
+        Text("No results")
+            .foregroundColor(.white.opacity(0.6))
+            .padding(.top, 40)
+    }
+
+    @ViewBuilder
+    private func ayahRow(for ayah: Ayah, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("\(ayah.surahNo):\(ayah.numberInSurah)")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundStyle(Color.black)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(hex: "8E8E93"))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            Text(ayah.text)
+                .font(.system(size: 24))
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .foregroundColor(.white)
+
+            if !ayah.english.isEmpty {
+                Text(ayah.english)
+                    .font(.callout)
+                    .foregroundColor(.white)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(
+            index % 2 == 0
+            ? Color(hex: "0e3034")
+            : Color(hex: "062023")
+        )
     }
 }
 
 #Preview {
-    QuranReadingView()
+    QuranReadingView(surahId: 1)
+        .environmentObject(QuranReadingViewModel())
+        .environmentObject(Router())
 }

@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct SettingsTabView: View {
-    @StateObject private var viewModel = SettingsTabViewModel()
+    @EnvironmentObject var viewModel: SettingsTabViewModel
     @State private var showDeleteConfirmation = false
+    @State private var showSignOutConfirmation = false
+    @EnvironmentObject var router: Router
 
     var body: some View {
         VStack(spacing: 32) {
@@ -34,17 +36,24 @@ struct SettingsTabView: View {
 
                 // MARK: - Menu Section
                 VStack(spacing: 16) {
-                    SettingsRow(title: "Subscription")
-                    SettingsRow(title: "Preferences")
-                    SettingsRow(title: "Help & Support")
+                    Button { router.navigate(to: .subscription) } label: {
+                        SettingsRow(title: "Subscription")
+                    }
+                    .buttonStyle(.plain)
+                    Button { router.navigate(to: .preferences) } label: {
+                        SettingsRow(title: "Preferences")
+                    }
+                    .buttonStyle(.plain)
+                    Button { router.navigate(to: .support) } label: {
+                        SettingsRow(title: "Help & Support")
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // MARK: - Footer
                 VStack(spacing: 16) {
                     Button {
-                        Task {
-                            await viewModel.signOut()
-                        }
+                        showSignOutConfirmation = true
                     } label: {
                         Text("Sign Out")
                             .font(.caption)
@@ -96,6 +105,16 @@ struct SettingsTabView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This action cannot be undone. All your data will be permanently deleted.")
+        }
+        .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
+            Button("Sign Out", role: .destructive) {
+                Task {
+                    await viewModel.signOut()
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to sign out?")
         }
         .task {
             await viewModel.loadUserData()

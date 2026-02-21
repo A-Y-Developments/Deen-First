@@ -26,11 +26,13 @@ struct MainTabView: View {
                     Color.primary900.cornerRadius(30)
                 )
                 .dragIndicatorColor(Color.gray4.opacity(0.2))
+                .enableAppleScrollBehavior()
             
                 .tabItem {
                     Label("Quran", systemImage: "book.fill")
                 }
                 .tag(0)
+                
             BlockingTabView()
                 .tabItem {
                     Label("Blocking", systemImage: "nosign")

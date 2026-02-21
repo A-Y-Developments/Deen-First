@@ -10,14 +10,6 @@ import SwiftUI
 struct SupportView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-                Text("Help & Support")
-                    .font(.system(.title3))
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
-                    .padding(.top)
-                
                 VStack(spacing: 16) {
                     HStack {
                         Text("Help & FAQ")
@@ -31,6 +23,7 @@ struct SupportView: View {
                     .padding()
                     .background(Color.primary700)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
+
                     HStack {
                         Text("Contact Support")
                             .foregroundColor(.white)
@@ -43,6 +36,7 @@ struct SupportView: View {
                     .padding()
                     .background(Color.primary700)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
+
                     HStack {
                         Text("Rate the App")
                             .foregroundColor(.white)
@@ -57,22 +51,24 @@ struct SupportView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .padding(.top, 32)
+
                 Spacer()
         }
         .padding(.horizontal, 24)
-        .padding(.top, 48)
         .background {
-            // Background
             Image("main-background")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
         }
+        .navigationTitle("Help & Support")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 
 #Preview {
-    SupportView()
+    NavigationStack {
+        SupportView()
+    }
 }
-
-

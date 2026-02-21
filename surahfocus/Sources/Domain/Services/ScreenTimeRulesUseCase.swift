@@ -36,6 +36,9 @@ protocol ScreenTimeRulesUseCase {
     // Session Shield Management
     func applySessionShield(for selection: FamilyActivitySelection) async
     func removeSessionShield() async
+
+    func pauseAllRules() async  // NEW — called on subscription expiry
+    func deleteAllRules() async throws
 }
 
 // MARK: - Screen Time Use Case Implementation
@@ -382,5 +385,54 @@ final class ScreenTimeRulesUseCaseImpl: ScreenTimeRulesUseCase {
 
         // 5. Reapply shields
         await reapplyActiveShields()
+    }
+
+    func pauseAllRules() async {
+        let allRules = getAllRules()
+
+        // Stop all DeviceActivity monitoring
+        var allNames: [DeviceActivityName] = []
+        for rule in allRules {
+            switch rule.type {
+            case .timeLimit:
+                allNames.append(DeviceActivityName("daily_\(rule.id.uuidString)"))
+            case .timeOfDay:
+                allNames.append(DeviceActivityName("timeOfDay_\(rule.id.uuidString)"))
+            case .allDay:
+                allNames.append(DeviceActivityName("allDay_\(rule.id.uuidString)"))
+            }
+        }
+
+        if !allNames.isEmpty {
+            try? await deviceActivityManager.stopMonitoring(names: Set(allNames))
+        }
+
+        // Remove all active shields
+        await deviceActivityManager.removeShield()
+
+        print("[ScreenTime] All rules paused due to subscription expiry")
+    }
+
+    func deleteAllRules() async throws {
+        let allRules = getAllRules()
+
+        for rule in allRules {
+            switch rule.type {
+            case .timeLimit:
+                try await deleteTimeLimit(id: rule.id)
+            case .timeOfDay:
+                try await deleteTimeOfDay(id: rule.id)
+            case .allDay:
+                try await deleteAllDay(id: rule.id)
+            }
+        }
+
+        // Clear AppGroup UserDefaults so token mappings are wiped too
+        let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        defaults?.removeObject(forKey: AppGroupConstants.tokenMappingKey)
+        defaults?.removeObject(forKey: AppGroupConstants.categoryTokensKey)
+        defaults?.synchronize()
+
+        print("[ScreenTime] All rules deleted — clean slate")
     }
 }

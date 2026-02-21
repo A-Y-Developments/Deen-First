@@ -27,6 +27,7 @@ env:
 		echo "Bundle ID: $$TUIST_COMPANY_ID"; \
 		echo "Team ID: $$TUIST_TEAM_ID"; \
 		echo "RevenueCat API Key: $$TUIST_REVENUECAT_API_KEY"; \
+		echo "RevenueCat API Key Prod: $$TUIST_REVENUECAT_PROD_KEY"; \
 	else \
 		echo "$(RED)Error: .env file not found$(NC)"; \
 		echo "$(YELLOW)Creating default .env file...$(NC)"; \
@@ -39,7 +40,7 @@ env:
 .PHONY: generate
 generate:
 	@echo "$(BLUE)Generating Tuist project...$(NC)"
-	@TUIST_COMPANY_ID=$$TUIST_COMPANY_ID TUIST_TEAM_ID=$$TUIST_TEAM_ID tuist generate
+	@tuist generate
 	@echo "$(GREEN)✓ Project generated successfully$(NC)"
 
 # Clean Tuist project
@@ -86,6 +87,6 @@ help:
 	@echo "  make build     - Build the app"
 	@echo "  make test      - Run unit tests"
 	@echo "  make clean     - Clean generated files"
-	@echo "  make install     - Fetch dependencies"
+	@echo "  make install   - Fetch dependencies"
 	@echo "  make edit      - Open project in Xcode"
 	@echo "  make help      - Show this help message"

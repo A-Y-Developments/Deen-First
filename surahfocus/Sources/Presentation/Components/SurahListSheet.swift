@@ -66,33 +66,31 @@ struct SurahListSheet: View {
                     .padding(.top, 60)
 
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            if viewModel.viewMode == .surah {
+                    LazyVStack(spacing: 12) {
+                        if viewModel.viewMode == .surah {
+                            ForEach(viewModel.filteredSurahs) { surah in
+                                SurahCard(surah: surah) {
+                                    router.navigate(to: .quranReading(surahId: surah.number))
+                                }
+                            }
+                        } else {
+                            // render juz view
+                            VStack(alignment: .leading) {
+                                Text("Juz 1")
+                                    .font(.system(.body))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(Color(hex: "ADA666"))
                                 ForEach(viewModel.filteredSurahs) { surah in
                                     SurahCard(surah: surah) {
-                                        router.navigate(to: .surahDetail(surahId: surah.number))
-                                    }
-                                }
-                            } else {
-                                // render juz view
-                                VStack(alignment: .leading) {
-                                    Text("Juz 1")
-                                        .font(.system(.body))
-                                        .fontWeight(.bold)
-                                        .foregroundColor(Color(hex: "ADA666"))
-                                    ForEach(viewModel.filteredSurahs) { surah in
-                                        SurahCard(surah: surah) {
-                                            router.navigate(to: .surahDetail(surahId: surah.number))
-                                        }
+                                        router.navigate(to: .quranReading(surahId: surah.number))
                                     }
                                 }
                             }
-                            
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.top, 8)
+
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
                 }
             }
             

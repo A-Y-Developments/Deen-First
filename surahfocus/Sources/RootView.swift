@@ -7,45 +7,38 @@ struct RootView: View {
     @StateObject private var surveyViewModel = SurveyViewModel()
     @StateObject private var summaryViewModel = SummaryViewModel()
     @StateObject private var paywallViewModel = PaywallViewModel()
-    // Setup flow ViewModels
     @StateObject private var permissionSetupViewModel = PermissionSetupViewModel()
     @StateObject private var setupViewModel = SetupViewModel()
     @StateObject private var quranTabViewModel = QuranTabViewModel()
+    @StateObject private var quranReadingViewModel = QuranReadingViewModel()
+    @StateObject private var settingsTabViewModel = SettingsTabViewModel()
 
     @State private var currentUser: User?
     @State private var isPremium = false
     @State private var isScreenTimeAuthorized = false
-    @State private var refreshTrigger = 0
     @State private var isCheckingState = true
 
     var body: some View {
         NavigationStack(path: $router.navigationPath) {
-            if isCheckingState {
-                LoadingOverlay()
-                .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
-            } else if currentUser == nil {
-                AuthView()
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
-            } else if !currentUser!.hasCompletedOnboarding {
-                SurveyView()
-                    .environmentObject(surveyViewModel)
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
-            } else if !isPremium {
-                PaywallView()
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
-            } else {
-                MainTabView()
-                    .navigationDestination(for: Router.Route.self) { route in
-                        destinationView(for: route)
-                    }
+            Group {
+                if isCheckingState {
+                    LoadingOverlay()
+                } else if currentUser == nil {
+                    AuthView()
+                } else if !currentUser!.hasCompletedOnboarding {
+                    SurveyView()
+                        .environmentObject(surveyViewModel)
+                } else if !isPremium {
+                    PaywallView()
+                } else if !isScreenTimeAuthorized {
+                    // Subscribed but hasn't granted Screen Time permission
+                    PermissionView()
+                } else {
+                    MainTabView()
+                }
+            }
+            .navigationDestination(for: Router.Route.self) { route in
+                destinationView(for: route)
             }
         }
         .environmentObject(router)
@@ -53,24 +46,35 @@ struct RootView: View {
         .environmentObject(surveyViewModel)
         .environmentObject(summaryViewModel)
         .environmentObject(paywallViewModel)
-        // Setup flow ViewModels
         .environmentObject(permissionSetupViewModel)
         .environmentObject(setupViewModel)
         .environmentObject(quranTabViewModel)
+        .environmentObject(quranReadingViewModel)
+        .environmentObject(settingsTabViewModel)
         .task {
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
-            refreshTrigger += 1
-            Task {
-                await checkUserState()
-            }
+            Task { await checkUserState() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .didSignOut)) { _ in
+            router.reset()
+            Task { await checkUserState() }
         }
         .onReceive(NotificationCenter.default.publisher(for: .didCompleteScreenTimeSetup)) { _ in
-            refreshTrigger += 1
-            Task {
-                await checkUserState()
-            }
+            Task { await checkUserState() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .didPurchaseSubscription)) { _ in
+            Task { await checkUserState() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .subscriptionExpired)) { _ in
+            router.reset()
+            isPremium = false
+            Task { await checkUserState() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .didCompleteOnboarding)) { _ in
+            router.reset()
+            Task { await checkUserState() }
         }
     }
 
@@ -78,7 +82,6 @@ struct RootView: View {
     private func checkUserState() async {
         isCheckingState = true
 
-        // Check user
         currentUser = try? await DIContainer.shared.authService.getCurrentUser()
 
         guard currentUser != nil else {
@@ -86,11 +89,12 @@ struct RootView: View {
             return
         }
 
-        // Check subscription
         isPremium = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
 
-        // Check Screen Time authorization
-        isScreenTimeAuthorized = AuthorizationCenter.shared.authorizationStatus == .approved
+        // Only check Screen Time if user is subscribed
+        if isPremium {
+            isScreenTimeAuthorized = AuthorizationCenter.shared.authorizationStatus == .approved
+        }
 
         isCheckingState = false
     }
@@ -100,9 +104,8 @@ struct RootView: View {
         switch route {
         case .auth:
             AuthView()
-        case .paywall:
-            PaywallView()
-        // Setup flow
+        case .paywall(let isFromSettings, let currentPlan):
+            PaywallView(isFromSettings: isFromSettings, currentPlan: currentPlan)
         case .permissionSetup:
             PermissionView()
         case .setupAppToBlock:
@@ -112,8 +115,10 @@ struct RootView: View {
         case .mainTabs:
             MainTabView()
                 .navigationBarBackButtonHidden(true)
-        case .surahDetail(let surahId):
-            SurahDetailView(surahNumber: surahId)
+        case .quranReading(let surahId):
+            QuranReadingView(surahId: surahId)
+                .environmentObject(quranReadingViewModel)
+                .toolbar(.hidden, for: .tabBar)
         case .blocks:
             BlockingTabView()
         case .appLimit:
@@ -136,8 +141,6 @@ struct RootView: View {
             ActiveSessionView(surahs: surahs, ayahs: ayahs)
         case .sessionFinish(let duration, let surahCount):
             SessionFinishView(duration: duration, surahCount: surahCount)
-
-        // Survey flow with data passing
         case .survey(let step, let answers):
             SurveyView()
                 .onAppear {
@@ -154,10 +157,8 @@ struct RootView: View {
                         summaryViewModel.answers = answers
                         summaryViewModel.currentStep = 1
                     }
-            case 2:
-                Summary2View()
-            default:
-                EmptyView()
+            case 2: Summary2View()
+            default: EmptyView()
             }
         case .howAppWork(let step):
             switch step {
@@ -168,15 +169,19 @@ struct RootView: View {
             }
         case .finalSummary:
             FinalSummaryView()
+        case .subscription:
+            SubscriptionView()
+        case .preferences:
+            PreferencesView()
+        case .support:
+            SupportView()
         }
     }
 }
 
 extension Notification.Name {
     static let didSignIn = Notification.Name("didSignIn")
+    static let didSignOut = Notification.Name("didSignOut")
+    static let didCompleteOnboarding = Notification.Name("didCompleteOnboarding") // NEW
     static let didCompleteScreenTimeSetup = Notification.Name("didCompleteScreenTimeSetup")
-}
-
-#Preview {
-    RootView()
 }

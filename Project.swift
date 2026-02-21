@@ -1,10 +1,10 @@
 import ProjectDescription
 
-let companyId = Environment.companyId.getString(default: "com.aydev")
-let teamId = Environment.teamId.getString(default: "32T8HNVYGX")
-let baseBundleId = Environment.baseBundleId.getString(default: "com.aydev.surahfocus")
-let revenueCatApiKey = Environment.revenueCatApiKey.getString(
-    default: "test_GigTjmiydMdJecOcMpeoxAtxtyi")
+let companyId = Environment.companyId.getString(default: "")
+let teamId = Environment.teamId.getString(default: "")
+let baseBundleId = Environment.baseBundleId.getString(default: "")
+let revenueCatApiKeyDebug = Environment.revenuecatApiKey.getString(default: "")
+let revenueCatApiKeyProd  = Environment.revenuecatProdKey.getString(default: "")
 
 let project = Project(
     name: "SurahFocus",
@@ -28,6 +28,8 @@ let project = Project(
                 "NSFamilyControlsUsageDescription":
                     "Deen First needs permission to block distracting apps during your Quran focus sessions.",
                 "UIBackgroundModes": ["audio"],
+                "RevenueCatAPIKey": "$(REVENUECAT_API_KEY)",
+                "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
             ]),
             sources: ["surahfocus/Sources/**"],
             resources: ["surahfocus/Resources/**"],
@@ -50,7 +52,8 @@ let project = Project(
                             "CODE_SIGN_IDENTITY": .string("Apple Development"),
                             "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "REVENUECAT_API_KEY": .string(revenueCatApiKeyDebug),
                         ]
                     ),
                     .release(
@@ -60,7 +63,8 @@ let project = Project(
                             "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution")
+                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution"),
+                            "REVENUECAT_API_KEY": .string(revenueCatApiKeyProd),
                         ]
                     ),
                 ]
@@ -183,12 +187,7 @@ let project = Project(
             buildAction: .buildAction(targets: ["SurahFocus"]),
             testAction: .targets(["SurahFocusTests"]),
             runAction: .runAction(
-                configuration: "Debug",
-                arguments: .arguments(
-                    environmentVariables: [
-                        "TUIST_REVENUECAT_API_KEY": .environmentVariable(value: revenueCatApiKey, isEnabled: true),
-                    ]
-                )
+                configuration: "Debug"
             )
         )
     ]

@@ -39,7 +39,6 @@ struct SetupSummary: View {
                                     .font(.callout)
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "ADA666"))
-                                    .padding(.horizontal, 24)
 
                                 if let rule = viewModel.previewAppLimitRule {
                                     BlockRuleCard(
@@ -47,9 +46,9 @@ struct SetupSummary: View {
                                         appsCount: rule.applicationTokenData.count,
                                         categoriesCount: rule.categoryTokenData.count,
                                         timeInfo: rule.limitDisplayName ?? "N/A",
-                                        daysText: rule.daysDisplayText
+                                        daysText: rule.daysDisplayText,
+                                        isShowPencil: false
                                     )
-                                    .padding(.horizontal, 24)
                                 }
                             }
                             .padding(.top, 32)
@@ -62,7 +61,6 @@ struct SetupSummary: View {
                                     .font(.callout)
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "ADA666"))
-                                    .padding(.horizontal, 24)
 
                                 ForEach(viewModel.previewTimeOfDayRules) { rule in
                                     BlockRuleCard(
@@ -70,9 +68,9 @@ struct SetupSummary: View {
                                         appsCount: rule.applicationTokenData.count,
                                         categoriesCount: rule.categoryTokenData.count,
                                         timeInfo: rule.timeRangeDisplay ?? "N/A",
-                                        daysText: rule.daysDisplayText
+                                        daysText: rule.daysDisplayText,
+                                        isShowPencil: false
                                     )
-                                    .padding(.horizontal, 24)
                                 }
                             }
                             .padding(.top, viewModel.previewAppLimitRule == nil ? 32 : 20)

@@ -4,6 +4,7 @@ import RevenueCat
 @MainActor
 final class SettingsTabViewModel: ObservableObject {
     @Published var user: User?
+    @Published var isPremium: Bool = false   // from RevenueCat, not User model
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showDeleteConfirmation = false
@@ -30,17 +31,23 @@ final class SettingsTabViewModel: ObservableObject {
         )
     }
 
+    // MARK: - Actions
+
     func loadUserData() async {
         isLoading = true
         errorMessage = nil
 
+        async let userResult = userRepository.getCurrentUser()
+        async let premiumResult = subscriptionService.checkSubscriptionStatus()
+
         do {
-            user = try await userRepository.getCurrentUser()
-            isLoading = false
+            user = try await userResult
+            isPremium = (try? await premiumResult) ?? false
         } catch {
             errorMessage = error.localizedDescription
-            isLoading = false
         }
+
+        isLoading = false
     }
 
     func signOut() async {
@@ -52,51 +59,37 @@ final class SettingsTabViewModel: ObservableObject {
     }
 
     func deleteAccount() async {
-        guard let user = user else {
-            errorMessage = "User not found"
-            return
-        }
-
         do {
-            try await userRepository.deleteCurrentUser()
-            try await authService.signOut()
+            try await authService.deleteAccount()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    // MARK: - Display Helpers
+
     var displayName: String {
-        guard let user = user else { return "User" }
-        if let name = user.name, !name.isEmpty {
-            return name
+        guard let user else { return "User" }
+        if let name = user.name, !name.isEmpty { return name }
+        if let email = user.email, !email.isEmpty {
+            return email.components(separatedBy: "@").first ?? "User"
         }
         return "User"
     }
 
     var displayInitial: String {
-        let name = displayName
-        return name.isEmpty ? "U" : String(name.prefix(1)).uppercased()
+        String(displayName.prefix(1)).uppercased()
     }
 
     var streakText: String {
-        guard let user = user else { return "0 day streak" }
-        return "\(user.currentStreak) day streak"
+        "\(user?.currentStreak ?? 0) day streak"
     }
 
     var subscriptionStatusText: String {
-        guard let user = user else { return "Loading..." }
-        return user.isPremium ? "Premium" : "Free"
+        isLoading ? "Loading..." : (isPremium ? "Premium" : "Free")
     }
 
-    var isSubscribed: Bool {
-        user?.isPremium ?? false
-    }
-
-    var email: String? {
-        user?.email
-    }
-
-    var currentStreak: Int {
-        user?.currentStreak ?? 0
-    }
+    var isSubscribed: Bool { isPremium }
+    var email: String? { user?.email }
+    var currentStreak: Int { user?.currentStreak ?? 0 }
 }

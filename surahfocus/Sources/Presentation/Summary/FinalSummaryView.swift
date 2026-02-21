@@ -106,7 +106,8 @@ struct FinalSummaryView: View {
         guard let user = try? await DIContainer.shared.userRepository.getCurrentUser() else { return }
         user.hasCompletedOnboarding = true
         try? await DIContainer.shared.userRepository.updateUser(user)
-        router.navigate(to: .paywall)
+
+        NotificationCenter.default.post(name: .didCompleteOnboarding, object: nil)
     }
 }
 

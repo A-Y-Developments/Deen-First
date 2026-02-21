@@ -6,33 +6,31 @@ final class Router: ObservableObject {
 
     enum Route: Hashable {
         case auth
-        case paywall
-        // Setup flow routes
+        case paywall(isFromSettings: Bool = false, currentPlan: String? = nil) // 👈 updated
         case permissionSetup
         case setupAppToBlock
         case setupSummary
         case mainTabs
-        case surahDetail(surahId: Int)
-        // Blocks View
+        case quranReading(surahId: Int)
         case blocks
         case appLimit
         case timeLimit
         case editAppLimit(id: UUID)
         case editTimeLimit(id: UUID)
         case editAllDay(id: UUID)
-
         case focusSection
         case selectSurah(surahs: [SurahWithRange])
         case ayahRange(surah: Surah)
         case activeSession(surahs: [SurahWithRange], ayahs: [Ayah])
         case sessionFinish(duration: TimeInterval, surahCount: Int)
-
-        // NEW: Survey flow with data passing via associated values
         case survey(step: Int, answers: SurveyAnswers)
         case calculateSurvey(answers: SurveyAnswers)
         case summary(step: Int, answers: SurveyAnswers)
         case howAppWork(step: Int)
         case finalSummary
+        case subscription
+        case preferences
+        case support
     }
 
     func navigate(to route: Route) {

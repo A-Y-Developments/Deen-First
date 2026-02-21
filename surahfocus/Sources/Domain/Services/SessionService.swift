@@ -136,14 +136,14 @@ final class SessionServiceImpl: SessionService {
             let daysDiff = Calendar.current.dateComponents([.day], from: lastActive, to: today).day ?? 0
 
             if daysDiff == 0 {
-                return
+                return // Already counted today
             } else if daysDiff == 1 {
                 user.currentStreak += 1
                 if user.currentStreak > user.longestStreak {
                     user.longestStreak = user.currentStreak
                 }
             } else {
-                user.currentStreak = 1
+                user.currentStreak = 1 // Streak broken
             }
         } else {
             user.currentStreak = 1
@@ -152,6 +152,13 @@ final class SessionServiceImpl: SessionService {
 
         user.lastActiveDate = Date()
         try await userRepository.updateUser(user)
+
+        // Sync streaks to iCloud KV so they survive reinstall
+        UserPersistenceHelper.saveStreaks(
+            current: user.currentStreak,
+            longest: user.longestStreak,
+            userId: user.appleUserId
+        )
     }
 
     // MARK: - Session Shield Management

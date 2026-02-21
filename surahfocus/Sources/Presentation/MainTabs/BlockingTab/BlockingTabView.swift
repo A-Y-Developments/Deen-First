@@ -7,52 +7,41 @@ struct BlockingTabView: View {
     @EnvironmentObject var router: Router
 
     var body: some View {
-        ScrollView {
-                VStack {
-                    HStack {
-                        Text("Blocks")
-                            .font(.system(.title))
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Button {
-                            showCreateSheet = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(width: 40, height: 40)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                )
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 16)
-                    .padding(.bottom, 24)
-
-
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .frame(height: 200)
-                    } else if !viewModel.hasApps {
-                        EmptyBlocksView(showCreateSheet: $showCreateSheet)
-                    } else {
-                        blockedAppsContent
-                    }
-
-                    Spacer()
+        Group {
+            if viewModel.isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
+            } else if !viewModel.hasApps {
+                EmptyBlocksView(showCreateSheet: $showCreateSheet)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    blockedAppsContent
+                        .padding(.top)
                 }
             }
-            .background {
-            // Background
+        }
+        .navigationTitle("Blocks")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showCreateSheet = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                }
+            }
+        }
+        .background {
             Image("main-background")
                 .resizable()
                 .scaledToFill()
@@ -80,45 +69,10 @@ struct BlockingTabView: View {
             }
         }
         .onChange(of: router.navigationPath.count) { _, _ in
-            // Reload when navigation path changes (returning from edit/create screens)
             Task {
                 await viewModel.loadBlockedApps()
             }
         }
-
-    }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "app.badge.checkmark")
-                .font(.system(size: 64))
-                .foregroundColor(.gray)
-
-            Text("No blocks set up yet")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-
-            Text("Add apps to block during your Quran focus sessions")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-
-            Button(action: {
-                showCreateSheet = true
-            }) {
-                Text("Create First Block")
-                    .font(.headline)
-                    .foregroundColor(Color(hex: "0c292b"))
-                    .padding()
-                    .frame(maxWidth: 200)
-                    .background(Color(hex: "ADA666"))
-                    .cornerRadius(12)
-            }
-            .padding(.top)
-        }
-        .frame(maxHeight: .infinity)
     }
 
     private var blockedAppsContent: some View {
@@ -179,6 +133,5 @@ struct BlockingTabView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top)
     }
 }

@@ -27,7 +27,7 @@ final class DIContainer {
 
     // Services
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
-    lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl(userRepository: userRepository)
+    lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl()
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
     
     @MainActor

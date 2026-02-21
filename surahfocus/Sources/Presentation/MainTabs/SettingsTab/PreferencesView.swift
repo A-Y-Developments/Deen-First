@@ -11,14 +11,6 @@ struct PreferencesView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
                 
-                Text("Preferences")
-                    .font(.system(.title3))
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
-                    .padding(.top)
-                
                 // MARK: Translation Field
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Translation")
@@ -64,16 +56,19 @@ struct PreferencesView: View {
         .padding(.horizontal, 24)
         .padding(.top, 48)
         .background {
-            // Background
             Image("main-background")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
         }
+        .navigationTitle("Preferences")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarColorScheme(.dark, for: .navigationBar)
     }
 }
 
 #Preview {
-    PreferencesView()
+    NavigationStack {
+        PreferencesView()
+    }
 }
-
