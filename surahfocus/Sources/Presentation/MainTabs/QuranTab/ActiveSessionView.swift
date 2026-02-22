@@ -91,11 +91,13 @@ struct ActiveSessionView: View {
             }
         }
         .navigationBarHidden(true)
-        .alert("End Session?", isPresented: $viewModel.showEndConfirmation) {
+        .alert("Astaghfirullah! Are you sure?", isPresented: $viewModel.showEndConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("End", role: .destructive) {
                 Task { await viewModel.confirmEndSession() }
             }
+        } message: {
+            Text("If you end this session, you need to restart again, focus for a little longer!")
         }
         .alert(viewModel.errorMessage ?? "Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },

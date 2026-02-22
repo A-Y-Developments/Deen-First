@@ -4,87 +4,61 @@ struct SessionFinishView: View {
     @EnvironmentObject var router: Router
     let duration: TimeInterval
     let surahCount: Int
-
+    
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [Color(hex: "1a1a2e"), Color(hex: "16213e")],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 32) {
-                Spacer()
-
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.2))
-                        .frame(width: 120, height: 120)
-
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 60, weight: .bold))
-                        .foregroundColor(.blue)
-                }
-
-                VStack(spacing: 8) {
-                    Text("Session Complete!")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-
-                    Text("Great job staying focused")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
-                }
-
-                VStack(spacing: 16) {
-                    StatRow(
-                        icon: "clock.fill",
-                        label: "Time Listened",
-                        value: durationString
-                    )
-
-                    StatRow(
-                        icon: "book.fill",
-                        label: "Surahs Completed",
-                        value: "\(surahCount)"
-                    )
-
-                    StatRow(
-                        icon: "flame.fill",
-                        label: "Streak",
-                        value: "🔥 1"
-                    )
-                }
-                .padding()
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(16)
-
-                Spacer()
-
-                Button(action: navigateToHome) {
-                    Text("Done")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                }
-                .padding()
+        VStack(spacing: 24) {
+            
+            Spacer()
+            
+            VStack(alignment: .leading, spacing: 16) {
+                
+                Text("MashaAllah...")
+                    .font(.system(.title, weight: .semibold))
+                    .italic()
+                    .foregroundColor(.white)
+                
+                Text("You’re doing better than 99% of people who just scroll through their phones aimlessly.")
+                    .font(.callout)
+                    .foregroundColor(Color.secondary200)
+                    .multilineTextAlignment(.leading)
+                
+                Text("May your effort be accepted by Allah")
+                    .font(.system(.subheadline, weight: .semibold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
             }
-            .padding()
+            
+            Spacer()
+            
+            // ✅ Button di dalam VStack
+            Button {
+                navigateToHome()
+            } label: {
+                Text("Aameen")
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.white)
+                    .clipShape(Capsule())
+            }
+            .padding(.bottom, 16)
+            .shadow(
+                color: Color.primary400,
+                radius: 12
+            )
         }
         .navigationBarHidden(true)
+        .padding(24)
+        .background {
+            // Background
+            Image("main-background")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+        }
     }
-
-    private var durationString: String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return "\(minutes)m \(seconds)s"
-    }
-
+    
     private func navigateToHome() {
         router.navigateBack()
         router.navigateBack()
@@ -93,33 +67,7 @@ struct SessionFinishView: View {
     }
 }
 
-struct StatRow: View {
-    let icon: String
-    let label: String
-    let value: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.blue)
-                .frame(width: 32)
-
-            Text(label)
-                .font(.subheadline)
-                .foregroundColor(.white)
-
-            Spacer()
-
-            Text(value)
-                .font(.headline)
-                .foregroundColor(.white)
-        }
-    }
-}
-
 #Preview {
-    NavigationStack {
-        SessionFinishView(duration: 300, surahCount: 3)
-    }
+    SessionFinishView(duration: 300, surahCount: 3)
+        .environmentObject(Router())
 }

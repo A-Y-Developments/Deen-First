@@ -132,6 +132,6 @@ struct BlockingTabView: View {
                 .padding(.horizontal)
             }
         }
-        .padding(.horizontal)
+//        .padding(.horizontal)
     }
 }

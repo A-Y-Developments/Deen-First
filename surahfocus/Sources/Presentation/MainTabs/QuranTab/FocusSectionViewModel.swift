@@ -11,6 +11,8 @@ final class FocusSectionViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isPickerPresented = false
     @Published var appSelection = FamilyActivitySelection()
+    @Published var editingSurah: SurahWithRange?
+    @Published var isRangeSheetPresented = false
 
     private let sessionService: SessionService
     private let userRepository: UserRepository
@@ -27,6 +29,23 @@ final class FocusSectionViewModel: ObservableObject {
         self.userRepository = userRepository
         self.quranService = quranService
         self.router = router
+    }
+    
+    func openRangeSheet(for surah: SurahWithRange) {
+        editingSurah = surah
+        isRangeSheetPresented = true
+    }
+    
+    func deleteSurah(surah: Surah) {
+        // Remove from UserDefaults
+        let key = "surahRange_\(surah.number)"
+        UserDefaults.standard.removeObject(forKey: key)
+
+        // Also remove surah from lastSelectedSurahs
+        if let surahNumbers = UserDefaults.standard.array(forKey: "lastSelectedSurahs") as? [Int] {
+            let updatedNumbers = surahNumbers.filter { $0 != surah.number }
+            UserDefaults.standard.set(updatedNumbers, forKey: "lastSelectedSurahs")
+        }
     }
 
     func loadData() async {

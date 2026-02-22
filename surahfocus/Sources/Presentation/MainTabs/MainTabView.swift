@@ -53,4 +53,5 @@ struct MainTabView: View {
     MainTabView()
         .environmentObject(Router())
         .environmentObject(QuranTabViewModel())
+        .environmentObject(SettingsTabViewModel())
 }
