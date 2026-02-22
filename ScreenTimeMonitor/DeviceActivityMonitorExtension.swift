@@ -1,19 +1,18 @@
 import DeviceActivity
 import FamilyControls
-import ManagedSettings
 import Foundation
+import ManagedSettings
 
-// MARK: - App Group Constants
-
-enum AppGroupConstants {
+private enum AppGroupConstants {
     static let suiteName = "group.com.aydev.surahfocus"
     static let tokenMappingKey = "tokenMapping"
     static let categoryTokensKey = "categoryTokens"
+    static let ruleTokensKey = "ruleTokens"
 }
 
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
-    private let managedSettingsStore = ManagedSettingsStore()
+    private let store = ManagedSettingsStore()
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: AppGroupConstants.suiteName)
     }
@@ -22,127 +21,111 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
-
-        // For time-limit schedules we name them as "daily_<ruleId>"
         if activity.rawValue.hasPrefix("daily_") {
-            let store = ManagedSettingsStore()
             store.clearAllSettings()
-            print("Reset limits for new day interval: \(activity.rawValue)")
+            print("✅ Reset limits for new day: \(activity.rawValue)")
         }
     }
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
-        let store = ManagedSettingsStore()
-        store.clearAllSettings()
+        if activity.rawValue.hasPrefix("daily_") {
+            store.clearAllSettings()
+            print("✅ App limit shields cleared at interval end: \(activity.rawValue)")
+        }
     }
 
-    // MARK: - Event Thresholds
+    // MARK: - Threshold Reached
 
-    override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
+    override func eventDidReachThreshold(
+        _ event: DeviceActivityEvent.Name, activity: DeviceActivityName
+    ) {
         super.eventDidReachThreshold(event, activity: activity)
-
-        print("🚦 THRESHOLD REACHED: \(event.rawValue) for activity: \(activity.rawValue)")
-
-        // User exceeded their time limit - apply shield
+        print("🚦 THRESHOLD REACHED: \(event.rawValue)")
         applyShieldForEvent(event)
     }
 
-    override func eventWillReachThresholdWarning(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
-        super.eventWillReachThresholdWarning(event, activity: activity)
-
-        // User is approaching their limit - could trigger notification
-        // (Not accessible from extension, but main app could listen for this)
-    }
-
-    // MARK: - Interval Warnings
-
-    override func intervalWillStartWarning(for activity: DeviceActivityName) {
-        super.intervalWillStartWarning(for: activity)
-        // Interval about to start
-    }
-
-    override func intervalWillEndWarning(for activity: DeviceActivityName) {
-        super.intervalWillStartWarning(for: activity)
-        // Interval about to end
-    }
-
-    // MARK: - Private Helpers
+    // MARK: - Shield Application
 
     private func applyShieldForEvent(_ event: DeviceActivityEvent.Name) {
-        guard let sharedDefaults = sharedDefaults else { return }
         let raw = event.rawValue
 
-        print("🛡️ Applying shield for event: \(raw)")
-
-        // Helper closures
-        func applyApp(by uuidString: String) {
-            print("🔍 Looking up app token: \(uuidString)")
-            guard
-                let dict = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data],
-                let data = dict[uuidString],
-                let token = try? JSONDecoder().decode(ApplicationToken.self, from: data)
-            else {
-                print("❌ Failed to find app token: \(uuidString)")
-                return
-            }
-            print("✅ Found app token, applying shield")
-            managedSettingsStore.shield.applications = (managedSettingsStore.shield.applications ?? []).union([token])
+        // Extract ruleId from event name
+        let ruleIdString: String
+        if raw.hasPrefix("limitReached_") {
+            ruleIdString = raw.replacingOccurrences(of: "limitReached_", with: "")
+        } else if raw.hasPrefix("timeLimit_") {
+            ruleIdString = raw.replacingOccurrences(of: "timeLimit_", with: "")
+        } else {
+            print("❌ Unknown event prefix: \(raw)")
+            return
         }
 
-        func applyCategory(by uuidString: String) {
-            guard
-                let dict = sharedDefaults.dictionary(forKey: AppGroupConstants.categoryTokensKey) as? [String: Data],
-                let data = dict[uuidString],
-                let token = try? JSONDecoder().decode(ActivityCategoryToken.self, from: data)
-            else { return }
+        guard UUID(uuidString: ruleIdString) != nil else {
+            print("❌ Invalid ruleId: \(ruleIdString)")
+            return
+        }
 
-            if let existing = managedSettingsStore.shield.applicationCategories {
-                switch existing {
-                case .all:
-                    managedSettingsStore.shield.applicationCategories = .all()
-                case .specific(let categories, let exceptApps):
-                    var newCategories = categories
-                    newCategories.insert(token)
-                    managedSettingsStore.shield.applicationCategories = .specific(newCategories, except: exceptApps)
-                case .none:
-                    break
-                @unknown default:
-                    break
+        // Load all tokens for this rule
+        let (appTokens, categoryTokens) = loadRuleTokens(ruleIdString: ruleIdString)
+
+        guard !appTokens.isEmpty || !categoryTokens.isEmpty else {
+            print("❌ No tokens found for rule: \(ruleIdString)")
+            return
+        }
+
+        // Shield all apps in this rule
+        if !appTokens.isEmpty {
+            let existing = store.shield.applications ?? []
+            store.shield.applications = existing.union(appTokens)
+            print("✅ Shielded \(appTokens.count) apps for rule: \(ruleIdString)")
+        }
+
+        if !categoryTokens.isEmpty {
+            switch store.shield.applicationCategories {
+            case .specific(let existing, let except):
+                store.shield.applicationCategories = .specific(
+                    existing.union(categoryTokens), except: except)
+            case .all:
+                store.shield.applicationCategories = .all()
+            default:
+                store.shield.applicationCategories = .specific(categoryTokens, except: [])
+            }
+            print("✅ Shielded \(categoryTokens.count) categories for rule: \(ruleIdString)")
+        }
+    }
+
+    // MARK: - Token Loading
+
+    private func loadRuleTokens(
+        ruleIdString: String
+    ) -> (Set<ApplicationToken>, Set<ActivityCategoryToken>) {
+        guard let defaults = sharedDefaults,
+            let allRules = defaults.dictionary(forKey: AppGroupConstants.ruleTokensKey),
+            let ruleData = allRules[ruleIdString] as? [String: Any]
+        else {
+            return ([], [])
+        }
+
+        var appTokens: Set<ApplicationToken> = []
+        var categoryTokens: Set<ActivityCategoryToken> = []
+
+        if let appDataList = ruleData["apps"] as? [Data] {
+            for data in appDataList {
+                if let token = try? JSONDecoder().decode(ApplicationToken.self, from: data) {
+                    appTokens.insert(token)
                 }
-            } else {
-                managedSettingsStore.shield.applicationCategories = .specific([token], except: [])
             }
         }
 
-        // Time limit events (App Limit)
-        if raw.hasPrefix("limitReached_app_") {
-            applyApp(by: raw.replacingOccurrences(of: "limitReached_app_", with: ""))
-            return
-        }
-        if raw.hasPrefix("limitReached_category_") {
-            applyCategory(by: raw.replacingOccurrences(of: "limitReached_category_", with: ""))
-            return
+        if let categoryDataList = ruleData["categories"] as? [Data] {
+            for data in categoryDataList {
+                if let token = try? JSONDecoder().decode(ActivityCategoryToken.self, from: data) {
+                    categoryTokens.insert(token)
+                }
+            }
         }
 
-        // Time-of-day events (Prayer Times/Downtime)
-        if raw.hasPrefix("timeOfDay_app_") {
-            applyApp(by: raw.replacingOccurrences(of: "timeOfDay_app_", with: ""))
-            return
-        }
-        if raw.hasPrefix("timeOfDay_category_") {
-            applyCategory(by: raw.replacingOccurrences(of: "timeOfDay_category_", with: ""))
-            return
-        }
-
-        // All-day events
-        if raw.hasPrefix("allDay_app_") {
-            applyApp(by: raw.replacingOccurrences(of: "allDay_app_", with: ""))
-            return
-        }
-        if raw.hasPrefix("allDay_category_") {
-            applyCategory(by: raw.replacingOccurrences(of: "allDay_category_", with: ""))
-            return
-        }
+        return (appTokens, categoryTokens)
     }
 }

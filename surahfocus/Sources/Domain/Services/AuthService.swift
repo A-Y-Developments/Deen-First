@@ -1,5 +1,5 @@
-import Foundation
 import AuthenticationServices
+import Foundation
 import RevenueCat
 
 protocol AuthService {
@@ -16,8 +16,6 @@ final class AuthServiceImpl: AuthService {
         self.userRepository = userRepository
     }
 
-    // MARK: - Sign In
-
     func signInWithApple(authorization: ASAuthorization) async throws -> User {
         guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
             throw AuthError.invalidCredential
@@ -25,7 +23,6 @@ final class AuthServiceImpl: AuthService {
 
         let appleUserId = credential.user
 
-        // Login to RevenueCat FIRST — must complete before subscription check
         do {
             _ = try await Purchases.shared.logIn(appleUserId)
             print("[RevenueCat] Logged in with Apple User ID: \(appleUserId)")
@@ -33,20 +30,17 @@ final class AuthServiceImpl: AuthService {
             print("[RevenueCat] logIn failed (non-fatal): \(error.localizedDescription)")
         }
 
-        // Resolve name from Apple → Keychain → iCloud KV
         let credentialName = Self.extractFullName(from: credential.fullName)
         let resolvedName = UserPersistenceHelper.resolveName(
             fromAppleCredentialName: credentialName,
             userId: appleUserId
         )
 
-        // Resolve email from Apple → iCloud KV
         let resolvedEmail = UserPersistenceHelper.resolveEmail(
             fromAppleCredentialEmail: credential.email,
             userId: appleUserId
         )
 
-        // User exists locally — patch name/email if recovered
         if var existingUser = try await userRepository.getUser(byAppleUserId: appleUserId) {
             var didChange = false
 
@@ -67,11 +61,9 @@ final class AuthServiceImpl: AuthService {
             return existingUser
         }
 
-        // Restore createdAt from Keychain/iCloud if user is reinstalling
         let restoredCreatedAt = UserPersistenceHelper.resolveCreatedAt(userId: appleUserId)
         let createdAt = restoredCreatedAt ?? Date()
 
-        // New user
         let newUser = User(
             appleUserId: appleUserId,
             email: resolvedEmail,
@@ -79,10 +71,8 @@ final class AuthServiceImpl: AuthService {
             createdAt: createdAt
         )
 
-        // Persist createdAt immediately
         UserPersistenceHelper.saveCreatedAt(createdAt, userId: appleUserId)
 
-        // Restore streaks from iCloud KV if available
         if let streaks = UserPersistenceHelper.resolveStreaks(userId: appleUserId) {
             newUser.currentStreak = streaks.current
             newUser.longestStreak = streaks.longest
@@ -93,62 +83,44 @@ final class AuthServiceImpl: AuthService {
         return newUser
     }
 
-    // MARK: - Get Current User
-
     func getCurrentUser() async throws -> User? {
         return try await userRepository.getCurrentUser()
     }
 
-    // MARK: - Sign Out
-
     func signOut() async throws {
-        // 1. Delete all Screen Time rules — fresh start for next user
-        try? await DIContainer.shared.screenTimeRulesUseCase.deleteAllRules()
-
-        // 2. Delete local user
+        try? await DIContainer.shared.screenTimeRulesService.deleteAllRules()
         try await userRepository.deleteCurrentUser()
 
-        // 3. Reset RevenueCat
         do {
             _ = try await Purchases.shared.logOut()
         } catch {
             print("[Auth] RevenueCat logOut skipped: \(error.localizedDescription)")
         }
 
-        // 4. Notify RootView
         await MainActor.run {
             NotificationCenter.default.post(name: .didSignOut, object: nil)
         }
     }
 
-    // MARK: - Delete Account
-
     func deleteAccount() async throws {
-        // 1. Cleanup Keychain + iCloud KV (includes email now)
         if let user = try await userRepository.getCurrentUser() {
             UserPersistenceHelper.deleteAll(userId: user.appleUserId)
         }
 
-        // 2. Delete all Screen Time rules
-        try? await DIContainer.shared.screenTimeRulesUseCase.deleteAllRules()
+        try? await DIContainer.shared.screenTimeRulesService.deleteAllRules()
 
-        // 3. Delete local user
         try await userRepository.deleteCurrentUser()
 
-        // 4. Reset RevenueCat
         do {
             _ = try await Purchases.shared.logOut()
         } catch {
             print("[Auth] RevenueCat logOut skipped: \(error.localizedDescription)")
         }
 
-        // 5. Notify RootView
         await MainActor.run {
             NotificationCenter.default.post(name: .didSignOut, object: nil)
         }
     }
-
-    // MARK: - Helpers
 
     private func setRevenueCatAttributes(name: String?, email: String?) {
         if let name { Purchases.shared.attribution.setDisplayName(name) }
@@ -172,8 +144,8 @@ enum AuthError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidCredential: return "Invalid authentication credential"
-        case .userNotFound:      return "User not found"
-        case .cancelled:         return "Authentication was cancelled"
+        case .userNotFound: return "User not found"
+        case .cancelled: return "Authentication was cancelled"
         }
     }
 }

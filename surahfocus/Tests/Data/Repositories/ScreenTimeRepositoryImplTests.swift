@@ -1,6 +1,7 @@
-import XCTest
 import DeviceActivity
 import FamilyControls
+import XCTest
+
 @testable import SurahFocus
 
 @MainActor
@@ -10,7 +11,9 @@ final class ScreenTimeRepositoryImplTests: XCTestCase {
     var container: ModelContainer!
 
     override func setUp() async throws {
-        let schema = Schema([User.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self])
+        let schema = Schema([
+            User.self, Session.self, BlockedApp.self, AppLimit.self, TimeLimitSettings.self,
+        ])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         container = try ModelContainer(for: schema, configurations: [config])
         localDataSource = LocalDataSource(container: container)
@@ -26,14 +29,12 @@ final class ScreenTimeRepositoryImplTests: XCTestCase {
     func testStartActivityMonitoring_WithEvents_CallsStartMonitoring() async throws {
         let name = DeviceActivityName("test_activity")
         let schedule = DeviceActivityScheduleHelper.createDailySchedule()
-        let token = AppLimitToken(id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
+        let token = ActivityToken(
+            id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
         let events = ScreenTimeEvents.createEvents(for: .fifteen, selection: [token])
 
         try await repository.startActivityMonitoring(name: name, schedule: schedule, events: events)
 
-        // If no error is thrown, the test passes
-        // Note: DeviceActivityCenter may throw in test environment
-        // We're mainly testing the method exists and can be called
     }
 
     func testStartActivityMonitoring_WithoutEvents_CallsStartMonitoring() async throws {

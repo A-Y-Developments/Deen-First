@@ -33,7 +33,16 @@ struct QuranTabView: View {
                 }
                 
                 Button {
-                    router.navigate(to: .focusSection)
+                   router.navigate(to: .focusSection)
+                   // NOTES: FOR TEST ONLY, FIRE NOTIFICATION
+                    // let content = UNMutableNotificationContent()
+                    // content.title = "Test"
+                    // content.body = "Notification works"
+                    // content.sound = .default
+                    // let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+                    // UNUserNotificationCenter.current().add(
+                    //     UNNotificationRequest(identifier: "test", content: content, trigger: trigger)
+                    // )
                 } label: {
                     Text("Start Focus Session")
                         .padding(.vertical)

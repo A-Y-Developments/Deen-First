@@ -125,8 +125,8 @@ cp /Users/adithyafp_/Projects/mindcore/Helper/TimeLimit.swift \
 cp /Users/adithyafp_/Projects/mindcore/Helper/ScreenTimeEvents.swift \
    /path/to/SurahFocus/Sources/Utils/ScreenTime/ScreenTimeEvents.swift
 
-cp /Users/adithyafp_/Projects/mindcore/Helper/TimeOfDayHelper.swift \
-   /path/to/SurahFocus/Sources/Utils/ScreenTime/TimeOfDayHelper.swift
+cp /Users/adithyafp_/Projects/mindcore/Helper/TimeLimitHelper.swift \
+   /path/to/SurahFocus/Sources/Utils/ScreenTime/TimeLimitHelper.swift
 ```
 
 **Then check each file for:**

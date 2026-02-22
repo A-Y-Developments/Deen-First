@@ -12,7 +12,8 @@ final class DIContainer {
 
     // Repositories
     lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
-    lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(localDataSource: localDataSource)
+    lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(
+        localDataSource: localDataSource)
     lazy var quranRepository: QuranRepository = QuranRepositoryImpl(
         apiDataSource: quranAPIDataSource
     )
@@ -21,32 +22,34 @@ final class DIContainer {
     // Managed Settings & Device Activity
     @MainActor
     lazy var managedSettings: ManagedSettingsWrapper = ManagedSettingsWrapper()
-    
+
     @MainActor
-    lazy var deviceActivityManager: DeviceActivityManager = DeviceActivityManagerImpl(managedSettings: managedSettings)
+    lazy var deviceActivityManager: DeviceActivityManager = DeviceActivityManagerImpl(
+        managedSettings: managedSettings)
 
     // Services
     lazy var authService: AuthService = AuthServiceImpl(userRepository: userRepository)
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl()
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
-    
+
     @MainActor
-    lazy var screenTimeRulesUseCase: ScreenTimeRulesUseCase = ScreenTimeRulesUseCaseImpl(
+    lazy var screenTimeRulesService: ScreenTimeRulesService = ScreenTimeRulesServiceImpl(
         repository: screenTimeRulesRepository,
         deviceActivityManager: deviceActivityManager
     )
-    
+
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
         userRepository: userRepository,
-        screenTimeRulesUseCase: MainActor.assumeIsolated { screenTimeRulesUseCase }
+        screenTimeRulesService: MainActor.assumeIsolated { screenTimeRulesService }
     )
 
     @MainActor
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
-    
+
     @MainActor
-    lazy var ayahAudioPlayerService: AyahAudioPlayerService = AyahAudioPlayerServiceImpl(audioPlayer: audioPlayerService)
+    lazy var ayahAudioPlayerService: AyahAudioPlayerService = AyahAudioPlayerServiceImpl(
+        audioPlayer: audioPlayerService)
 
     @MainActor
     var mainContext: ModelContext {
@@ -57,7 +60,7 @@ final class DIContainer {
         do {
             let schema = Schema([
                 User.self,
-                Session.self
+                Session.self,
             ])
             let config = ModelConfiguration(
                 schema: schema,
@@ -65,7 +68,6 @@ final class DIContainer {
                 allowsSave: true,
                 cloudKitDatabase: .none
             )
-            // NO MIGRATION - Fresh start
             self.modelContainer = try ModelContainer(
                 for: schema,
                 configurations: [config]
@@ -74,7 +76,7 @@ final class DIContainer {
             do {
                 let schema = Schema([
                     User.self,
-                    Session.self
+                    Session.self,
                 ])
                 let config = ModelConfiguration(
                     schema: schema,
@@ -94,7 +96,7 @@ final class DIContainer {
     static func makeTestContainer() -> DIContainer {
         let schema = Schema([
             User.self,
-            Session.self
+            Session.self,
         ])
         let config = ModelConfiguration(
             schema: schema,

@@ -1,5 +1,5 @@
-import SwiftUI
 import FamilyControls
+import SwiftUI
 
 struct BlockingTabView: View {
     @StateObject private var viewModel = BlockingTabViewModel()
@@ -54,24 +54,22 @@ struct BlockingTabView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color(hex: "041315"))
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
-                viewModel.errorMessage = nil
-            }
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )
+        ) {
+            Button("OK") { viewModel.errorMessage = nil }
         } message: {
-            if let error = viewModel.errorMessage {
-                Text(error)
-            }
+            Text(viewModel.errorMessage ?? "")
         }
         .onAppear {
-            Task {
-                await viewModel.loadBlockedApps()
-            }
+            Task { await viewModel.loadBlockedApps() }
         }
         .onChange(of: router.navigationPath.count) { _, _ in
-            Task {
-                await viewModel.loadBlockedApps()
-            }
+            Task { await viewModel.loadBlockedApps() }
         }
     }
 
@@ -92,7 +90,7 @@ struct BlockingTabView: View {
                 .buttonStyle(PlainButtonStyle())
             }
 
-            ForEach(viewModel.timeOfDayLimits) { limit in
+            ForEach(viewModel.timeLimits) { limit in
                 Button {
                     router.navigate(to: .editTimeLimit(id: limit.id))
                 } label: {
@@ -105,31 +103,6 @@ struct BlockingTabView: View {
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
-            }
-
-            if !viewModel.allDayLimits.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("All Day")
-                        .font(.system(.callout, design: .serif))
-                        .fontWeight(.semibold)
-                        .foregroundColor(Color(hex: "ADA666"))
-
-                    ForEach(viewModel.allDayLimits) { limit in
-                        Button {
-                            router.navigate(to: .editAllDay(id: limit.id))
-                        } label: {
-                            BlockRuleCard(
-                                settingsName: limit.name,
-                                appsCount: limit.applicationTokenData.count,
-                                categoriesCount: limit.categoryTokenData.count,
-                                timeInfo: "All Day",
-                                daysText: limit.daysDisplayText
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .padding(.horizontal)
             }
         }
 //        .padding(.horizontal)

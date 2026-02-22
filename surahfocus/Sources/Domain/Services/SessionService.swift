@@ -1,7 +1,7 @@
-import Foundation
-import SwiftData
-import ManagedSettings
 import FamilyControls
+import Foundation
+import ManagedSettings
+import SwiftData
 
 protocol SessionRepository {
     func save(_ session: Session) async throws
@@ -32,9 +32,7 @@ final class SessionRepositoryImpl: SessionRepository {
 
     func getSessions(for userId: UUID, startDate: Date, endDate: Date) async throws -> [Session] {
         return try await localDataSource.fetchSessions(predicate: {
-            $0.userId == userId &&
-            $0.startTime >= startDate &&
-            $0.startTime <= endDate
+            $0.userId == userId && $0.startTime >= startDate && $0.startTime <= endDate
         })
     }
 
@@ -48,7 +46,8 @@ final class SessionRepositoryImpl: SessionRepository {
 }
 
 protocol SessionService {
-    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int?) async throws -> Session
+    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int?) async throws
+        -> Session
     func endSession(_ session: Session, durationSeconds: Int) async throws
     func getTodaySession(for userId: UUID) async throws -> Session?
     func updateStreak(for userId: UUID) async throws
@@ -69,21 +68,24 @@ enum SessionServiceError: LocalizedError {
 final class SessionServiceImpl: SessionService {
     let sessionRepository: SessionRepository
     let userRepository: UserRepository
-    let screenTimeRulesUseCase: ScreenTimeRulesUseCase
+    let screenTimeRulesService: ScreenTimeRulesService
 
-    init(sessionRepository: SessionRepository, userRepository: UserRepository, screenTimeRulesUseCase: ScreenTimeRulesUseCase) {
+    init(
+        sessionRepository: SessionRepository, userRepository: UserRepository,
+        screenTimeRulesService: ScreenTimeRulesService
+    ) {
         self.sessionRepository = sessionRepository
         self.userRepository = userRepository
-        self.screenTimeRulesUseCase = screenTimeRulesUseCase
+        self.screenTimeRulesService = screenTimeRulesService
     }
 
-
-    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int? = nil) async throws -> Session {
+    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int? = nil)
+        async throws -> Session
+    {
         guard let user = try await userRepository.getCurrentUser() else {
             throw SessionServiceError.noUser
         }
 
-        // Apply shields for listening sessions
         if type == .listening {
             await applySessionShields()
         }
@@ -97,13 +99,11 @@ final class SessionServiceImpl: SessionService {
 
         try await sessionRepository.save(session)
 
-        // Save preferences to UserDefaults
         UserDefaults.standard.set(surahNumbers, forKey: "lastSelectedSurahs")
         if let reciterId = reciterId {
             UserDefaults.standard.set(reciterId, forKey: "lastReciterId")
         }
 
-        // Engagement counts immediately - no minimum time
         try await updateStreak(for: user.id)
 
         return session
@@ -114,7 +114,6 @@ final class SessionServiceImpl: SessionService {
         session.durationSeconds = durationSeconds
         session.isCompleted = true
 
-        // Remove shields when session ends
         if session.type == .listening {
             await removeSessionShields()
         }
@@ -133,17 +132,18 @@ final class SessionServiceImpl: SessionService {
         let lastActiveDay = user.lastActiveDate.map { Calendar.current.startOfDay(for: $0) }
 
         if let lastActive = lastActiveDay {
-            let daysDiff = Calendar.current.dateComponents([.day], from: lastActive, to: today).day ?? 0
+            let daysDiff =
+                Calendar.current.dateComponents([.day], from: lastActive, to: today).day ?? 0
 
             if daysDiff == 0 {
-                return // Already counted today
+                return
             } else if daysDiff == 1 {
                 user.currentStreak += 1
                 if user.currentStreak > user.longestStreak {
                     user.longestStreak = user.currentStreak
                 }
             } else {
-                user.currentStreak = 1 // Streak broken
+                user.currentStreak = 1
             }
         } else {
             user.currentStreak = 1
@@ -153,7 +153,6 @@ final class SessionServiceImpl: SessionService {
         user.lastActiveDate = Date()
         try await userRepository.updateUser(user)
 
-        // Sync streaks to iCloud KV so they survive reinstall
         UserPersistenceHelper.saveStreaks(
             current: user.currentStreak,
             longest: user.longestStreak,
@@ -169,40 +168,38 @@ final class SessionServiceImpl: SessionService {
         }
 
         var selection = FamilyActivitySelection()
-        
-        // Load application tokens
-        if let tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data] {
+
+        if let tokenMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.tokenMappingKey)
+            as? [String: Data]
+        {
             for (_, data) in tokenMapping {
                 if let token = try? JSONDecoder().decode(ApplicationToken.self, from: data) {
                     selection.applicationTokens.insert(token)
                 }
             }
         }
-        
-        // Load category tokens
-        if let categoryMapping = sharedDefaults.dictionary(forKey: AppGroupConstants.categoryTokensKey) as? [String: Data] {
+
+        if let categoryMapping = sharedDefaults.dictionary(
+            forKey: AppGroupConstants.categoryTokensKey) as? [String: Data]
+        {
             for (_, data) in categoryMapping {
                 if let token = try? JSONDecoder().decode(ActivityCategoryToken.self, from: data) {
                     selection.categoryTokens.insert(token)
                 }
             }
         }
-        
+
         guard !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty else {
             print("⚠️ No saved app selection found")
             return
         }
-        
-        do {
-            try await screenTimeRulesUseCase.applySessionShield(for: selection)
-            print("✅ Session shields applied")
-        } catch {
-            print("❌ Failed to apply session shields: \(error)")
-        }
+
+        await screenTimeRulesService.applySessionShield(for: selection)
+        print("✅ Session shields applied")
     }
 
     private func removeSessionShields() async {
-        await screenTimeRulesUseCase.removeSessionShield()
+        await screenTimeRulesService.removeSessionShield()
         print("✅ Session shields removed, rule-based shields reapplied")
     }
 }

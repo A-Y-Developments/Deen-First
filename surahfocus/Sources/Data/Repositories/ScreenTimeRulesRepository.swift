@@ -1,35 +1,30 @@
-import Foundation
-import FamilyControls
 import DeviceActivity
+import FamilyControls
+import Foundation
 import ManagedSettings
 
 // MARK: - Screen Time Rules Repository Protocol
 
 protocol ScreenTimeRulesRepository {
+    func getAppLimitRules() -> [ScreenTimeRule]
     func getTimeLimitRules() -> [ScreenTimeRule]
-    func getTimeOfDayRules() -> [ScreenTimeRule]
-    func getAllDayRules() -> [ScreenTimeRule]
     func getAllRules() -> [ScreenTimeRule]
 
+    func setAppLimitRule(_ rule: ScreenTimeRule)
     func setTimeLimitRule(_ rule: ScreenTimeRule)
-    func setTimeOfDayRule(_ rule: ScreenTimeRule)
-    func setAllDayRule(_ rule: ScreenTimeRule)
 
+    func deleteAppLimitRule(id: UUID)
     func deleteTimeLimitRule(id: UUID)
-    func deleteTimeOfDayRule(id: UUID)
-    func deleteAllDayRule(id: UUID)
 
     func getRule(id: UUID) -> ScreenTimeRule?
-
     func clearAllRules()
 }
 
 // MARK: - UserDefaults Keys
 
 private enum UserDefaultsKeys {
+    static let appLimitRules = "appLimitRules"
     static let timeLimitRules = "timeLimitRules"
-    static let timeOfDayRules = "timeOfDayRules"
-    static let allDayRules = "allDayRules"
     static let tokenMapping = "tokenMapping"
     static let categoryTokens = "categoryTokens"
 }
@@ -45,20 +40,16 @@ final class ScreenTimeRulesRepositoryImpl: ScreenTimeRulesRepository {
 
     // MARK: - Get Rules
 
+    func getAppLimitRules() -> [ScreenTimeRule] {
+        loadRules(forKey: UserDefaultsKeys.appLimitRules)
+    }
+
     func getTimeLimitRules() -> [ScreenTimeRule] {
         loadRules(forKey: UserDefaultsKeys.timeLimitRules)
     }
 
-    func getTimeOfDayRules() -> [ScreenTimeRule] {
-        loadRules(forKey: UserDefaultsKeys.timeOfDayRules)
-    }
-
-    func getAllDayRules() -> [ScreenTimeRule] {
-        loadRules(forKey: UserDefaultsKeys.allDayRules)
-    }
-
     func getAllRules() -> [ScreenTimeRule] {
-        getTimeLimitRules() + getTimeOfDayRules() + getAllDayRules()
+        getAppLimitRules() + getTimeLimitRules()
     }
 
     func getRule(id: UUID) -> ScreenTimeRule? {
@@ -67,25 +58,25 @@ final class ScreenTimeRulesRepositoryImpl: ScreenTimeRulesRepository {
 
     // MARK: - Set Rules
 
+    func setAppLimitRule(_ rule: ScreenTimeRule) {
+        var rules = getAppLimitRules()
+        addOrUpdateRule(&rules, rule: rule)
+        saveRules(rules, forKey: UserDefaultsKeys.appLimitRules)
+    }
+
     func setTimeLimitRule(_ rule: ScreenTimeRule) {
         var rules = getTimeLimitRules()
         addOrUpdateRule(&rules, rule: rule)
         saveRules(rules, forKey: UserDefaultsKeys.timeLimitRules)
     }
 
-    func setTimeOfDayRule(_ rule: ScreenTimeRule) {
-        var rules = getTimeOfDayRules()
-        addOrUpdateRule(&rules, rule: rule)
-        saveRules(rules, forKey: UserDefaultsKeys.timeOfDayRules)
-    }
-
-    func setAllDayRule(_ rule: ScreenTimeRule) {
-        var rules = getAllDayRules()
-        addOrUpdateRule(&rules, rule: rule)
-        saveRules(rules, forKey: UserDefaultsKeys.allDayRules)
-    }
-
     // MARK: - Delete Rules
+
+    func deleteAppLimitRule(id: UUID) {
+        var rules = getAppLimitRules()
+        rules.removeAll { $0.id == id }
+        saveRules(rules, forKey: UserDefaultsKeys.appLimitRules)
+    }
 
     func deleteTimeLimitRule(id: UUID) {
         var rules = getTimeLimitRules()
@@ -93,30 +84,18 @@ final class ScreenTimeRulesRepositoryImpl: ScreenTimeRulesRepository {
         saveRules(rules, forKey: UserDefaultsKeys.timeLimitRules)
     }
 
-    func deleteTimeOfDayRule(id: UUID) {
-        var rules = getTimeOfDayRules()
-        rules.removeAll { $0.id == id }
-        saveRules(rules, forKey: UserDefaultsKeys.timeOfDayRules)
-    }
-
-    func deleteAllDayRule(id: UUID) {
-        var rules = getAllDayRules()
-        rules.removeAll { $0.id == id }
-        saveRules(rules, forKey: UserDefaultsKeys.allDayRules)
-    }
-
     func clearAllRules() {
+        userDefaults?.removeObject(forKey: UserDefaultsKeys.appLimitRules)
         userDefaults?.removeObject(forKey: UserDefaultsKeys.timeLimitRules)
-        userDefaults?.removeObject(forKey: UserDefaultsKeys.timeOfDayRules)
-        userDefaults?.removeObject(forKey: UserDefaultsKeys.allDayRules)
     }
 
     // MARK: - Private Helpers
 
     private func loadRules(forKey key: String) -> [ScreenTimeRule] {
         guard let userDefaults = userDefaults,
-              let data = userDefaults.data(forKey: key),
-              let rules = try? JSONDecoder().decode([ScreenTimeRule].self, from: data) else {
+            let data = userDefaults.data(forKey: key),
+            let rules = try? JSONDecoder().decode([ScreenTimeRule].self, from: data)
+        else {
             return []
         }
         return rules
@@ -124,7 +103,8 @@ final class ScreenTimeRulesRepositoryImpl: ScreenTimeRulesRepository {
 
     private func saveRules(_ rules: [ScreenTimeRule], forKey key: String) {
         guard let userDefaults = userDefaults,
-              let data = try? JSONEncoder().encode(rules) else {
+            let data = try? JSONEncoder().encode(rules)
+        else {
             return
         }
         userDefaults.set(data, forKey: key)

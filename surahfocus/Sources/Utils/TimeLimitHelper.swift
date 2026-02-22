@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Time of Day Helper
 
-enum TimeOfDayHelper {
+enum TimeLimitHelper {
     static func isMorning() -> Bool {
         hour >= 6 && hour < 12
     }

@@ -1,281 +1,284 @@
-//
-//  AppLimitView.swift
-//  SurahFocus
-//
-//  Created by Aditya Rizki on 11/02/26.
-//
-
-import SwiftUI
 import FamilyControls
+import SwiftUI
 
 struct AppLimitView: View {
-    @StateObject private var viewModel: AppLimitConfigViewModel
+    @StateObject private var viewModel = AppLimitViewModel()
     @Environment(\.dismiss) private var dismiss
 
-    let days = ["S", "M", "T", "W", "T", "F", "S"]
+    let limitId: UUID?
 
-    init(limitId: UUID? = nil, isAllDay: Bool = false, container: DIContainer = .shared) {
-        let vm = AppLimitConfigViewModel()
-        self._viewModel = StateObject(wrappedValue: vm)
-        
-        if let limitId = limitId {
-            Task { @MainActor in
-                if let rule = container.screenTimeRulesUseCase.getRule(id: limitId) {
-                    await vm.setupForEdit(rule: rule)
-                }
-            }
-        }
+    private let days = ["S", "M", "T", "W", "T", "F", "S"]
+
+    init(limitId: UUID? = nil) {
+        self.limitId = limitId
     }
 
     var body: some View {
         ZStack {
-            Color.primary900
-                    .ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 28) {
+            Color.primary900.ignoresSafeArea()
 
-                    // HEADER
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(viewModel.isEditMode ? "Edit App Limit" : "App Limit")
-                            .font(.system(.title3))
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
+            if viewModel.isLoading && viewModel.settingsName.isEmpty {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 28) {
+                        headerSection
 
-                        Text("Block app after daily usage limit")
-                            .font(.system(.subheadline))
-                            .foregroundColor(Color(hex: "999999"))
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
+                        VStack(spacing: 20) {
+                            settingsNameSection
+                            blockedAppsSection
+                            timeSettingsSection
+                            activeTimeSection
+                        }
+
+                        actionButtons
+                            .padding(.top, 8)
                     }
-
-                    // CONTENT
-                    VStack(spacing: 24) {
-
-                        // SETTINGS NAME
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Settings Name")
-                                .foregroundColor(Color(hex: "ADA666"))
-                                .fontWeight(.semibold)
-
-                            TextField("", text: $viewModel.settingsName, prompt: Text("Enter a name"))
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color(hex: "0c292b"))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .submitLabel(.go)
-                        }
-
-                        // BLOCKED APP
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Blocked App")
-                                .foregroundColor(Color.secondary400)
-                                .fontWeight(.semibold)
-
-                            Button {
-                                viewModel.addMoreApps()
-                            } label: {
-                                HStack {
-                                    Text(viewModel.appsCount > 0 ? "\(viewModel.appsCount) apps selected" : "Select apps")
-                                        .foregroundColor(.white)
-
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.white.opacity(0.7))
-                                }
-                                .padding()
-                                .background(Color(hex: "0c292b"))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                            }
-                            .disabled(viewModel.isLoading)
-                            .padding()
-                            .background(Color.primary500.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                        }
-                        // TIME SETTINGS
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Time Settings")
-                                .foregroundColor(Color.secondary400)
-                                .fontWeight(.semibold)
-
-                            Text("App Usage Duration")
-                                .foregroundColor(Color(hex: "999999"))
-                                .font(.caption)
-
-                            HStack {
-                                Text(viewModel.timeLimitText)
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 32, weight: .bold))
-
-                                Spacer()
-
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.white.opacity(0.4))
-                            }
-                            // .padding()
-                            // .background(Color(hex: "0c292b")
-                            .frame(height: 120)
-                            .background(Color.primary500.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.showTimePicker = true
-                            }
-                        }
-
-                        // ACTIVE TIME
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text("Active Time")
-                                    .foregroundColor(Color(hex: "999999"))
-                                    .font(.caption)
-
-                                Spacer()
-
-                                Toggle("", isOn: $viewModel.isAllDay)
-                                    .labelsHidden()
-                            }
-
-                            HStack(spacing: 12) {
-                                ForEach(0..<7) { index in
-                                    let isSelected = viewModel.activeDays.contains(index)
-
-                                    Text(days[index])
-                                        .fontWeight(.semibold)
-                                        .frame(width: 40, height: 40)
-                                        .background(
-                                            isSelected ?
-                                            Color.primary600 :
-                                                Color.primary500.opacity(0.2)
-                                        )
-                                        .foregroundColor(.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                                        .onTapGesture {
-                                            viewModel.toggleDay(index)
-                                        }
-                                }
-                            }
-                        }
-                    }
-
-                    // COMPLETE BUTTON
-                    if viewModel.isEditMode {
-                        // Edit mode: Delete + Save buttons
-                        HStack(spacing: 12) {
-                            Button {
-                                viewModel.showDeleteConfirmation = true
-                            } label: {
-                                if viewModel.isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
-                                    Text("Delete")
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red.opacity(0.8))
-                            .clipShape(Capsule())
-                            .disabled(viewModel.isLoading)
-
-                            Button {
-                                Task {
-                                    await viewModel.saveSettings()
-                                    if viewModel.hasSetupCompleted {
-                                        dismiss()
-                                    }
-                                }
-                            } label: {
-                                if viewModel.isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
-                                    Text("Save")
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(Color(hex: "0c292b"))
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(.white)
-                            .clipShape(Capsule())
-                            .disabled(viewModel.isLoading)
-                        }
-                        .padding(.top, 12)
-                    } else {
-                        // Create mode: Single button
-                        Button {
-                            Task {
-                                await viewModel.saveSettings()
-                                if viewModel.hasSetupCompleted {
-                                    dismiss()
-                                }
-                            }
-                        } label: {
-                            if viewModel.isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .foregroundColor(.white)
-                            } else {
-                                Text("Complete setup")
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(Color(hex: "0c292b"))
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(hex: "ADA666"))
-                        .clipShape(Capsule())
-                        .disabled(viewModel.isLoading)
-                        .padding(.top, 12)
-                    }
+                    .padding(24)
                 }
-                .padding(24)
             }
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
-            Button("OK") {
-                viewModel.errorMessage = nil
+        .task {
+            guard let limitId else { return }
+            if let rule = DIContainer.shared.screenTimeRulesService.getRule(id: limitId) {
+                await viewModel.setupForEdit(rule: rule)
             }
+        }
+        .alert(
+            "Error",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )
+        ) {
+            Button("OK") { viewModel.errorMessage = nil }
         } message: {
-            if let error = viewModel.errorMessage {
-                Text(error)
-            }
+            Text(viewModel.errorMessage ?? "")
         }
         .alert("Delete Block?", isPresented: $viewModel.showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 Task {
                     await viewModel.deleteCurrentLimit()
-                    if viewModel.hasSetupCompleted {
-                        dismiss()
-                    }
+                    if viewModel.hasSetupCompleted { dismiss() }
                 }
             }
         } message: {
-            Text("This will remove the block and its associated shield. This action cannot be undone.")
+            Text(
+                "This will remove the block and its associated shield. This action cannot be undone."
+            )
         }
         .familyActivityPicker(
             isPresented: $viewModel.showAppPicker,
             selection: $viewModel.appSelection
         )
         .onChange(of: viewModel.appSelection) { _, newValue in
+            Task { await viewModel.handleAppPickerSelection(newValue) }
+        }
+    }
+
+    // MARK: - Header
+
+    private var headerSection: some View {
+        VStack(spacing: 6) {
+            Text(viewModel.isEditMode ? "Edit App Limit" : "App Limit")
+                .font(.system(.title3, weight: .semibold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+
+            Text("Block app after daily usage limit")
+                .font(.subheadline)
+                .foregroundColor(Color(hex: "999999"))
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    // MARK: - Settings Name
+
+    private var settingsNameSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Name Settings")
+                .foregroundColor(Color(hex: "ADA666"))
+                .fontWeight(.semibold)
+
+            HStack {
+                TextField(
+                    "",
+                    text: $viewModel.settingsName,
+                    prompt: Text("Enter a name").foregroundColor(Color(hex: "999999"))
+                )
+                .foregroundColor(.white)
+                .submitLabel(.done)
+
+                Image(systemName: "pencil")
+                    .foregroundColor(Color(hex: "999999"))
+                    .font(.system(size: 14))
+            }
+            .padding()
+            .background(Color(hex: "0c292b"))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Blocked Apps
+
+    private var blockedAppsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Blocked Apps")
+                .foregroundColor(Color(hex: "ADA666"))
+                .fontWeight(.semibold)
+
+            Button {
+                viewModel.addMoreApps()
+            } label: {
+                HStack {
+                    Text(viewModel.appsCountText)
+                    .foregroundColor(.white)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(Color(hex: "999999"))
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .padding()
+                .background(Color(hex: "0c292b"))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+            }
+            .disabled(viewModel.isLoading)
+        }
+    }
+
+    // MARK: - Time Settings (Inline Wheel Picker)
+
+    private var timeSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Time Settings")
+                .foregroundColor(Color(hex: "ADA666"))
+                .fontWeight(.semibold)
+
+            Text("App Usage Duration")
+                .foregroundColor(Color(hex: "999999"))
+                .font(.caption)
+
+            HStack(spacing: 0) {
+                Picker("Hours", selection: $viewModel.selectedHours) {
+                    ForEach(0..<24, id: \.self) { Text("\($0) hours").tag($0) }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity, maxHeight: 150)
+
+                Picker("Minutes", selection: $viewModel.selectedMinutes) {
+                    ForEach(0..<60, id: \.self) { Text("\($0) min").tag($0) }
+                }
+                .pickerStyle(.wheel)
+                .frame(maxWidth: .infinity, maxHeight: 150)
+            }
+            .colorScheme(.dark)
+            .background(Color(hex: "0c292b"))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Active Time
+
+    private var activeTimeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Active Time")
+                    .foregroundColor(Color(hex: "999999"))
+                    .font(.caption)
+
+                Spacer()
+
+                Button {
+                    viewModel.toggleAllDay()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: viewModel.isAllDay ? "checkmark.square.fill" : "square")
+                            .foregroundColor(
+                                viewModel.isAllDay ? Color(hex: "ADA666") : Color(hex: "999999"))
+                        Text("Daily")
+                            .foregroundColor(Color(hex: "999999"))
+                            .font(.caption)
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                ForEach(0..<7, id: \.self) { index in
+                    let isSelected = viewModel.activeDays.contains(index)
+                    Text(days[index])
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity, minHeight: 40)
+                        .background(isSelected ? Color.primary600 : Color.primary500.opacity(0.2))
+                        .foregroundColor(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .onTapGesture { viewModel.toggleDay(index) }
+                }
+            }
+        }
+    }
+
+    // MARK: - Action Buttons
+
+    @ViewBuilder
+    private var actionButtons: some View {
+        if viewModel.isEditMode {
+            VStack(spacing: 12) {
+                deleteButton
+                completeButton(title: "Save")
+            }
+        } else {
+            completeButton(title: "Complete Setup")
+        }
+    }
+
+    private var deleteButton: some View {
+        Button {
+            viewModel.showDeleteConfirmation = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "trash")
+                Text("Delete Blocks")
+                    .fontWeight(.semibold)
+            }
+            .foregroundColor(Color(hex: "ADA666"))
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(hex: "ADA666").opacity(0.12))
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(Color(hex: "ADA666").opacity(0.3), lineWidth: 1))
+        }
+        .disabled(viewModel.isLoading)
+    }
+
+    private func completeButton(title: String) -> some View {
+        Button {
             Task {
-                await viewModel.handleAppPickerSelection(newValue)
+                await viewModel.saveSettings()
+                if viewModel.hasSetupCompleted { dismiss() }
             }
-        }
-        .sheet(isPresented: $viewModel.showTimePicker) {
-            DurationPickerSheet(
-                selectedMinutes: viewModel.dailyLimitMinutes,
-                title: "App Usage Duration"
-            ) { minutes in
-                viewModel.dailyLimitMinutes = minutes
+        } label: {
+            Group {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "0c292b")))
+                } else {
+                    Text(title)
+                        .fontWeight(.semibold)
+                        .foregroundColor(
+                            viewModel.isFormValid ? Color(hex: "0c292b") : Color(hex: "999999"))
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding()
         }
+        .background(viewModel.isFormValid ? Color.white : Color(hex: "1a3a3a"))
+        .clipShape(Capsule())
+        .disabled(!viewModel.isFormValid || viewModel.isLoading)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isFormValid)
     }
 }
 

@@ -140,11 +140,11 @@ let sharedDefaults = UserDefaults(suiteName: "group.com.yourapp.screentime")
 ```swift
 protocol ScreenTimeRepository {
     func requestAuthorization() async -> Bool
-    func setTimeLimit(for selection: FamilyActivitySelection, config: TimeLimitConfig)
-    func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDayConfig)
+    func setTimeLimit(for selection: FamilyActivitySelection, config: AppLimitConfig)
+    func settimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig)
     func setAllDayBlock(for selection: FamilyActivitySelection, config: AllDayConfig)
     func deleteTimeLimit(id: UUID)
-    func deleteTimeOfDay(id: UUID)
+    func deletetimeLimit(id: UUID)
     func deleteAllDay(id: UUID)
 }
 ```
@@ -154,11 +154,11 @@ protocol ScreenTimeRepository {
 ```swift
 protocol ScreenTimeUseCase {
     func requestAuthorization() async -> Bool
-    func setTimeLimit(for selection: FamilyActivitySelection, config: TimeLimitConfig)
-    func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDayConfig)
+    func setTimeLimit(for selection: FamilyActivitySelection, config: AppLimitConfig)
+    func settimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig)
     func setAllDayBlock(for selection: FamilyActivitySelection, config: AllDayConfig)
     func deleteTimeLimit(id: UUID)
-    func deleteTimeOfDay(id: UUID)
+    func deletetimeLimit(id: UUID)
     func deleteAllDay(id: UUID)
 }
 ```
@@ -174,7 +174,7 @@ All three block types share a **unified model**:
 ```swift
 enum RuleType: String, Codable, Hashable {
     case timeLimit    // App Limit
-    case timeOfDay    // Downtime
+    case timeLimit    // Downtime
     case allDay       // All Day Limit
 }
 
@@ -186,8 +186,8 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
 
     // Optional fields based on type
     var limitSeconds: Int?           // For timeLimit
-    var startTime: DateComponents?   // For timeOfDay
-    var endTime: DateComponents?     // For timeOfDay
+    var startTime: DateComponents?   // For timeLimit
+    var endTime: DateComponents?     // For timeLimit
     var daysActive: Set<String>?     // For all types
     var unblockAllowedAfterLimit: Int?
     var durationOptions: [Int]?
@@ -200,7 +200,7 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
 
 #### Time Limit Config (App Limit)
 ```swift
-struct TimeLimitConfig: Codable {
+struct AppLimitConfig: Codable {
     let id: UUID?
     let name: String
     let timeLimit: TimeLimit          // The duration enum
@@ -212,7 +212,7 @@ struct TimeLimitConfig: Codable {
 
 #### Time of Day Config (Downtime)
 ```swift
-struct TimeOfDayConfig: Codable {
+struct TimeLimitConfig: Codable {
     let id: UUID?
     let name: String
     let startTime: DateComponents
@@ -275,7 +275,7 @@ enum TimeLimit: Equatable, CaseIterable, Hashable, Codable {
 ```swift
 private enum Keys {
     static let timeLimitRules = "timeLimitRules"
-    static let timeOfDayRules = "timeOfDayRules"
+    static let timeLimitRules = "timeLimitRules"
     static let allDayRules = "allDayRules"
     static let tokenMapping = "tokenMapping"           // ApplicationToken storage
     static let categoryTokens = "categoryTokens"        // ActivityCategoryToken storage
@@ -303,7 +303,7 @@ Restricts usage time for selected apps/categories. Blocks when time threshold is
 ### Repository Implementation
 
 ```swift
-func setTimeLimit(for selection: FamilyActivitySelection, config: TimeLimitConfig) {
+func setTimeLimit(for selection: FamilyActivitySelection, config: AppLimitConfig) {
     var rules = load(Keys.timeLimitRules, as: [ScreenTimeRule].self) ?? []
     let ruleId: UUID
     let createdAt: Date
@@ -459,8 +459,8 @@ Blocks apps during specific time windows on selected days.
 |----------|-------|
 | **Schedule** | Custom start/end time |
 | **Trigger** | When entering time window |
-| **Event Prefix** | `timeOfDay_app_` / `timeOfDay_category_` |
-| **Activity Name** | `timeOfDay_{ruleId}` |
+| **Event Prefix** | `timeLimit_app_` / `timeLimit_category_` |
+| **Activity Name** | `timeLimit_{ruleId}` |
 | **Threshold** | Immediate (0 seconds) |
 | **Days** | Configurable |
 | **Immediate Shield** | **Yes** - if currently in window |
@@ -468,8 +468,8 @@ Blocks apps during specific time windows on selected days.
 ### Repository Implementation
 
 ```swift
-func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDayConfig) {
-    var rules = load(Keys.timeOfDayRules, as: [ScreenTimeRule].self) ?? []
+func settimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) {
+    var rules = load(Keys.timeLimitRules, as: [ScreenTimeRule].self) ?? []
     let ruleId: UUID
     let createdAt: Date
 
@@ -477,14 +477,14 @@ func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDay
     if let id = config.id, let index = rules.firstIndex(where: { $0.id == id }) {
         ruleId = id
         createdAt = rules[index].createdAt
-        let oldName = DeviceActivityName("timeOfDay_\(id.uuidString)")
+        let oldName = DeviceActivityName("timeLimit_\(id.uuidString)")
         try? activityCenter.stopMonitoring([oldName])
 
         rules[index] = ScreenTimeRule(
             id: ruleId,
             name: config.name,
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             limitSeconds: nil,
             startTime: config.startTime,
             endTime: config.endTime,
@@ -501,7 +501,7 @@ func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDay
             id: ruleId,
             name: config.name,
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             limitSeconds: nil,
             startTime: config.startTime,
             endTime: config.endTime,
@@ -512,7 +512,7 @@ func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDay
         ))
     }
 
-    save(rules, to: Keys.timeOfDayRules)
+    save(rules, to: Keys.timeLimitRules)
 
     // Build AppLimit array
     var appLimits: [AppLimit] = []
@@ -540,10 +540,10 @@ func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDay
     )
 
     // Create events with zero threshold (immediate)
-    let events = ScreenTimeEvents.createTimeOfDayEvents(for: appLimits)
+    let events = ScreenTimeEvents.createtimeLimitEvents(for: appLimits)
 
     // Start monitoring
-    let name = DeviceActivityName("timeOfDay_\(ruleId.uuidString)")
+    let name = DeviceActivityName("timeLimit_\(ruleId.uuidString)")
     try? activityCenter.startMonitoring(name, during: schedule, events: events)
 }
 ```
@@ -551,11 +551,11 @@ func setTimeOfDayBlock(for selection: FamilyActivitySelection, config: TimeOfDay
 ### Event Creation (Time of Day)
 
 ```swift
-static func createTimeOfDayEvents(for selection: [AppLimit]) -> [DeviceActivityEvent.Name: DeviceActivityEvent] {
+static func createtimeLimitEvents(for selection: [AppLimit]) -> [DeviceActivityEvent.Name: DeviceActivityEvent] {
     var events: [DeviceActivityEvent.Name: DeviceActivityEvent] = [:]
 
     for app in selection {
-        let eventName = DeviceActivityEvent.Name("timeOfDay_app_\(app.id.uuidString)")
+        let eventName = DeviceActivityEvent.Name("timeLimit_app_\(app.id.uuidString)")
         events[eventName] = DeviceActivityEvent(
             applications: app.token.map { [$0] } ?? [],
             categories: app.categoryToken != nil ? [app.categoryToken!] : [],
@@ -577,7 +577,7 @@ static func createTimeOfDayEvents(for selection: [AppLimit]) -> [DeviceActivityE
 ### Time Window Validation
 
 ```swift
-extension TimeOfDayConfig {
+extension TimeLimitConfig {
     var isCurrentlyInBlockingPeriod: Bool {
         // First check if today is an active day
         let todayName = DayHelper.getCurrentDayName()
@@ -751,8 +751,8 @@ extension AllDayConfig {
 | **Purpose** | Time-based quota | Schedule-based blocking | Day-based blocking |
 | **Schedule** | 00:00-23:59 (daily) | Custom start/end | 00:00-23:59 (selected days) |
 | **Threshold** | Configurable seconds | 0 (immediate) | 0 (immediate) |
-| **Event Prefix** | `limitReached_` | `timeOfDay_` | `allDay_` |
-| **Activity Name** | `daily_{id}` | `timeOfDay_{id}` | `allDay_{id}` |
+| **Event Prefix** | `limitReached_` | `timeLimit_` | `allDay_` |
+| **Activity Name** | `daily_{id}` | `timeLimit_{id}` | `allDay_{id}` |
 | **Immediate Shield** | No (after threshold) | Yes (if in window) | Yes (if today active) |
 | **Auto Reset** | Yes (midnight) | No | No |
 | **Days Active** | Optional | Required | Required |
@@ -879,12 +879,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         }
 
         // Time-of-day events
-        if raw.hasPrefix("timeOfDay_app_") {
-            applyApp(by: raw.replacingOccurrences(of: "timeOfDay_app_", with: ""))
+        if raw.hasPrefix("timeLimit_app_") {
+            applyApp(by: raw.replacingOccurrences(of: "timeLimit_app_", with: ""))
             return
         }
-        if raw.hasPrefix("timeOfDay_category_") {
-            applyCategory(by: raw.replacingOccurrences(of: "timeOfDay_category_", with: ""))
+        if raw.hasPrefix("timeLimit_category_") {
+            applyCategory(by: raw.replacingOccurrences(of: "timeLimit_category_", with: ""))
             return
         }
 
@@ -993,7 +993,7 @@ private func reapplyActiveShields() {
     let store = ManagedSettingsStore()
     store.clearAllSettings()
 
-    let remainingTimeOfDay: [ScreenTimeRule] = load(Keys.timeOfDayRules, as: [ScreenTimeRule].self) ?? []
+    let remainingtimeLimit: [ScreenTimeRule] = load(Keys.timeLimitRules, as: [ScreenTimeRule].self) ?? []
     let remainingAllDay: [ScreenTimeRule] = load(Keys.allDayRules, as: [ScreenTimeRule].self) ?? []
 
     var applicationTokens: Set<ApplicationToken> = []
@@ -1017,7 +1017,7 @@ private func reapplyActiveShields() {
     }
 
     // Time-of-day rules
-    for r in remainingTimeOfDay {
+    for r in remainingtimeLimit {
         let days = r.daysActive ?? []
         let isActiveDay = days.isEmpty || days.contains(todayName)
         if isActiveDay && isWithin(start: r.startTime, end: r.endTime) {
@@ -1080,9 +1080,9 @@ class BlockingViewModel: ObservableObject {
 
     func loadActiveBlocking() {
         let timeLimits: [ScreenTimeRule] = load("timeLimitRules", as: [ScreenTimeRule].self) ?? []
-        let timeOfDays: [ScreenTimeRule] = load("timeOfDayRules", as: [ScreenTimeRule].self) ?? []
+        let timeLimits: [ScreenTimeRule] = load("timeLimitRules", as: [ScreenTimeRule].self) ?? []
         let allDays: [ScreenTimeRule] = load("allDayRules", as: [ScreenTimeRule].self) ?? []
-        let merged = (timeLimits + timeOfDays + allDays).sorted { $0.createdAt < $1.createdAt }
+        let merged = (timeLimits + timeLimits + allDays).sorted { $0.createdAt < $1.createdAt }
         activeBlocking = merged
     }
 
@@ -1090,8 +1090,8 @@ class BlockingViewModel: ObservableObject {
         switch rule.type {
         case .timeLimit:
             screenTimeUseCase.deleteTimeLimit(id: rule.id)
-        case .timeOfDay:
-            screenTimeUseCase.deleteTimeOfDay(id: rule.id)
+        case .timeLimit:
+            screenTimeUseCase.deletetimeLimit(id: rule.id)
         case .allDay:
             screenTimeUseCase.deleteAllDay(id: rule.id)
         }
@@ -1144,7 +1144,7 @@ class BlockingViewModel: ObservableObject {
 | Type | App Event | Category Event |
 |------|-----------|----------------|
 | Time Limit | `limitReached_app_{uuid}` | `limitReached_category_{uuid}` |
-| Downtime | `timeOfDay_app_{uuid}` | `timeOfDay_category_{uuid}` |
+| Downtime | `timeLimit_app_{uuid}` | `timeLimit_category_{uuid}` |
 | All Day | `allDay_app_{uuid}` | `allDay_category_{uuid}` |
 
 ### Activity Name Convention
@@ -1152,14 +1152,14 @@ class BlockingViewModel: ObservableObject {
 | Type | Format |
 |------|--------|
 | Time Limit | `daily_{ruleId}` |
-| Downtime | `timeOfDay_{ruleId}` |
+| Downtime | `timeLimit_{ruleId}` |
 | All Day | `allDay_{ruleId}` |
 
 ### UserDefaults Keys
 
 ```swift
 "timeLimitRules"     // [ScreenTimeRule]
-"timeOfDayRules"     // [ScreenTimeRule]
+"timeLimitRules"     // [ScreenTimeRule]
 "allDayRules"        // [ScreenTimeRule]
 "tokenMapping"       // [String: Data] (ApplicationToken)
 "categoryTokens"     // [String: Data] (ActivityCategoryToken)
@@ -1192,10 +1192,10 @@ YourApp/
 │   └── Helper/
 │       ├── ScreenTimeEvents.swift
 │       ├── AllDayConfig.swift
-│       ├── TimeOfDayConfig.swift
-│       ├── TimeLimit.swift
 │       ├── TimeLimitConfig.swift
-│       └── TimeOfDayHelper.swift
+│       ├── TimeLimit.swift
+│       ├── AppLimitConfig.swift
+│       └── TimeLimitHelper.swift
 └── YourApp.entitlements
 
 DeviceActivityMonitor/

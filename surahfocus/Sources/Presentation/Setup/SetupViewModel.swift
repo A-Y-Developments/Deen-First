@@ -1,42 +1,35 @@
-import SwiftUI
 import FamilyControls
+import SwiftUI
 
 @MainActor
 final class SetupViewModel: ObservableObject {
-    // MARK: - Step 1: Selection
     @Published var selection = FamilyActivitySelection()
     @Published var isPickerPresented = false
     @Published var selectedAppsCount: Int = 0
     @Published var selectedCategoriesCount: Int = 0
 
-    // MARK: - Step 2: Daily Limit
     @Published var selectedDailyLimit: TimeLimit? = nil
 
-    // MARK: - Step 3: Downtime
     @Published var selectedPrayers: Set<String> = []
 
-    // MARK: - Common
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
-    // MARK: - Dependencies
-    private let screenTimeRulesUseCase: ScreenTimeRulesUseCase
+    private let screenTimeRulesService: ScreenTimeRulesService
     private let authCenter: AuthorizationCenter
 
-    // MARK: - Initialization
     init(
-        screenTimeRulesUseCase: ScreenTimeRulesUseCase,
+        screenTimeRulesService: ScreenTimeRulesService,
         authCenter: AuthorizationCenter = .shared
     ) {
-        self.screenTimeRulesUseCase = screenTimeRulesUseCase
+        self.screenTimeRulesService = screenTimeRulesService
         self.authCenter = authCenter
     }
 
     convenience init() {
-        self.init(screenTimeRulesUseCase: DIContainer.shared.screenTimeRulesUseCase)
+        self.init(screenTimeRulesService: DIContainer.shared.screenTimeRulesService)
     }
 
-    // MARK: - Selection Methods
     func openPicker() {
         isPickerPresented = true
     }
@@ -51,7 +44,6 @@ final class SetupViewModel: ObservableObject {
         !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty
     }
 
-    // MARK: - Limit Methods
     func selectLimit(_ limit: TimeLimit) {
         selectedDailyLimit = limit
     }
@@ -60,7 +52,6 @@ final class SetupViewModel: ObservableObject {
         selectedDailyLimit = nil
     }
 
-    // MARK: - Downtime Methods
     func togglePrayer(_ prayer: String) {
         if selectedPrayers.contains(prayer) {
             selectedPrayers.remove(prayer)
@@ -73,10 +64,10 @@ final class SetupViewModel: ObservableObject {
         selectedPrayers.contains(prayer)
     }
 
-    // MARK: - Preview Rules for SetupSummary
     var previewAppLimitRule: ScreenTimeRule? {
         guard let limit = selectedDailyLimit,
-              !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty else {
+            !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty
+        else {
             return nil
         }
 
@@ -89,24 +80,26 @@ final class SetupViewModel: ObservableObject {
         )
     }
 
-    var previewTimeOfDayRules: [ScreenTimeRule] {
+    var previewtimeLimitRules: [ScreenTimeRule] {
         selectedPrayers.compactMap { prayer in
             let range = getPrayerTimeRange(prayer)
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
 
             guard let startDate = formatter.date(from: range.start),
-                  let endDate = formatter.date(from: range.end) else {
+                let endDate = formatter.date(from: range.end)
+            else {
                 return nil
             }
 
-            let startComponents = Calendar.current.dateComponents([.hour, .minute], from: startDate)
+            let startComponents = Calendar.current.dateComponents(
+                [.hour, .minute], from: startDate)
             let endComponents = Calendar.current.dateComponents([.hour, .minute], from: endDate)
 
             return ScreenTimeRule(
                 name: "During \(getPrayerDisplayName(prayer))",
                 selection: selection,
-                type: .timeOfDay,
+                type: .timeLimit,
                 startTime: startComponents,
                 endTime: endComponents,
                 daysActive: []
@@ -115,10 +108,9 @@ final class SetupViewModel: ObservableObject {
     }
 
     var hasAnyRules: Bool {
-        previewAppLimitRule != nil || !previewTimeOfDayRules.isEmpty
+        previewAppLimitRule != nil || !previewtimeLimitRules.isEmpty
     }
 
-    // MARK: - Completion
     func saveSetup() async {
         isLoading = true
         errorMessage = nil
@@ -130,17 +122,15 @@ final class SetupViewModel: ObservableObject {
                 return
             }
 
-            // 1. Create App Limit if daily limit selected
             if let limit = selectedDailyLimit {
-                let config = TimeLimitConfig(
+                let config = AppLimitConfig(
                     name: "Daily Limit",
                     timeLimit: limit,
                     daysActive: []
                 )
-                try await screenTimeRulesUseCase.setTimeLimit(for: selection, config: config)
+                try await screenTimeRulesService.setAppLimitBlock(for: selection, config: config)
             }
 
-            // 2. Create Time of Day blocks for each selected prayer
             for prayer in selectedPrayers {
                 let range = getPrayerTimeRange(prayer)
 
@@ -148,23 +138,23 @@ final class SetupViewModel: ObservableObject {
                 formatter.dateFormat = "HH:mm"
 
                 guard let startDate = formatter.date(from: range.start),
-                      let endDate = formatter.date(from: range.end) else {
-                    continue
-                }
+                    let endDate = formatter.date(from: range.end)
+                else { continue }
 
-                let startComponents = Calendar.current.dateComponents([.hour, .minute], from: startDate)
-                let endComponents = Calendar.current.dateComponents([.hour, .minute], from: endDate)
+                let startComponents = Calendar.current.dateComponents(
+                    [.hour, .minute], from: startDate)
+                let endComponents = Calendar.current.dateComponents(
+                    [.hour, .minute], from: endDate)
 
-                let config = TimeOfDayConfig(
+                let config = TimeLimitConfig(
                     name: "During \(getPrayerDisplayName(prayer))",
                     startTime: startComponents,
                     endTime: endComponents,
                     daysActive: []
                 )
-                try await screenTimeRulesUseCase.setTimeOfDayBlock(for: selection, config: config)
+                try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
             }
 
-            // 3. Log settings
             logTimeBlockSettings(
                 appCount: selectedAppsCount,
                 categoryCount: selectedCategoriesCount,
@@ -172,17 +162,13 @@ final class SetupViewModel: ObservableObject {
                 selectedPrayers: selectedPrayers
             )
 
-            // 4. Post notification for setup completion
             NotificationCenter.default.post(name: .didCompleteScreenTimeSetup, object: nil)
-
             isLoading = false
         } catch {
             errorMessage = error.localizedDescription
             isLoading = false
         }
     }
-
-    // MARK: - Helpers
     private func getPrayerTimeRange(_ prayer: String) -> (start: String, end: String) {
         switch prayer {
         case "subuh": return ("04:30", "06:00")
@@ -216,7 +202,9 @@ final class SetupViewModel: ObservableObject {
         if let limit = dailyLimit {
             print("\nType: App Limit")
             print("Name: Daily Limit")
-            print("App Selection: \(categoryCount) Category\(categoryCount == 1 ? "" : "es"), \(appCount) App\(appCount == 1 ? "" : "s")")
+            print(
+                "App Selection: \(categoryCount) Category\(categoryCount == 1 ? "" : "es"), \(appCount) App\(appCount == 1 ? "" : "s")"
+            )
             print("Time: \(limit.displayName)")
             print("Days: All Days")
         }
@@ -225,7 +213,9 @@ final class SetupViewModel: ObservableObject {
             let range = getPrayerTimeRange(prayer)
             print("\nType: Time of Day")
             print("Name: During \(getPrayerDisplayName(prayer))")
-            print("App Selection: \(categoryCount) Category\(categoryCount == 1 ? "" : "es"), \(appCount) App\(appCount == 1 ? "" : "s")")
+            print(
+                "App Selection: \(categoryCount) Category\(categoryCount == 1 ? "" : "es"), \(appCount) App\(appCount == 1 ? "" : "s")"
+            )
             print("Time: \(range.start) - \(range.end)")
             print("Days: All Days")
         }
