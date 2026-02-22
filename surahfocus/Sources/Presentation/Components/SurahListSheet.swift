@@ -19,28 +19,6 @@ struct SurahListSheet: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
                 
-                HStack {
-                    Spacer()
-                    Menu {
-                        Button {
-                            viewModel.viewMode = .juz
-                        } label: {
-                            Label("Juz View", systemImage: viewModel.viewMode == .juz ? "checkmark" : "")
-                        }
-                        Button {
-                            viewModel.viewMode = .surah
-                        } label: {
-                            Label("Surah View", systemImage: viewModel.viewMode == .surah ? "checkmark" : "")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.8))
-                            .frame(width: 24, height: 18)
-                    }
-                }
-                .padding(.horizontal, 24)
-                
                 if viewModel.isLoading && viewModel.surahs.isEmpty {
                     ProgressView()
                         .padding(.top, 40)

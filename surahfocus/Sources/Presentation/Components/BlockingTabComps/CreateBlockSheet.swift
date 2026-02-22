@@ -13,26 +13,6 @@ struct CreateBlockSheet: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Header dengan X button
-            HStack {
-                Spacer()
-                
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 32, height: 32)
-                        .background(.ultraThinMaterial)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                }
-            }
-            
             // Title
             VStack(alignment: .leading, spacing: 8) {
                 Text("Create New Blocks")
@@ -69,17 +49,7 @@ struct CreateBlockSheet: View {
                 dismiss()
                 router.navigate(to: .timeLimit)
             }
-
-            // Menu 3
-            BlockRow(
-                title: "All Day",
-                description: "Block apps for entire days"
-            ) {
-                print("tapped all day")
-                dismiss()
-                // TODO: Add allDay navigation
-            }
-
+            
             Spacer()
         }
         .padding(24)
