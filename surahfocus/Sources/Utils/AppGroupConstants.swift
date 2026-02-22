@@ -7,8 +7,8 @@ enum AppGroupConstants {
         UserDefaults(suiteName: suiteName)
     }
 
-    // Storage keys
     static let tokenMappingKey = "tokenMapping"
     static let categoryTokensKey = "categoryTokens"
     static let selectedAppsKey = "selectedApps"
+    static let ruleTokensKey = "ruleTokens"
 }

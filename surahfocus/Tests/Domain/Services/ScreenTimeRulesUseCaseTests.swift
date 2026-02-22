@@ -1,10 +1,11 @@
-import XCTest
 import FamilyControls
+import XCTest
+
 @testable import SurahFocus
 
 @MainActor
-final class ScreenTimeRulesUseCaseTests: XCTestCase {
-    var useCase: ScreenTimeRulesUseCaseImpl!
+final class ScreenTimeRulesServiceTests: XCTestCase {
+    var useCase: ScreenTimeRulesServiceImpl!
     var repository: ScreenTimeRulesRepositoryImpl!
     var userDefaults: UserDefaults!
 
@@ -13,16 +14,16 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
         userDefaults = UserDefaults(suiteName: suiteName)
 
         userDefaults.removeObject(forKey: "timeLimitRules")
-        userDefaults.removeObject(forKey: "timeOfDayRules")
+        userDefaults.removeObject(forKey: "timeLimitRules")
         userDefaults.removeObject(forKey: "allDayRules")
 
         repository = ScreenTimeRulesRepositoryImpl(userDefaults: userDefaults)
-        useCase = ScreenTimeRulesUseCaseImpl(repository: repository)
+        useCase = ScreenTimeRulesServiceImpl(repository: repository)
     }
 
     override func tearDown() async throws {
         userDefaults.removeObject(forKey: "timeLimitRules")
-        userDefaults.removeObject(forKey: "timeOfDayRules")
+        userDefaults.removeObject(forKey: "timeLimitRules")
         userDefaults.removeObject(forKey: "allDayRules")
         useCase = nil
         repository = nil
@@ -33,7 +34,7 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
 
     func testSetTimeLimit_CreatesRule() async throws {
         let selection = FamilyActivitySelection()
-        let config = TimeLimitConfig(
+        let config = AppLimitConfig(
             name: "Social Media",
             timeLimit: .oneHour,
             daysActive: []
@@ -48,9 +49,9 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
 
     func testSetTimeLimit_WithCustomDuration() async throws {
         let selection = FamilyActivitySelection()
-        let config = TimeLimitConfig(
+        let config = AppLimitConfig(
             name: "Custom",
-            timeLimit: .custom(5400), // 1.5 hours
+            timeLimit: .custom(5400),  // 1.5 hours
             daysActive: []
         )
 
@@ -62,7 +63,7 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
 
     func testDeleteTimeLimit_RemovesRule() async throws {
         let selection = FamilyActivitySelection()
-        let config = TimeLimitConfig(
+        let config = AppLimitConfig(
             name: "Test",
             timeLimit: .thirtyMin,
             daysActive: []
@@ -79,59 +80,59 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
 
     // MARK: - Time of Day Use Case Tests
 
-    func testSetTimeOfDayBlock_CreatesRule() async throws {
+    func testSettimeLimitBlock_CreatesRule() async throws {
         let selection = FamilyActivitySelection()
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
-        let config = TimeOfDayConfig(
+        let config = TimeLimitConfig(
             name: "Work Hours",
             startTime: start,
             endTime: end,
             daysActive: []
         )
 
-        try await useCase.setTimeOfDayBlock(for: selection, config: config)
+        try await useCase.settimeLimitBlock(for: selection, config: config)
 
-        let rules = useCase.getTimeOfDayRules()
+        let rules = useCase.gettimeLimitRules()
         XCTAssertEqual(rules.count, 1)
         XCTAssertEqual(rules.first?.name, "Work Hours")
     }
 
-    func testSetTimeOfDayBlock_WithSpecificDays() async throws {
+    func testSettimeLimitBlock_WithSpecificDays() async throws {
         let selection = FamilyActivitySelection()
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
-        let config = TimeOfDayConfig(
+        let config = TimeLimitConfig(
             name: "Weekdays",
             startTime: start,
             endTime: end,
             daysActive: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
         )
 
-        try await useCase.setTimeOfDayBlock(for: selection, config: config)
+        try await useCase.settimeLimitBlock(for: selection, config: config)
 
-        let rules = useCase.getTimeOfDayRules()
+        let rules = useCase.gettimeLimitRules()
         XCTAssertEqual(rules.first?.daysActive?.count, 5)
     }
 
-    func testDeleteTimeOfDay_RemovesRule() async throws {
+    func testDeletetimeLimit_RemovesRule() async throws {
         let selection = FamilyActivitySelection()
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
-        let config = TimeOfDayConfig(
+        let config = TimeLimitConfig(
             name: "Test",
             startTime: start,
             endTime: end,
             daysActive: []
         )
 
-        try await useCase.setTimeOfDayBlock(for: selection, config: config)
-        XCTAssertEqual(useCase.getTimeOfDayRules().count, 1)
+        try await useCase.settimeLimitBlock(for: selection, config: config)
+        XCTAssertEqual(useCase.gettimeLimitRules().count, 1)
 
-        let rule = useCase.getTimeOfDayRules().first!
-        try await useCase.deleteTimeOfDay(id: rule.id)
+        let rule = useCase.gettimeLimitRules().first!
+        try await useCase.deletetimeLimit(id: rule.id)
 
-        XCTAssertEqual(useCase.getTimeOfDayRules().count, 0)
+        XCTAssertEqual(useCase.gettimeLimitRules().count, 0)
     }
 
     // MARK: - All Day Use Case Tests
@@ -186,13 +187,13 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
         let selection = FamilyActivitySelection()
 
         // Create one of each type
-        let timeLimitConfig = TimeLimitConfig(
+        let timeLimitConfig = AppLimitConfig(
             name: "Limit",
             timeLimit: .oneHour,
             daysActive: []
         )
 
-        let timeOfDayConfig = TimeOfDayConfig(
+        let timeLimitConfig = TimeLimitConfig(
             name: "Downtime",
             startTime: DateComponents(hour: 9, minute: 0),
             endTime: DateComponents(hour: 17, minute: 0),
@@ -205,7 +206,7 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
         )
 
         try await useCase.setTimeLimit(for: selection, config: timeLimitConfig)
-        try await useCase.setTimeOfDayBlock(for: selection, config: timeOfDayConfig)
+        try await useCase.settimeLimitBlock(for: selection, config: timeLimitConfig)
         try await useCase.setAllDayBlock(for: selection, config: allDayConfig)
 
         let allRules = useCase.getAllRules()
@@ -214,7 +215,7 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
         let types = Set(allRules.map { $0.type })
         XCTAssertEqual(types.count, 3)
         XCTAssertTrue(types.contains(.timeLimit))
-        XCTAssertTrue(types.contains(.timeOfDay))
+        XCTAssertTrue(types.contains(.timeLimit))
         XCTAssertTrue(types.contains(.allDay))
     }
 
@@ -222,12 +223,12 @@ final class ScreenTimeRulesUseCaseTests: XCTestCase {
         let selection = FamilyActivitySelection()
 
         // Create rules with delays to ensure different creation times
-        let config1 = TimeLimitConfig(name: "First", timeLimit: .thirtyMin, daysActive: [])
+        let config1 = AppLimitConfig(name: "First", timeLimit: .thirtyMin, daysActive: [])
         try await useCase.setTimeLimit(for: selection, config: config1)
 
-        try await Task.sleep(nanoseconds: 10_000_000) // 0.01 seconds
+        try await Task.sleep(nanoseconds: 10_000_000)  // 0.01 seconds
 
-        let config2 = TimeLimitConfig(name: "Second", timeLimit: .oneHour, daysActive: [])
+        let config2 = AppLimitConfig(name: "Second", timeLimit: .oneHour, daysActive: [])
         try await useCase.setTimeLimit(for: selection, config: config2)
 
         let rules = useCase.getTimeLimitRules()

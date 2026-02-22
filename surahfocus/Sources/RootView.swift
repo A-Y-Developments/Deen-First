@@ -76,6 +76,19 @@ struct RootView: View {
             router.reset()
             Task { await checkUserState() }
         }
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIApplication.willEnterForegroundNotification)
+        ) { _ in
+            let defaults = UserDefaults(suiteName: "group.com.aydev.surahfocus")
+            if defaults?.bool(forKey: "reciteRequested") == true {
+                defaults?.set(false, forKey: "reciteRequested") // ✅ clear it
+                defaults?.synchronize()
+                router.navigate(to: .reciteToUnlock)
+            }
+            Task {
+                await DIContainer.shared.screenTimeRulesService.reblockIfExpired()
+            }
+        }
     }
 
     @MainActor
@@ -129,8 +142,6 @@ struct RootView: View {
             AppLimitView(limitId: id)
         case .editTimeLimit(let id):
             TimeLimitView(limitId: id)
-        case .editAllDay(let id):
-            AppLimitView(limitId: id, isAllDay: true)
         case .focusSection:
             FocusSectionView(router: router)
         case .selectSurah(let surahs):
@@ -175,6 +186,8 @@ struct RootView: View {
             PreferencesView()
         case .support:
             SupportView()
+        case .reciteToUnlock:
+            ReciteToUnblockView()
         }
     }
 }

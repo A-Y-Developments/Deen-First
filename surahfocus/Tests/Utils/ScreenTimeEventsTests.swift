@@ -1,6 +1,7 @@
-import XCTest
 import DeviceActivity
 import FamilyControls
+import XCTest
+
 @testable import SurahFocus
 
 final class ScreenTimeEventsTests: XCTestCase {
@@ -22,8 +23,10 @@ final class ScreenTimeEventsTests: XCTestCase {
     }
 
     func testCreateEvents_WithApplicationTokens_CreatesCorrectEvents() {
-        let token1 = AppLimitToken(id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
-        let token2 = AppLimitToken(id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
+        let token1 = ActivityToken(
+            id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
+        let token2 = ActivityToken(
+            id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
 
         let events = ScreenTimeEvents.createEvents(for: .fifteen, selection: [token1, token2])
 
@@ -35,12 +38,13 @@ final class ScreenTimeEventsTests: XCTestCase {
 
         // Verify all events have the 15 minute threshold
         for event in events.values {
-            XCTAssertEqual(event.threshold.second, 900) // 15 minutes = 900 seconds
+            XCTAssertEqual(event.threshold.second, 900)  // 15 minutes = 900 seconds
         }
     }
 
     func testCreateEvents_WithCategoryTokens_CreatesCorrectEvents() {
-        let token = AppLimitToken(id: UUID(), applicationToken: nil, categoryToken: ActivityCategoryToken())
+        let token = ActivityToken(
+            id: UUID(), applicationToken: nil, categoryToken: ActivityCategoryToken())
 
         let events = ScreenTimeEvents.createEvents(for: .sixty, selection: [token])
 
@@ -52,32 +56,38 @@ final class ScreenTimeEventsTests: XCTestCase {
 
         // Verify threshold is 60 minutes
         let event = events.values.first
-        XCTAssertEqual(event?.threshold.second, 3600) // 60 minutes = 3600 seconds
+        XCTAssertEqual(event?.threshold.second, 3600)  // 60 minutes = 3600 seconds
     }
 
     func testCreateEvents_WithMixedTokens_CreatesCorrectEvents() {
-        let appToken = AppLimitToken(id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
-        let categoryToken = AppLimitToken(id: UUID(), applicationToken: nil, categoryToken: ActivityCategoryToken())
+        let appToken = ActivityToken(
+            id: UUID(), applicationToken: ApplicationToken(), categoryToken: nil)
+        let categoryToken = ActivityToken(
+            id: UUID(), applicationToken: nil, categoryToken: ActivityCategoryToken())
 
-        let events = ScreenTimeEvents.createEvents(for: .thirty, selection: [appToken, categoryToken])
+        let events = ScreenTimeEvents.createEvents(
+            for: .thirty, selection: [appToken, categoryToken])
 
         XCTAssertEqual(events.count, 2)
 
         // Verify we have one app event and one category event
         let eventNames = Array(events.keys)
         XCTAssertEqual(eventNames.filter { $0.rawValue.hasPrefix("limitReached_app_") }.count, 1)
-        XCTAssertEqual(eventNames.filter { $0.rawValue.hasPrefix("limitReached_category_") }.count, 1)
+        XCTAssertEqual(
+            eventNames.filter { $0.rawValue.hasPrefix("limitReached_category_") }.count, 1)
     }
 
     func testCreateEvents_SavesTokensToUserDefaults() {
         let tokenId = UUID()
-        let token = AppLimitToken(id: tokenId, applicationToken: ApplicationToken(), categoryToken: nil)
+        let token = ActivityToken(
+            id: tokenId, applicationToken: ApplicationToken(), categoryToken: nil)
 
         _ = ScreenTimeEvents.createEvents(for: .fifteen, selection: [token])
 
         // Verify token was saved to shared defaults
         let sharedDefaults = AppGroupConstants.sharedDefaults
-        let tokenMapping = sharedDefaults?.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data]
+        let tokenMapping =
+            sharedDefaults?.dictionary(forKey: AppGroupConstants.tokenMappingKey) as? [String: Data]
 
         XCTAssertNotNil(tokenMapping)
         XCTAssertTrue(tokenMapping?.keys.contains(tokenId.uuidString) == true)

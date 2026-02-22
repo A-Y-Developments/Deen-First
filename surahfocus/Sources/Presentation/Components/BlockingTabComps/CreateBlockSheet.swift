@@ -13,7 +13,7 @@ struct CreateBlockSheet: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Title
+            
             VStack(alignment: .leading, spacing: 8) {
                 Text("Create New Blocks")
                     .font(.system(.title2))
@@ -29,8 +29,7 @@ struct CreateBlockSheet: View {
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
             }
-            
-            // Menu 1
+
             BlockRow(
                 title: "App Limit",
                 description: "Limit selected apps daily usage"
@@ -40,7 +39,6 @@ struct CreateBlockSheet: View {
                 router.navigate(to: .appLimit)
             }
 
-            // Menu 2
             BlockRow(
                 title: "Time of Day",
                 description: "Block apps during specific time windows"
@@ -49,8 +47,6 @@ struct CreateBlockSheet: View {
                 dismiss()
                 router.navigate(to: .timeLimit)
             }
-            
-            Spacer()
         }
         .padding(24)
         .background(Color.primary900)

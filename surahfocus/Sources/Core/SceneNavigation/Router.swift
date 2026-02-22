@@ -6,7 +6,7 @@ final class Router: ObservableObject {
 
     enum Route: Hashable {
         case auth
-        case paywall(isFromSettings: Bool = false, currentPlan: String? = nil) // 👈 updated
+        case paywall(isFromSettings: Bool = false, currentPlan: String? = nil)
         case permissionSetup
         case setupAppToBlock
         case setupSummary
@@ -17,7 +17,6 @@ final class Router: ObservableObject {
         case timeLimit
         case editAppLimit(id: UUID)
         case editTimeLimit(id: UUID)
-        case editAllDay(id: UUID)
         case focusSection
         case selectSurah(surahs: [SurahWithRange])
         case ayahRange(surah: Surah)
@@ -31,6 +30,7 @@ final class Router: ObservableObject {
         case subscription
         case preferences
         case support
+        case reciteToUnlock
     }
 
     func navigate(to route: Route) {

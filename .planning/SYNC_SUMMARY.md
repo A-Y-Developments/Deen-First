@@ -162,7 +162,7 @@ REVENUECAT_API_KEY=your_api_key_here
 3. `Data/Repositories/ScreenTimeRepository.swift` - Reference for implementation
 4. `Helper/TimeLimit.swift` → Goes to `Utils/ScreenTime/TimeLimit.swift`
 5. `Helper/ScreenTimeEvents.swift` → Goes to `Utils/ScreenTime/ScreenTimeEvents.swift`
-6. `Helper/TimeOfDayHelper.swift` → Goes to `Utils/ScreenTime/TimeOfDayHelper.swift`
+6. `Helper/TimeLimitHelper.swift` → Goes to `Utils/ScreenTime/TimeLimitHelper.swift`
 
 **Note:** You'll manually copy these from mindcore since the path isn't accessible in this container.
 

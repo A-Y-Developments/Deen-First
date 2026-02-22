@@ -1,5 +1,6 @@
-import XCTest
 import FamilyControls
+import XCTest
+
 @testable import SurahFocus
 
 @MainActor
@@ -14,7 +15,7 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
 
         // Clear any existing data
         userDefaults.removeObject(forKey: "timeLimitRules")
-        userDefaults.removeObject(forKey: "timeOfDayRules")
+        userDefaults.removeObject(forKey: "timeLimitRules")
         userDefaults.removeObject(forKey: "allDayRules")
 
         repository = ScreenTimeRulesRepositoryImpl(userDefaults: userDefaults)
@@ -23,7 +24,7 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
     override func tearDown() async throws {
         // Clean up
         userDefaults.removeObject(forKey: "timeLimitRules")
-        userDefaults.removeObject(forKey: "timeOfDayRules")
+        userDefaults.removeObject(forKey: "timeLimitRules")
         userDefaults.removeObject(forKey: "allDayRules")
         repository = nil
         userDefaults = nil
@@ -90,7 +91,7 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
 
     // MARK: - Time of Day Rules Tests
 
-    func testSetTimeOfDayRule_SavesRule() async throws {
+    func testSettimeLimitRule_SavesRule() async throws {
         let selection = FamilyActivitySelection()
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
@@ -98,19 +99,19 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Work Hours",
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             startTime: start,
             endTime: end
         )
 
-        repository.setTimeOfDayRule(rule)
+        repository.settimeLimitRule(rule)
 
-        let rules = repository.getTimeOfDayRules()
+        let rules = repository.gettimeLimitRules()
         XCTAssertEqual(rules.count, 1)
         XCTAssertEqual(rules.first?.name, "Work Hours")
     }
 
-    func testDeleteTimeOfDayRule_RemovesRule() async throws {
+    func testDeletetimeLimitRule_RemovesRule() async throws {
         let selection = FamilyActivitySelection()
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
@@ -118,16 +119,16 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Work",
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             startTime: start,
             endTime: end
         )
 
-        repository.setTimeOfDayRule(rule)
-        XCTAssertEqual(repository.getTimeOfDayRules().count, 1)
+        repository.settimeLimitRule(rule)
+        XCTAssertEqual(repository.gettimeLimitRules().count, 1)
 
-        repository.deleteTimeOfDayRule(id: rule.id)
-        XCTAssertEqual(repository.getTimeOfDayRules().count, 0)
+        repository.deletetimeLimitRule(id: rule.id)
+        XCTAssertEqual(repository.gettimeLimitRules().count, 0)
     }
 
     // MARK: - All Day Rules Tests
@@ -178,10 +179,10 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
             limitSeconds: 3600
         )
 
-        let timeOfDayRule = ScreenTimeRule(
+        let timeLimitRule = ScreenTimeRule(
             name: "Downtime",
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             startTime: DateComponents(hour: 9, minute: 0),
             endTime: DateComponents(hour: 17, minute: 0)
         )
@@ -193,7 +194,7 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
         )
 
         repository.setTimeLimitRule(timeLimitRule)
-        repository.setTimeOfDayRule(timeOfDayRule)
+        repository.settimeLimitRule(timeLimitRule)
         repository.setAllDayRule(allDayRule)
 
         let allRules = repository.getAllRules()
@@ -201,7 +202,7 @@ final class ScreenTimeRulesRepositoryTests: XCTestCase {
 
         let types = Set(allRules.map { $0.type })
         XCTAssertTrue(types.contains(.timeLimit))
-        XCTAssertTrue(types.contains(.timeOfDay))
+        XCTAssertTrue(types.contains(.timeLimit))
         XCTAssertTrue(types.contains(.allDay))
     }
 

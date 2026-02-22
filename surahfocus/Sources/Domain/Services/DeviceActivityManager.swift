@@ -1,10 +1,12 @@
-import Foundation
 import DeviceActivity
-import ManagedSettings
 import FamilyControls
+import Foundation
+import ManagedSettings
 
 protocol DeviceActivityManager {
-    func startMonitoring(name: DeviceActivityName, schedule: DeviceActivitySchedule, events: [DeviceActivityEvent.Name: DeviceActivityEvent]) async throws
+    func startMonitoring(
+        name: DeviceActivityName, schedule: DeviceActivitySchedule,
+        events: [DeviceActivityEvent.Name: DeviceActivityEvent]) async throws
     func stopMonitoring(names: Set<DeviceActivityName>) async throws
     func applyShield(for selection: FamilyActivitySelection) async
     func removeShield() async
@@ -21,7 +23,10 @@ final class DeviceActivityManagerImpl: DeviceActivityManager {
         self.managedSettings = managedSettings
     }
 
-    func startMonitoring(name: DeviceActivityName, schedule: DeviceActivitySchedule, events: [DeviceActivityEvent.Name: DeviceActivityEvent]) async throws {
+    func startMonitoring(
+        name: DeviceActivityName, schedule: DeviceActivitySchedule,
+        events: [DeviceActivityEvent.Name: DeviceActivityEvent]
+    ) async throws {
         print("🚀 Starting monitoring for: \(name.rawValue) with \(events.count) events")
         for (eventName, event) in events {
             print("  Event: \(eventName.rawValue) threshold: \(event.threshold.second ?? 0)s")
@@ -77,22 +82,15 @@ final class DeviceActivityManagerImpl: DeviceActivityManager {
         }
 
         for rule in rules {
-            if rule.type == .timeOfDay {
-                let days = rule.daysActive ?? []
-                let isActiveDay = days.isEmpty || days.contains(todayName)
-                if isActiveDay && isWithin(start: rule.getStartTimeComponents(), end: rule.getEndTimeComponents()) {
-                    let selection = rule.getFamilyActivitySelection()
-                    applicationTokens.formUnion(selection.applicationTokens)
-                    categoryTokens.formUnion(selection.categoryTokens)
-                }
-            } else if rule.type == .allDay {
-                let days = rule.daysActive ?? []
-                let isActiveDay = days.isEmpty || days.contains(todayName)
-                if isActiveDay {
-                    let selection = rule.getFamilyActivitySelection()
-                    applicationTokens.formUnion(selection.applicationTokens)
-                    categoryTokens.formUnion(selection.categoryTokens)
-                }
+            guard rule.type == .timeLimit else { continue }
+
+            let days = rule.daysActive ?? []
+            let isActiveDay = days.isEmpty || days.contains(todayName)
+
+            if isActiveDay && isWithin(start: rule.getStartTimeComponents(), end: rule.getEndTimeComponents()) {
+                let selection = rule.getFamilyActivitySelection()
+                applicationTokens.formUnion(selection.applicationTokens)
+                categoryTokens.formUnion(selection.categoryTokens)
             }
         }
 

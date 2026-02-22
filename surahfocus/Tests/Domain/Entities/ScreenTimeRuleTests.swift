@@ -1,5 +1,6 @@
-import XCTest
 import FamilyControls
+import XCTest
+
 @testable import SurahFocus
 
 final class ScreenTimeRuleTests: XCTestCase {
@@ -26,7 +27,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         XCTAssertNil(rule.endTime)
     }
 
-    func testScreenTimeRuleInitializationForTimeOfDay() {
+    func testScreenTimeRuleInitializationFortimeLimit() {
         let selection = FamilyActivitySelection()
         let startComponents = DateComponents(hour: 9, minute: 0)
         let endComponents = DateComponents(hour: 17, minute: 0)
@@ -34,13 +35,13 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Work Hours",
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             startTime: startComponents,
             endTime: endComponents
         )
 
         XCTAssertEqual(rule.name, "Work Hours")
-        XCTAssertEqual(rule.type, .timeOfDay)
+        XCTAssertEqual(rule.type, .timeLimit)
         XCTAssertNotNil(rule.startTime)
         XCTAssertNotNil(rule.endTime)
         XCTAssertEqual(rule.startTime?.hour, 9)
@@ -138,7 +139,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Work",
             selection: selection,
-            type: .timeOfDay,
+            type: .timeLimit,
             startTime: start,
             endTime: end
         )
