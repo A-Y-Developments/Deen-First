@@ -24,8 +24,21 @@ protocol ScreenTimeRulesService {
     func pauseAllRules() async
     func deleteAllRules() async throws
 
-    func temporaryUnblock(minutes: Int) async
-    func reblockIfExpired() async
+    // MARK: - Per-Rule Unblock
+
+    /// Temporarily unblocks only the apps belonging to a specific rule.
+    /// Each rule maintains its own independent timer and notification.
+    func temporaryUnblock(minutes: Int, ruleId: UUID) async
+
+    /// Fallback for the Shield flow (no specific rule context).
+    /// Unblocks all currently blocking rules simultaneously.
+    func temporaryUnblockAll(minutes: Int) async
+
+    /// Checks if a specific rule's unblock period has expired and re-applies its shields.
+    func reblockIfExpired(ruleId: UUID) async
+
+    /// Called on foreground — iterates all rules and re-blocks any whose timer has expired.
+    func reblockAllExpired() async
 }
 
 // MARK: - Implementation
@@ -77,30 +90,15 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         )
 
         let name = DeviceActivityName("daily_\(ruleId.uuidString)")
-
-        // FIX: Start monitoring BEFORE saving to repository.
-        // Previously the rule was saved first — if startMonitoring threw, the rule would
-        // exist in the repository with no active monitoring behind it (phantom rule).
         try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
-
-        // Only persist after monitoring successfully started
         repository.setAppLimitRule(rule)
     }
 
     func deleteAppLimit(id: UUID) async throws {
         let name = DeviceActivityName("daily_\(id.uuidString)")
-
-        // FIX: stopMonitoring error is no longer silently swallowed via try?
-        // If stopping fails, we propagate the error so the caller knows the rule is still active.
         try await deviceActivityManager.stopMonitoring(names: [name])
-
         ScreenTimeEvents.removeRuleTokens(ruleId: id)
-
-        // FIX: Clean up triggered state for this rule.
-        // Without this, the ID lingers in triggeredRuleIds and reapplyActiveShields would
-        // continue trying to restore shields for a rule that no longer exists.
         ScreenTimeEvents.removeTriggeredRuleId(ruleId: id)
-
         repository.deleteAppLimitRule(id: id)
         await reapplyActiveShields()
     }
@@ -135,8 +133,6 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
             repeats: true
         )
 
-        // config.startTime and config.endTime are already DateComponents —
-        // read hour/minute directly for storage in SharedDefaults.
         let events = ScreenTimeEvents.createTimeLimitEvents(
             for: ruleId,
             selection: appLimits,
@@ -147,30 +143,19 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
             daysActive:  Array(config.daysActive)
         )
         let name = DeviceActivityName("timeLimit_\(ruleId.uuidString)")
-
-        // FIX: Start monitoring BEFORE saving to repository (same reason as AppLimit above).
         try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
-
-        // Only persist after successful start
         repository.setTimeLimitRule(rule)
 
-        // Apply or remove shield based on whether we're currently in the blocking window
         if config.isCurrentlyInBlockingPeriod {
             await deviceActivityManager.applyShield(for: selection)
         }
-        // Note: no need to explicitly removeShield here — if we're NOT in the window,
-        // this rule simply has no active shield yet, which is correct.
     }
 
     func deleteTimeLimit(id: UUID) async throws {
         let name = DeviceActivityName("timeLimit_\(id.uuidString)")
         try await deviceActivityManager.stopMonitoring(names: [name])
         ScreenTimeEvents.removeRuleTokens(ruleId: id)
-
-        // TimeLimit rules don't use triggeredRuleIds, but clean up defensively in case
-        // we ever add hybrid rule types in future.
         ScreenTimeEvents.removeTriggeredRuleId(ruleId: id)
-
         repository.deleteTimeLimitRule(id: id)
         await reapplyActiveShields()
     }
@@ -192,23 +177,9 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         await deviceActivityManager.applyShield(for: selection)
     }
 
-    /// Called when a Focus Session ends.
-    ///
-    /// FIX: Removed the old two-step pattern:
-    ///   1. removeAllShields()   ← created a brief gap with no shields
-    ///   2. reapplyActiveShields ← restored rule-based shields
-    ///
-    /// Now `reapplyActiveShields` computes the full desired state (rules only, since
-    /// `isSessionActive` is cleared first) and atomically replaces everything in one call.
-    /// This eliminates both the gap AND the bug where AppLimit shields weren't restored.
     func removeSessionShield() async {
-        // Mark session as inactive BEFORE reapplying, so reapplyActiveShields doesn't
-        // include session tokens in the new shield state.
         AppGroupConstants.sharedDefaults?.set(false, forKey: AppGroupConstants.isSessionActiveKey)
-
-        // Atomic recompute — replaces current state with only rule-based shields
         await reapplyActiveShields()
-
         print("✅ Session shield removed, rule-based shields reapplied atomically")
     }
 
@@ -225,8 +196,6 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         }
 
         if !allNames.isEmpty {
-            // FIX: Log the error instead of silently swallowing it.
-            // If monitoring fails to stop, shields may re-trigger unexpectedly.
             do {
                 try await deviceActivityManager.stopMonitoring(names: Set(allNames))
             } catch {
@@ -248,19 +217,15 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
             }
         }
 
-        // Full clean slate in shared defaults
         let defaults = AppGroupConstants.sharedDefaults
         defaults?.removeObject(forKey: AppGroupConstants.tokenMappingKey)
         defaults?.removeObject(forKey: AppGroupConstants.categoryTokensKey)
         defaults?.removeObject(forKey: AppGroupConstants.ruleTokensKey)
-
-        // FIX: Also clear triggered state on full delete
         ScreenTimeEvents.clearAllTriggeredRuleIds()
-
         defaults?.synchronize()
         print("[ScreenTime] All rules deleted — clean slate")
     }
 
-    // NOTE: temporaryUnblock and reblockIfExpired are implemented in
-    // ScreenTimeRulesService+Unblock.swift — do not declare them here.
+    // NOTE: temporaryUnblock, temporaryUnblockAll, reblockIfExpired, reblockAllExpired
+    // are implemented in ScreenTimeRulesService+Unblock.swift
 }

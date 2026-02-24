@@ -74,6 +74,7 @@ struct RootView: View {
             // checking user state. This ensures isSessionActiveKey is cleared so
             // checkUserState → reapplyActiveShields doesn't re-apply stale session shields.
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
+            try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
@@ -105,6 +106,7 @@ struct RootView: View {
                 // FIX: Also clean up on foreground — covers the case where the app was
                 // force-killed and relaunched via notification or deep link, bypassing .task.
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()
+                try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
 
                 // Handle "Recite to Unblock" deep link from ShieldActionExtension
                 let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
@@ -114,7 +116,7 @@ struct RootView: View {
                     router.navigate(to: .reciteToUnlock)
                 }
 
-                await DIContainer.shared.screenTimeRulesService.reblockIfExpired()
+                await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
             }
         }
     }
@@ -146,12 +148,22 @@ struct RootView: View {
             AuthView()
         case .paywall(let isFromSettings, let currentPlan):
             PaywallView(isFromSettings: isFromSettings, currentPlan: currentPlan)
-        case .permissionSetup:
-            PermissionView()
-        case .setupAppToBlock:
-            AppToBlock()
-        case .setupSummary:
-            SetupSummary()
+        case .permissionSetup, .setupAppToBlock, .setupSummary:
+            // Guard: Don't show setup routes if user already completed onboarding
+            if currentUser?.hasCompletedOnboarding == true {
+                MainTabView()
+                    .navigationBarBackButtonHidden(true)
+            } else {
+                switch route {
+                case .permissionSetup:
+                    PermissionView()
+                case .setupAppToBlock:
+                    AppToBlock()
+                case .setupSummary:
+                    SetupSummary()
+                default: EmptyView()
+                }
+            }
         case .mainTabs:
             MainTabView()
                 .navigationBarBackButtonHidden(true)
@@ -178,25 +190,35 @@ struct RootView: View {
             ActiveSessionView(surahs: surahs, ayahs: ayahs)
         case .sessionFinish(let duration, let surahCount):
             SessionFinishView(duration: duration, surahCount: surahCount)
-        case .survey(let step, let answers):
-            SurveyView(step: step, answers: answers)
-        case .calculateSurvey(let answers):
-            CalculateSurveyView(answers: answers)
-        case .summary(let step, let answers):
-            switch step {
-            case 1: Summary1View(answers: answers)
-            case 2: Summary2View()
-            default: EmptyView()
+        case .survey, .calculateSurvey, .summary, .howAppWork, .finalSummary:
+            // Guard: Don't show onboarding routes if user already completed onboarding
+            if currentUser?.hasCompletedOnboarding == true {
+                MainTabView()
+                    .navigationBarBackButtonHidden(true)
+            } else {
+                switch route {
+                case .survey(let step, let answers):
+                    SurveyView(step: step, answers: answers)
+                case .calculateSurvey(let answers):
+                    CalculateSurveyView(answers: answers)
+                case .summary(let step, let answers):
+                    switch step {
+                    case 1: Summary1View(answers: answers)
+                    case 2: Summary2View()
+                    default: EmptyView()
+                    }
+                case .howAppWork(let step):
+                    switch step {
+                    case 1: HowAppWork1View()
+                    case 2: HowAppWork2View()
+                    case 3: HowAppWork3View()
+                    default: EmptyView()
+                    }
+                case .finalSummary:
+                    FinalSummaryView()
+                default: EmptyView()
+                }
             }
-        case .howAppWork(let step):
-            switch step {
-            case 1: HowAppWork1View()
-            case 2: HowAppWork2View()
-            case 3: HowAppWork3View()
-            default: EmptyView()
-            }
-        case .finalSummary:
-            FinalSummaryView()
         case .subscription:
             SubscriptionView()
         case .preferences:

@@ -10,10 +10,8 @@ final class TimeLimitViewModel: ObservableObject {
     @Published var settingsName: String = ""
     @Published var selectedApps: Set<Data> = []
     @Published var selectedCategories: Set<Data> = []
-    @Published var startTime: Date =
-        Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
-    @Published var endTime: Date =
-        Calendar.current.date(from: DateComponents(hour: 17, minute: 0)) ?? Date()
+    @Published var startTime: Date
+    @Published var endTime: Date
     @Published var activeDays: Set<Int> = Set(0...6)
     @Published var isAllDay: Bool = true
     @Published var selectedPrayers: Set<String> = []
@@ -45,10 +43,28 @@ final class TimeLimitViewModel: ObservableObject {
     ) {
         self.screenTimeRulesService = screenTimeRulesService
         self.authCenter = authCenter
+        self.startTime = Self.defaultStartTime()
+        self.endTime = Self.defaultEndTime()
     }
 
     convenience init() {
         self.init(screenTimeRulesService: DIContainer.shared.screenTimeRulesService)
+    }
+
+    // MARK: - Default Time Helpers
+
+    private static func defaultStartTime() -> Date {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.hour, .minute], from: now)
+
+        let nextHour = (components.hour! + 1) % 24
+        return calendar.date(from: DateComponents(hour: nextHour, minute: 0)) ?? Date()
+    }
+
+    private static func defaultEndTime() -> Date {
+        let start = defaultStartTime()
+        return Calendar.current.date(byAdding: .hour, value: 1, to: start) ?? start
     }
 
     // MARK: - Computed Properties

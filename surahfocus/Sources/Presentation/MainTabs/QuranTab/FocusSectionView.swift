@@ -164,11 +164,6 @@ struct FocusSectionView: View {
         .task {
             await viewModel.loadData()
         }
-        .onAppear {
-            Task {
-                await viewModel.loadData()
-            }
-        }
         .sheet(item: $viewModel.editingSurah) { surahWithRange in
             AyahRangeSheetView(
                 surah: surahWithRange.surah,

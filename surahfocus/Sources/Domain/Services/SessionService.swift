@@ -53,6 +53,7 @@ protocol SessionService {
     func endSession(_ session: Session, durationSeconds: Int) async throws
     func getTodaySession(for userId: UUID) async throws -> Session?
     func updateStreak(for userId: UUID) async throws
+    func checkAndResetStreakIfNeeded() async throws
     func cleanupOrphanedSessions() async  // ← ADD
 }
 
@@ -181,6 +182,7 @@ final class SessionServiceImpl: SessionService {
             longest: user.longestStreak,
             userId: user.appleUserId
         )
+        UserPersistenceHelper.saveLastActiveDate(user.lastActiveDate!, userId: user.appleUserId)
         print("✅ updateStreak: Completed. Streak updated to \(user.currentStreak)")
     }
 
@@ -227,6 +229,25 @@ final class SessionServiceImpl: SessionService {
     private func removeSessionShields() async {
         await screenTimeRulesService.removeSessionShield()
         print("✅ Session ended — shields restored to rule-based state")
+    }
+
+    // MARK: - Streak Check
+
+    func checkAndResetStreakIfNeeded() async throws {
+        guard let user = try await userRepository.getCurrentUser() else { return }
+
+        guard let lastActive = user.lastActiveDate else { return }
+
+        let today = Calendar.current.startOfDay(for: Date())
+        let lastActiveDay = Calendar.current.startOfDay(for: lastActive)
+        let daysDiff = Calendar.current.dateComponents([.day], from: lastActiveDay, to: today).day ?? 0
+
+        if daysDiff > 1 {
+            user.currentStreak = 1
+            try await userRepository.updateUser(user)
+            UserPersistenceHelper.saveStreaks(current: 1, longest: user.longestStreak, userId: user.appleUserId)
+            print("🔄 Streak reset to 1 (missed \(daysDiff) days)")
+        }
     }
 
     // MARK: - Orphaned Session Cleanup

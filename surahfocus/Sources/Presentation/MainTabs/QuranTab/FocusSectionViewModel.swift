@@ -176,6 +176,8 @@ final class FocusSectionViewModel: ObservableObject {
 
     func prepareForSession() async throws -> (surahs: [SurahWithRange], ayahs: [Ayah]) {
         guard canStartSession else { throw SessionError.noSurahs }
+
+        // Save current app selection before starting session
         saveAppSelection()
 
         var allAyahs: [Ayah] = []

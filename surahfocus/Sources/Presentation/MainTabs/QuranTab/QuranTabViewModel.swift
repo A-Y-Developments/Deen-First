@@ -14,20 +14,23 @@ final class QuranTabViewModel: ObservableObject {
     @Published var viewMode: QuranViewMode = .surah
 
     private var cancellables = Set<AnyCancellable>()
-    
+
     enum QuranViewMode {
         case surah
         case juz
     }
     private let quranService: QuranService
     private let authService: AuthService
-    
+    private let notificationPermissionService: NotificationPermissionService
+
     init(
         quranService: QuranService = DIContainer.shared.quranService,
-        authService: AuthService = DIContainer.shared.authService
+        authService: AuthService = DIContainer.shared.authService,
+        notificationPermissionService: NotificationPermissionService = DIContainer.shared.notificationPermissionService
     ) {
         self.quranService = quranService
         self.authService = authService
+        self.notificationPermissionService = notificationPermissionService
 
         setupNotifications()
     }
@@ -78,5 +81,9 @@ final class QuranTabViewModel: ObservableObject {
             currentStreak = currentUser.currentStreak
             print("🔄 QuranTabViewModel: Refreshed user, streak=\(currentStreak)")
         }
+    }
+
+    func requestNotificationPermission() async {
+        _ = await notificationPermissionService.requestAuthorizationIfNeeded()
     }
 }

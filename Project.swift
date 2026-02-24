@@ -8,7 +8,7 @@ let revenueCatApiKeyProd = Environment.revenuecatProdKey.getString(default: "")
 let openAIApiKey = Environment.openaiApiKey.getString(default: "")  // ← NEW
 
 let project = Project(
-    name: "SurahFocus",
+    name: "Deen First",
     targets: [
 
         // MARK: - Main App Target

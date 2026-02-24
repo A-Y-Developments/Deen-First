@@ -56,10 +56,8 @@ struct SessionFinishView: View {
     private func navigateToHome() {
         // Notify that session completed so streak can be refreshed
         NotificationCenter.default.post(name: .didCompleteSession, object: nil)
-        router.navigateBack()
-        router.navigateBack()
-        router.navigateBack()
-        router.navigateBack()
+        router.reset()
+        router.navigate(to: .mainTabs)
     }
 }
 

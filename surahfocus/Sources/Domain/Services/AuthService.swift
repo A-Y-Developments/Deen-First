@@ -61,6 +61,13 @@ final class AuthServiceImpl: AuthService {
                 didChange = true
             }
 
+            // Restore lastActiveDate from iCloud KV
+            if let lastActive = UserPersistenceHelper.resolveLastActiveDate(userId: appleUserId) {
+                print("🔄 Restoring lastActiveDate from iCloud: \(lastActive)")
+                existingUser.lastActiveDate = lastActive
+                didChange = true
+            }
+
             if didChange {
                 try await userRepository.updateUser(existingUser)
             }
@@ -84,6 +91,10 @@ final class AuthServiceImpl: AuthService {
         if let streaks = UserPersistenceHelper.resolveStreaks(userId: appleUserId) {
             newUser.currentStreak = streaks.current
             newUser.longestStreak = streaks.longest
+        }
+
+        if let lastActive = UserPersistenceHelper.resolveLastActiveDate(userId: appleUserId) {
+            newUser.lastActiveDate = lastActive
         }
 
         try await userRepository.createUser(newUser)

@@ -72,6 +72,7 @@ struct SetupSummary: View {
             Button {
                 Task {
                     await viewModel.saveSetup()
+                    router.reset()
                     router.navigate(to: .mainTabs)
                 }
             } label: {

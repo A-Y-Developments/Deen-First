@@ -2,15 +2,63 @@ import ManagedSettings
 import ManagedSettingsUI
 import UIKit
 
-// MARK: - Shield Configuration Extension
-// Target: Shield
-// Replaces your existing ShieldConfigurationExtension.swift
-
 class ShieldConfigurationExtension: ShieldConfigurationDataSource {
 
-    private var sharedDefaults: UserDefaults? {
-        UserDefaults(suiteName: "group.com.aydev.surahfocus")
-    }
+    // MARK: - Rotated Quranic Subtitles
+    // Themes: remembrance of Allah, use of time, prayer, dunya vs akhirah, patience, Quran.
+    // Rotate by minute — stable within the minute, fresh on each new visit.
+
+    private let subtitles: [String] = [
+
+        // ── Remembrance of Allah ───────────────────────────────────────────────
+        "Verily, in the remembrance of Allah do hearts find rest. — Ar-Ra'd 13:28",
+
+        "Remember Me and I will remember you. Be grateful and do not deny Me. — Al-Baqarah 2:152",
+
+        "Remember your Lord much, and exalt Him morning and evening. — Al-Imran 3:41",
+
+        "And remind, for reminders benefit the believers. — Adh-Dhariyat 51:55",
+
+        // ── Prayer ─────────────────────────────────────────────────────────────
+        "Establish prayer. Indeed, prayer prohibits immorality and wrongdoing. — Al-Ankabut 29:45",
+
+        "Seek help through patience and prayer. It is hard, except for the humble. — Al-Baqarah 2:45",
+
+        "Maintain your prayers and stand before Allah in devotion. — Al-Baqarah 2:238",
+
+        "Indeed, prayer is an obligation on the believers at set times. — An-Nisa 4:103",
+
+        // ── Time & Its Value ───────────────────────────────────────────────────
+        "By time — indeed, mankind is in loss, except those who believe and do good. — Al-Asr 103:1-3",
+
+        "Did We not give you a long enough life for whoever wanted to remember to do so? — Fatir 35:37",
+
+        // ── Dunya vs Akhirah ───────────────────────────────────────────────────
+        "You prefer the life of this world, but the Hereafter is better and more lasting. — Al-A'la 87:16-17",
+
+        "The life of this world is nothing but the enjoyment of delusion. — Al-Imran 3:185",
+
+        "O believers! Do not let your wealth or children divert you from the remembrance of Allah. — Al-Munafiqun 63:9",
+
+        "Know that the life of this world is but play and amusement. — Al-Hadid 57:20",
+
+        // ── Patience & Steadfastness ───────────────────────────────────────────
+        "Indeed, Allah is with the patient. — Al-Baqarah 2:153",
+
+        "Give good news to the patient — those who say: Indeed, to Allah we belong and to Him we return. — Al-Baqarah 2:155-156",
+
+        // ── The Quran as Guidance ──────────────────────────────────────────────
+        "Indeed, this Quran guides to that which is most suitable. — Al-Isra 17:9",
+
+        "We send down the Quran as a healing and mercy for the believers. — Al-Isra 17:82",
+
+        // ── Tawbah & Returning to Allah ────────────────────────────────────────
+        "Turn to Allah in repentance, all of you, O believers, so that you may succeed. — An-Nur 24:31",
+
+        "Say: O My servants who have wronged themselves — never despair of Allah's mercy. — Az-Zumar 39:53",
+    ]
+
+    // MARK: - Shield Configurations
 
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         makeShieldConfiguration()
@@ -27,53 +75,38 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
         makeShieldConfiguration()
     }
 
-    // MARK: - Shared Configuration
+    // MARK: - Build Configuration
 
     private func makeShieldConfiguration() -> ShieldConfiguration {
-        let subtitle = getShieldMessage()
-
-        return ShieldConfiguration(
-            icon: UIImage(systemName: "moon.stars.fill"),
+        ShieldConfiguration(
+            icon: UIImage(named: "app-logo"),
             title: ShieldConfiguration.Label(
-                text: "Deen First",
+                text: "Blocked by Deen First",
                 color: .label
             ),
             subtitle: ShieldConfiguration.Label(
-                text: subtitle,
+                text: currentSubtitle(),
                 color: .secondaryLabel
             ),
             primaryButtonLabel: ShieldConfiguration.Label(
                 text: "Close",
                 color: .white
             ),
-            primaryButtonBackgroundColor: UIColor(hex: "#5C64D0"),
-            // ← NEW: secondary button triggers ShieldActionExtension
-            secondaryButtonLabel: ShieldConfiguration.Label(
-                text: "🎙️ Recite to Unblock",
-                color: UIColor(hex: "#5C64D0")
-            )
+            primaryButtonBackgroundColor: UIColor(hex: "#488D66")
+            // Secondary button removed — recite to unblock is triggered from BlockingTabView
         )
     }
 
-    // MARK: - Message
+    // MARK: - Subtitle Rotation
 
-    private func getShieldMessage() -> String {
-        guard let sharedDefaults = sharedDefaults else {
-            return "Time to focus on what matters 🌙"
-        }
-
-        let hasActiveSession = sharedDefaults.bool(forKey: "activeSession")
-        if hasActiveSession,
-            let surahId = sharedDefaults.object(forKey: "activeSurahId") as? Int
-        {
-            return "Quran session active - Time to read Surah \(surahId) 🌙"
-        }
-
-        return "Time to focus on what matters 🌙"
+    /// Returns a random ayah each time the shield appears.
+    /// The shield extension is re-invoked on every block, so this always picks fresh.
+    private func currentSubtitle() -> String {
+        return subtitles[Int.random(in: 0..<subtitles.count)]
     }
 }
 
-// MARK: - UIColor Hex Extension (keep your existing one or use this)
+// MARK: - UIColor Hex
 
 extension UIColor {
     convenience init(hex: String) {

@@ -8,6 +8,8 @@ struct MainBackgroundModifier: ViewModifier {
                 Image("main-background")
                     .resizable()
                     .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
                     .ignoresSafeArea()
             }
     }
@@ -21,6 +23,8 @@ struct SecondaryBackgroundModifier: ViewModifier {
                 Image("secondary-background")
                     .resizable()
                     .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
                     .ignoresSafeArea()
             }
     }

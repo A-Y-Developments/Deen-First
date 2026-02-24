@@ -36,10 +36,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             print("✅ Removed shields at interval end for rule: \(ruleId)")
 
         } else if activity.rawValue.hasPrefix(AppGroupConstants.tempUnblockActivityPrefix) {
-            // The temporary unblock window has expired.
-            // This runs in the extension process — fires reliably even if the main app
-            // has been backgrounded or killed by the user.
-            handleTempUnblockExpired()
+            // The temporary unblock window for a specific rule has expired.
+            // Extract the ruleId from the activity name suffix.
+            let ruleIdString = activity.rawValue.replacingOccurrences(
+                of: AppGroupConstants.tempUnblockActivityPrefix,
+                with: ""
+            )
+            handleTempUnblockExpired(ruleId: ruleIdString)
         }
     }
 
@@ -64,25 +67,74 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         }
     }
 
-    // MARK: - Temp Unblock Expiry
+    // MARK: - Temp Unblock Expiry (per-rule)
 
-    private func handleTempUnblockExpired() {
-        print("🔒 [TempUnblock] Window expired — re-applying shields")
+    private func handleTempUnblockExpired(ruleId: String) {
+        print("🔒 [TempUnblock] Window expired for rule: \(ruleId) — re-applying shields")
 
-        // Clear expiry key so isTemporarilyUnblocked returns false in the main app
-        sharedDefaults?.removeObject(forKey: AppGroupConstants.unblockExpiryKey)
+        // Clear the per-rule expiry key
+        guard let uuid = UUID(uuidString: ruleId) else { return }
+        sharedDefaults?.removeObject(forKey: AppGroupConstants.unblockExpiryKey(for: uuid))
         sharedDefaults?.synchronize()
 
-        // Re-apply triggered AppLimit rules
+        // Re-apply shields for this specific rule only.
+        // Check AppLimit first (quota was reached today), then TimeLimit (in active window).
         let triggeredIds = ScreenTimeEvents.getTriggeredRuleIds()
-        for ruleId in triggeredIds {
+        if triggeredIds.contains(ruleId) {
+            // AppLimit rule — re-shield its tokens
             applyShieldsFromStorage(ruleId: ruleId)
+            print("✅ [TempUnblock] AppLimit shields restored for rule: \(ruleId)")
+        } else {
+            // TimeLimit rule — only re-shield if currently inside the active window
+            reapplyTimeLimitShieldForRule(ruleId: ruleId)
+        }
+    }
+
+    // MARK: - Re-apply Single TimeLimit Rule
+
+    private func reapplyTimeLimitShieldForRule(ruleId: String) {
+        guard let defaults = sharedDefaults,
+              let allRules = defaults.dictionary(forKey: AppGroupConstants.ruleTokensKey),
+              let ruleData = allRules[ruleId] as? [String: Any],
+              let type = ruleData["type"] as? String, type == "timeLimit",
+              let startHour = ruleData["startHour"] as? Int,
+              let startMinute = ruleData["startMinute"] as? Int,
+              let endHour = ruleData["endHour"] as? Int,
+              let endMinute = ruleData["endMinute"] as? Int
+        else { return }
+
+        let calendar = Calendar.current
+        let now = Date()
+        let comps = calendar.dateComponents([.hour, .minute], from: now)
+        let currentMinutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+
+        // Check active days
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        formatter.locale = Locale(identifier: "en_US")
+        let todayName = formatter.string(from: now)
+
+        if let daysActive = ruleData["daysActive"] as? [String], !daysActive.isEmpty {
+            guard daysActive.contains(todayName) else { return }
         }
 
-        // Re-apply any TimeLimit rules whose window is currently active
-        reapplyTimeLimitShields()
+        // Check time window (handles overnight wrap)
+        let sMin = startHour * 60 + startMinute
+        let eMin = endHour * 60 + endMinute
+        let inWindow: Bool
+        if sMin <= eMin {
+            inWindow = currentMinutes >= sMin && currentMinutes <= eMin
+        } else {
+            inWindow = currentMinutes >= sMin || currentMinutes <= eMin
+        }
 
-        print("✅ [TempUnblock] Shields restored — \(triggeredIds.count) AppLimit rule(s) re-applied")
+        guard inWindow else {
+            print("✅ [TempUnblock] TimeLimit rule \(ruleId) is outside its window — no shield needed")
+            return
+        }
+
+        applyShieldsFromStorage(ruleId: ruleId)
+        print("✅ [TempUnblock] TimeLimit shields restored for rule: \(ruleId)")
     }
 
     private func applyShieldsFromStorage(ruleId: String) {
@@ -111,42 +163,8 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
               let allRules = defaults.dictionary(forKey: AppGroupConstants.ruleTokensKey)
         else { return }
 
-        let calendar = Calendar.current
-        let now = Date()
-        let comps = calendar.dateComponents([.hour, .minute], from: now)
-        let currentMinutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
-        formatter.locale = Locale(identifier: "en_US")
-        let todayName = formatter.string(from: now)
-
-        for (ruleId, ruleData) in allRules {
-            guard let ruleDict = ruleData as? [String: Any],
-                  let type = ruleDict["type"] as? String, type == "timeLimit",
-                  let startHour = ruleDict["startHour"] as? Int,
-                  let startMinute = ruleDict["startMinute"] as? Int,
-                  let endHour = ruleDict["endHour"] as? Int,
-                  let endMinute = ruleDict["endMinute"] as? Int
-            else { continue }
-
-            // Check active days
-            if let daysActive = ruleDict["daysActive"] as? [String], !daysActive.isEmpty {
-                guard daysActive.contains(todayName) else { continue }
-            }
-
-            // Check time window (handles overnight wrap)
-            let sMin = startHour * 60 + startMinute
-            let eMin = endHour * 60 + endMinute
-            let inWindow: Bool
-            if sMin <= eMin {
-                inWindow = currentMinutes >= sMin && currentMinutes <= eMin
-            } else {
-                inWindow = currentMinutes >= sMin || currentMinutes <= eMin
-            }
-
-            guard inWindow else { continue }
-            applyShieldsFromStorage(ruleId: ruleId)
+        for (ruleId, _) in allRules {
+            reapplyTimeLimitShieldForRule(ruleId: ruleId)
         }
     }
 

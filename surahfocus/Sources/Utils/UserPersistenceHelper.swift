@@ -127,10 +127,29 @@ enum UserPersistenceHelper {
         return (current, longest)
     }
 
+    // MARK: - LastActiveDate
+
+    static func saveLastActiveDate(_ date: Date, userId: String) {
+        let k = key("lastActiveDate", userId: userId)
+        let value = String(date.timeIntervalSince1970)
+        iCloud.set(value, forKey: k)
+    }
+
+    static func resolveLastActiveDate(userId: String) -> Date? {
+        let k = key("lastActiveDate", userId: userId)
+
+        if let raw = iCloud.string(forKey: k),
+           let ti = TimeInterval(raw) {
+            return Date(timeIntervalSince1970: ti)
+        }
+
+        return nil
+    }
+
     // MARK: - Cleanup (on delete account)
 
     static func deleteAll(userId: String) {
-        let keys = ["userName", "userEmail", "createdAt", "currentStreak", "longestStreak"]
+        let keys = ["userName", "userEmail", "createdAt", "currentStreak", "longestStreak", "lastActiveDate"]
         for base in keys {
             let k = key(base, userId: userId)
             KeychainHelper.delete(forKey: k)

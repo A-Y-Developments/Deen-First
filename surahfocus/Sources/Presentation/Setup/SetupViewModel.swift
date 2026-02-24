@@ -64,6 +64,30 @@ final class SetupViewModel: ObservableObject {
         selectedPrayers.contains(prayer)
     }
 
+    func saveAppSelection() {
+        guard let sharedDefaults = AppGroupConstants.sharedDefaults else { return }
+
+        // Save application tokens
+        var tokenMapping: [String: Data] = [:]
+        for token in selection.applicationTokens {
+            if let encoded = try? JSONEncoder().encode(token) {
+                let key = String(token.hashValue)
+                tokenMapping[key] = encoded
+            }
+        }
+        sharedDefaults.set(tokenMapping, forKey: AppGroupConstants.tokenMappingKey)
+
+        // Save category tokens
+        var categoryMapping: [String: Data] = [:]
+        for token in selection.categoryTokens {
+            if let encoded = try? JSONEncoder().encode(token) {
+                let key = String(token.hashValue)
+                categoryMapping[key] = encoded
+            }
+        }
+        sharedDefaults.set(categoryMapping, forKey: AppGroupConstants.categoryTokensKey)
+    }
+
     var previewAppLimitRule: ScreenTimeRule? {
         guard let limit = selectedDailyLimit,
             !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty
@@ -161,6 +185,9 @@ final class SetupViewModel: ObservableObject {
                 dailyLimit: selectedDailyLimit,
                 selectedPrayers: selectedPrayers
             )
+
+            // Save app selection for use in Focus Session
+            saveAppSelection()
 
             NotificationCenter.default.post(name: .didCompleteScreenTimeSetup, object: nil)
             isLoading = false

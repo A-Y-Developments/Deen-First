@@ -42,6 +42,7 @@ struct CircularPlusButton: View {
 
 struct BlockingTabView: View {
     @EnvironmentObject private var viewModel: BlockingTabViewModel
+    @EnvironmentObject private var reciteToUnblockViewModel: ReciteToUnblockViewModel
     @EnvironmentObject var router: Router
     @State private var showCreateSheet = false
 
@@ -91,7 +92,7 @@ struct BlockingTabView: View {
         }
         .onChange(of: router.navigationPath.count) { _, newCount in
             Task { await viewModel.loadBlockedApps() }
-            // User returned from ReciteToUnlock — pick up any new expiry that was written
+            // User returned from ReciteToUnlock — pick up any new per-rule expiry
             viewModel.syncCountdownFromStorage()
         }
     }
@@ -119,9 +120,12 @@ struct BlockingTabView: View {
                     daysText: limit.daysDisplayText,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
+                        // Set the target rule BEFORE navigating so ReciteToUnblockViewModel
+                        // knows which rule's shields to remove on a successful recitation.
+                        reciteToUnblockViewModel.targetRuleId = limit.id
                         router.navigate(to: .reciteToUnlock)
                     },
-                    countdownDisplay: viewModel.countdownDisplay
+                    countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
                 .onTapGesture {
                     router.navigate(to: .editAppLimit(id: limit.id))
@@ -137,9 +141,10 @@ struct BlockingTabView: View {
                     daysText: limit.daysDisplayText,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
+                        reciteToUnblockViewModel.targetRuleId = limit.id
                         router.navigate(to: .reciteToUnlock)
                     },
-                    countdownDisplay: viewModel.countdownDisplay
+                    countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
                 .onTapGesture {
                     router.navigate(to: .editTimeLimit(id: limit.id))

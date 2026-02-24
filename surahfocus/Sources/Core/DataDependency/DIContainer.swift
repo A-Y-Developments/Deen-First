@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UserNotifications
 
 final class DIContainer {
     static let shared = DIContainer()
@@ -45,6 +46,8 @@ final class DIContainer {
         userRepository: userRepository,
         screenTimeRulesService: MainActor.assumeIsolated { screenTimeRulesService }
     )
+
+    lazy var notificationPermissionService: NotificationPermissionService = NotificationPermissionServiceImpl()
 
     @MainActor
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()

@@ -29,7 +29,7 @@ private func normalizeArabic(_ text: String) -> String {
 enum ReciteState: Equatable {
     case idle
     case loadingAyah
-    case ready          
+    case ready
     case recording
     case transcribing
     case result(passed: Bool, score: Int)
@@ -46,9 +46,16 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var state: ReciteState = .idle
     @Published var ayah: Ayah?
     @Published var transcript: String = ""
-    @Published var unblockDurationMinutes: Int = 5   
+    @Published var unblockDurationMinutes: Int = 5
 
-    // MARK: - Dependencies (from DIContainer)
+    // MARK: - Target Rule
+    
+    /// Set by BlockingTabView before navigating here — identifies which rule's apps to unblock.
+    /// nil means the flow was triggered from the Shield screen (no specific rule context),
+    /// in which case handlePass falls back to unblocking ALL currently blocking rules.
+    var targetRuleId: UUID?
+
+    // MARK: - Dependencies
 
     private let quranPreferences: QuranPreferencesService
     private var quranService: QuranService {
@@ -66,7 +73,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
         UserDefaults(suiteName: AppGroupConstants.suiteName)
     }
 
-    private let surahRange = 1...7   
+    private let surahRange = 1...114
+    private let maxAyahWordCount = 20
 
     // MARK: - Init
 
@@ -83,15 +91,28 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
         let surahNo = Int.random(in: surahRange)
         do {
-            let (surah, ayahs) = try await quranService.loadSurah(number: surahNo)
+            let (_, ayahs) = try await quranService.loadSurah(number: surahNo)
             guard !ayahs.isEmpty else {
                 state = .error("Could not load ayah. Check your connection.")
                 return
             }
-            let picked = ayahs[Int.random(in: 0..<min(ayahs.count, 10))]
+
+            // Filter ayahs by word count
+            let filteredAyahs = ayahs.filter { ayah in
+                let wordCount = ayah.arabic2.split(separator: " ").count
+                return wordCount <= maxAyahWordCount
+            }
+
+            guard !filteredAyahs.isEmpty else {
+                // Surah has no short ayahs, try another surah
+                await loadRandomAyah()
+                return
+            }
+
+            let picked = filteredAyahs.randomElement()!
             self.ayah = picked
             state = .ready
-            print("... \(picked.numberInSurah)")
+            print("... \(picked.surahNo):\(picked.numberInSurah)")
         } catch {
             state = .error("Could not load ayah: \(error.localizedDescription)")
         }
@@ -259,7 +280,13 @@ final class ReciteToUnblockViewModel: ObservableObject {
         sharedDefaults?.removeObject(forKey: AppGroupConstants.reciteRequested)
         sharedDefaults?.synchronize()
 
-        await screenTimeService.temporaryUnblock(minutes: unblockDurationMinutes)
+        if let ruleId = targetRuleId {
+            // BlockingTabView path — unblock only the tapped rule
+            await screenTimeService.temporaryUnblock(minutes: unblockDurationMinutes, ruleId: ruleId)
+        } else {
+            // Shield path — no specific rule, unblock all currently blocking rules
+            await screenTimeService.temporaryUnblockAll(minutes: unblockDurationMinutes)
+        }
     }
 
     // MARK: - Retry

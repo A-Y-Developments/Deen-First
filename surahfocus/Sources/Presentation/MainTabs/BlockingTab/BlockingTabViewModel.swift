@@ -12,14 +12,16 @@ final class BlockingTabViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    /// Remaining seconds on the temporary unblock. nil means not currently unblocked.
-    /// All cards observe this single value — unblock is global across all rules.
-    @Published var unblockRemainingSeconds: Int? = nil
+    /// Per-rule remaining seconds. Each rule has its own independent countdown.
+    /// Key = rule UUID. nil entry (or missing key) means that rule is not currently unblocked.
+    @Published var unblockRemainingSeconds: [UUID: Int] = [:]
 
     // MARK: - Dependencies
 
     private let screenTimeRulesService: ScreenTimeRulesService
-    private var countdownTimer: AnyCancellable?
+
+    /// One timer subscription per rule — so rules tick down independently.
+    private var countdownTimers: [UUID: AnyCancellable] = [:]
 
     // MARK: - Init
 
@@ -48,57 +50,62 @@ final class BlockingTabViewModel: ObservableObject {
         syncCountdownFromStorage()
     }
 
-    // MARK: - Countdown Timer
+    // MARK: - Countdown Timers (per-rule)
 
-    /// Reads the unblock expiry from SharedDefaults and starts (or stops) the countdown timer.
+    /// Reads per-rule unblock expiry from SharedDefaults and starts or stops
+    /// each rule's individual countdown timer.
     func syncCountdownFromStorage() {
-        let expiry = AppGroupConstants.sharedDefaults?
-            .double(forKey: AppGroupConstants.unblockExpiryKey) ?? 0
+        let allRules = appLimits + timeLimits
 
-        guard expiry > 0 else {
-            stopCountdown()
-            return
+        for rule in allRules {
+            let key = AppGroupConstants.unblockExpiryKey(for: rule.id)
+            let expiry = AppGroupConstants.sharedDefaults?.double(forKey: key) ?? 0
+
+            guard expiry > 0 else {
+                stopCountdown(for: rule.id)
+                continue
+            }
+
+            let remaining = Int(expiry - Date().timeIntervalSince1970)
+            guard remaining > 0 else {
+                // Already expired — stop timer and trigger re-block
+                stopCountdown(for: rule.id)
+                Task { await screenTimeRulesService.reblockIfExpired(ruleId: rule.id) }
+                continue
+            }
+
+            unblockRemainingSeconds[rule.id] = remaining
+            startCountdownTimer(ruleId: rule.id, expiry: expiry)
         }
-
-        let remaining = Int(expiry - Date().timeIntervalSince1970)
-        guard remaining > 0 else {
-            stopCountdown()
-            Task { await screenTimeRulesService.reblockIfExpired() }
-            return
-        }
-
-        unblockRemainingSeconds = remaining
-        startCountdownTimer(expiry: expiry)
     }
 
-    private func startCountdownTimer(expiry: TimeInterval) {
-        countdownTimer?.cancel()
+    private func startCountdownTimer(ruleId: UUID, expiry: TimeInterval) {
+        // Cancel existing timer for this rule before starting a new one
+        countdownTimers[ruleId]?.cancel()
 
-        countdownTimer = Timer.publish(every: 1, on: .main, in: .common)
+        countdownTimers[ruleId] = Timer.publish(every: 1, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
                 let remaining = Int(expiry - Date().timeIntervalSince1970)
                 if remaining <= 0 {
-                    self.stopCountdown()
-                    Task { await self.screenTimeRulesService.reblockIfExpired() }
+                    self.stopCountdown(for: ruleId)
+                    Task { await self.screenTimeRulesService.reblockIfExpired(ruleId: ruleId) }
                 } else {
-                    self.unblockRemainingSeconds = remaining
+                    self.unblockRemainingSeconds[ruleId] = remaining
                 }
             }
     }
 
-    private func stopCountdown() {
-        countdownTimer?.cancel()
-        countdownTimer = nil
-        unblockRemainingSeconds = nil
+    private func stopCountdown(for ruleId: UUID) {
+        countdownTimers[ruleId]?.cancel()
+        countdownTimers.removeValue(forKey: ruleId)
+        unblockRemainingSeconds.removeValue(forKey: ruleId)
     }
 
     // MARK: - Per-Rule Blocking State
 
     /// Returns whether a given rule is currently actively blocking apps.
-    /// - AppLimit: quota was reached today (persisted in triggeredRuleIds)
-    /// - TimeLimit: currently inside the scheduled window on an active day
     func isRuleCurrentlyBlocking(_ rule: ScreenTimeRule) -> Bool {
         guard DayHelper.isActiveToday(daysActive: rule.daysActive) else { return false }
 
@@ -136,9 +143,9 @@ final class BlockingTabViewModel: ObservableObject {
         !appLimits.isEmpty || !timeLimits.isEmpty
     }
 
-    /// "4:32" style display string for the countdown button label.
-    var countdownDisplay: String? {
-        guard let seconds = unblockRemainingSeconds else { return nil }
+    /// Returns "4:32" style display string for a specific rule's countdown, or nil if not unblocked.
+    func countdownDisplay(for ruleId: UUID) -> String? {
+        guard let seconds = unblockRemainingSeconds[ruleId] else { return nil }
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%d:%02d", m, s)

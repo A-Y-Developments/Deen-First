@@ -75,6 +75,7 @@ struct QuranTabView: View {
                 await viewModel.loadSurahs()
             }
             await settingsViewModel.loadUserData()
+            await viewModel.requestNotificationPermission()
         }
         .onChange(of: viewModel.searchQuery) { _, _ in
             viewModel.searchSurahs()
