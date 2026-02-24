@@ -53,13 +53,7 @@ struct EndView: View {
                 )
         }
         .padding(24)
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
     }
 }
 

@@ -1,10 +1,3 @@
-//
-//  SurahListSheet.swift
-//  SurahFocus
-//
-//  Created by Aditya Rizki on 11/02/26.
-//
-
 import SwiftUI
 
 struct SurahListSheet: View {
@@ -12,30 +5,28 @@ struct SurahListSheet: View {
     @EnvironmentObject var viewModel: QuranTabViewModel
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 16) {
-                SearchBar(text: $viewModel.searchQuery,
-                          placeholder: "Search surahs...")
+        VStack(spacing: 0) {
+            SearchBar(text: $viewModel.searchQuery, placeholder: "Search surahs...")
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
-                
+                .padding(.bottom, 12)
+            
+            // Single ScrollView — no nesting because enableAppleScrollBehavior
+            // is removed. This fixes both the glitch and the scroll cap.
+            ScrollView {
                 if viewModel.isLoading && viewModel.surahs.isEmpty {
                     ProgressView()
+                        .frame(maxWidth: .infinity)
                         .padding(.top, 40)
-                } else if !viewModel.searchQuery.isEmpty &&
-                            viewModel.filteredSurahs.isEmpty {
-                    
-                    // MARK: - Empty Search State
+
+                } else if !viewModel.searchQuery.isEmpty && viewModel.filteredSurahs.isEmpty {
                     VStack(spacing: 12) {
-                        
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 28))
                             .foregroundColor(Color.secondary300.opacity(0.6))
-                        
                         Text("No Result for \"\(viewModel.searchQuery)\"")
                             .font(.headline)
                             .foregroundColor(.white)
-                        
                         Text("Check the spelling or try a new search.")
                             .font(.footnote)
                             .foregroundColor(Color.gray4)
@@ -52,11 +43,9 @@ struct SurahListSheet: View {
                                 }
                             }
                         } else {
-                            // render juz view
                             VStack(alignment: .leading) {
                                 Text("Juz 1")
-                                    .font(.system(.body))
-                                    .fontWeight(.bold)
+                                    .font(.system(.body, weight: .bold))
                                     .foregroundColor(Color(hex: "ADA666"))
                                 ForEach(viewModel.filteredSurahs) { surah in
                                     SurahCard(surah: surah) {
@@ -65,14 +54,14 @@ struct SurahListSheet: View {
                                 }
                             }
                         }
-
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
+                    .padding(.bottom, 100)
                 }
             }
-            
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: viewModel.searchQuery) { _, _ in
             viewModel.searchSurahs()
         }

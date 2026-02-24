@@ -3,7 +3,7 @@ import SwiftUI
 struct SubscriptionView: View {
 
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel = SubscriptionViewModel()
+    @EnvironmentObject private var viewModel: SubscriptionViewModel
 
     var body: some View {
         VStack(spacing: 28) {
@@ -26,12 +26,7 @@ struct SubscriptionView: View {
         }
         .padding(.vertical, 48)
         .padding(.horizontal, 24)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .navigationTitle("Subscription")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarColorScheme(.dark, for: .navigationBar)  // keeps text white
@@ -147,4 +142,5 @@ struct SubscriptionView: View {
 #Preview {
     SubscriptionView()
         .environmentObject(Router())
+        .environmentObject(SubscriptionViewModel())
 }

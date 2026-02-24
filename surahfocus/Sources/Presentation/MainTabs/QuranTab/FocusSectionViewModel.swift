@@ -17,18 +17,15 @@ final class FocusSectionViewModel: ObservableObject {
     private let sessionService: SessionService
     private let userRepository: UserRepository
     private let quranService: QuranService
-    private weak var router: Router?
 
     init(
         sessionService: SessionService = DIContainer.shared.sessionService,
         userRepository: UserRepository = DIContainer.shared.userRepository,
-        quranService: QuranService = DIContainer.shared.quranService,
-        router: Router? = nil
+        quranService: QuranService = DIContainer.shared.quranService
     ) {
         self.sessionService = sessionService
         self.userRepository = userRepository
         self.quranService = quranService
-        self.router = router
     }
     
     func openRangeSheet(for surah: SurahWithRange) {
@@ -102,14 +99,6 @@ final class FocusSectionViewModel: ObservableObject {
         appSelection = selection
     }
 
-    func navigateToSelectSurah() {
-        router?.navigate(to: .selectSurah(surahs: selectedSurahs))
-    }
-
-    func navigateToAyahRange(_ surahWithRange: SurahWithRange) {
-        router?.navigate(to: .ayahRange(surah: surahWithRange.surah))
-    }
-
     func updateSurahRange(_ surahWithRange: SurahWithRange) {
         if let index = selectedSurahs.firstIndex(where: { $0.surah.number == surahWithRange.surah.number }) {
             selectedSurahs[index] = surahWithRange
@@ -153,30 +142,51 @@ final class FocusSectionViewModel: ObservableObject {
     }
 
     var selectedAppsCount: Int {
-        appSelection.applicationTokens.count
+        appSelection.applicationTokens.count + appSelection.categoryTokens.count
+    }
+
+    var appsCountText: String {
+        let apps = appSelection.applicationTokens.count
+        let categories = appSelection.categoryTokens.count
+
+        if apps > 0 && categories > 0 {
+            return "\(categories) categor\(categories == 1 ? "y" : "ies") and \(apps) app\(apps == 1 ? "" : "s") selected"
+        } else if categories > 0 {
+            return "\(categories) categor\(categories == 1 ? "y" : "ies") selected"
+        } else if apps > 0 {
+            return "\(apps) app\(apps == 1 ? "" : "s") selected"
+        } else {
+            return "Select apps"
+        }
     }
 
     var canStartSession: Bool {
         !selectedSurahs.isEmpty
     }
 
-    func navigateToDownload() async {
-        guard canStartSession else { return }
+    enum SessionError: LocalizedError {
+        case noSurahs
+
+        var errorDescription: String? {
+            switch self {
+            case .noSurahs: return "No surahs selected"
+            }
+        }
+    }
+
+    func prepareForSession() async throws -> (surahs: [SurahWithRange], ayahs: [Ayah]) {
+        guard canStartSession else { throw SessionError.noSurahs }
         saveAppSelection()
 
-        do {
-            var allAyahs: [Ayah] = []
-            for surahWithRange in selectedSurahs {
-                let (_, ayahs) = try await quranService.loadSurah(number: surahWithRange.surah.number)
-                let rangeAyahs = ayahs.filter { ayah in
-                    ayah.numberInSurah >= surahWithRange.startAyah &&
-                    ayah.numberInSurah <= surahWithRange.endAyah
-                }
-                allAyahs.append(contentsOf: rangeAyahs)
+        var allAyahs: [Ayah] = []
+        for surahWithRange in selectedSurahs {
+            let (_, ayahs) = try await quranService.loadSurah(number: surahWithRange.surah.number)
+            let rangeAyahs = ayahs.filter { ayah in
+                ayah.numberInSurah >= surahWithRange.startAyah &&
+                ayah.numberInSurah <= surahWithRange.endAyah
             }
-            router?.navigate(to: .activeSession(surahs: selectedSurahs, ayahs: allAyahs))
-        } catch {
-            errorMessage = "Failed to load ayahs"
+            allAyahs.append(contentsOf: rangeAyahs)
         }
+        return (selectedSurahs, allAyahs)
     }
 }

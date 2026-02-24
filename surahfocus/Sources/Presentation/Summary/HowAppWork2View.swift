@@ -76,12 +76,7 @@ struct HowAppWork2View: View {
         .padding(.horizontal, 20)
         .padding(.top)
         .padding(.bottom, 48)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
     }
 }
 

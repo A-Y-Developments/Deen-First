@@ -29,6 +29,7 @@ struct AppToBlockStep2View: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
             
             
             // MARK: - Subtitle

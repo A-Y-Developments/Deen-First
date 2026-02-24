@@ -4,7 +4,7 @@ import SwiftUI
 
 
 struct ReciteToUnblockView: View {
-    @StateObject private var viewModel = ReciteToUnblockViewModel()
+    @EnvironmentObject private var viewModel: ReciteToUnblockViewModel
     @EnvironmentObject private var router: Router
     @Environment(\.dismiss) private var dismiss
 
@@ -201,7 +201,7 @@ struct ReciteToUnblockView: View {
             Divider()
                 .background(.white.opacity(0.1))
 
-            Text(ayah.english)
+            Text(viewModel.getTranslation(for: ayah))
                 .font(.system(size: 13))
                 .foregroundColor(.white.opacity(0.45))
                 .multilineTextAlignment(.center)
@@ -380,4 +380,5 @@ struct ReciteToUnblockView: View {
 #Preview {
     ReciteToUnblockView()
         .environmentObject(Router())
+        .environmentObject(ReciteToUnblockViewModel())
 }

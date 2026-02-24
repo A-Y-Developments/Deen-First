@@ -4,6 +4,7 @@ struct QuranReadingView: View {
     let surahId: Int
     @EnvironmentObject private var viewModel: QuranReadingViewModel
     @EnvironmentObject var router: Router
+    @State private var scrollOffset: CGFloat = 0
 
     var body: some View {
         Group {
@@ -14,13 +15,13 @@ struct QuranReadingView: View {
                     mainContent
                 }
             }
-            .background(Color(hex: "062629").ignoresSafeArea())
+            .background(Color.primary900.ignoresSafeArea())
             .searchable(text: $viewModel.searchQuery, prompt: "Search ayahs...")
             .onChange(of: viewModel.searchQuery) { _, _ in
                 viewModel.searchAyahs()
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Color(hex: "062629"), for: .navigationBar)
+        .toolbarBackground(Color.primary900, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .errorAlert(isError: $viewModel.showError, errorMessage: $viewModel.errorMessage)
         .task {
@@ -44,7 +45,7 @@ struct QuranReadingView: View {
                 HStack(spacing: 24) {
                     ForEach(viewModel.allSurahs) { surah in
                         VStack(spacing: 6) {
-                            Text(surah.englishName)
+                            Text(surah.name)
                                 .font(.system(.callout))
                                 .foregroundColor(
                                     viewModel.selectedSurah?.number == surah.number
@@ -82,7 +83,7 @@ struct QuranReadingView: View {
     private var surahInfoHeader: some View {
         if let surah = viewModel.selectedSurah {
             HStack {
-                Text("\(surah.number). \(surah.englishName)")
+                Text("\(surah.number). \(surah.name)")
                     .font(.system(.callout))
                     .foregroundColor(.black)
 
@@ -99,18 +100,26 @@ struct QuranReadingView: View {
 
     @ViewBuilder
     private var ayahContent: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if let surah = viewModel.selectedSurah, surah.number != 1 && surah.number != 9 {
-                    bismillahView
-                }
-
-                if viewModel.filteredAyahs.isEmpty && !viewModel.searchQuery.isEmpty {
-                    emptySearchView
-                } else {
-                    ForEach(Array(viewModel.filteredAyahs.enumerated()), id: \.element.id) { index, ayah in
-                        ayahRow(for: ayah, index: index)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    if let surah = viewModel.selectedSurah, surah.number != 1 && surah.number != 9 {
+                        bismillahView
                     }
+
+                    if viewModel.filteredAyahs.isEmpty && !viewModel.searchQuery.isEmpty {
+                        emptySearchView
+                    } else {
+                        ForEach(Array(viewModel.filteredAyahs.enumerated()), id: \.element.id) { index, ayah in
+                            ayahRow(for: ayah, index: index)
+                        }
+                    }
+                }
+                .id("ayahContent")
+            }
+            .onChange(of: viewModel.selectedSurah) { _, _ in
+                withAnimation {
+                    proxy.scrollTo("ayahContent", anchor: .top)
                 }
             }
         }
@@ -123,7 +132,7 @@ struct QuranReadingView: View {
             .foregroundColor(.white)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding()
-            .background(Color(hex: "062023"))
+            .background(Color.primary500.opacity(0.3))
     }
 
     @ViewBuilder
@@ -142,7 +151,7 @@ struct QuranReadingView: View {
                 .foregroundStyle(Color.black)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color(hex: "8E8E93"))
+                .background(Color.gray4)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 
             Text(ayah.text)
@@ -151,8 +160,9 @@ struct QuranReadingView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundColor(.white)
 
-            if !ayah.english.isEmpty {
-                Text(ayah.english)
+            let translationText = viewModel.getTranslation(for: ayah)
+            if !translationText.isEmpty {
+                Text(translationText)
                     .font(.callout)
                     .foregroundColor(.white)
             }
@@ -161,8 +171,8 @@ struct QuranReadingView: View {
         .frame(maxWidth: .infinity)
         .background(
             index % 2 == 0
-            ? Color(hex: "0e3034")
-            : Color(hex: "062023")
+            ? Color.primary500.opacity(0.3)
+            : Color.primary500.opacity(0.2)
         )
     }
 }

@@ -125,13 +125,6 @@ final class SubscriptionMonitor: ObservableObject {
     }
 }
 
-// MARK: - Notification Names
-
-extension Notification.Name {
-    static let subscriptionStatusChanged = Notification.Name("subscriptionStatusChanged")
-    static let subscriptionExpired = Notification.Name("subscriptionExpired")
-    static let didPurchaseSubscription = Notification.Name("didPurchaseSubscription")
-}
 
 // MARK: - Bundle Extension
 

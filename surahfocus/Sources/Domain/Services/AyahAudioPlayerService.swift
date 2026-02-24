@@ -99,10 +99,14 @@ final class AyahAudioPlayerServiceImpl: NSObject, AyahAudioPlayerService {
             ayahNo: ayah.numberInSurah
         )
 
+        // Get reciter name from reciterId
+        let reciters = quranService.getAvailableReciters()
+        let reciterName = reciters.first { $0.id == reciterId }?.name ?? "Unknown"
+
         try? await audioPlayer.loadAudio(
             url: audioURL,
             surahName: ayah.surahName,
-            reciterName: "Mishary Rashid Alafasy"
+            reciterName: reciterName
         )
 
         onAyahChanged?(ayah, currentAyahIndex)

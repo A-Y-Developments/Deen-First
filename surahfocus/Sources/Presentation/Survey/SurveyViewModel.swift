@@ -5,6 +5,10 @@ final class SurveyViewModel: ObservableObject {
     @Published var currentStep: Int = 1
     @Published var answers: SurveyAnswers = SurveyAnswers()
 
+    let totalSteps: Int = 4
+
+    var canGoBack: Bool { currentStep > 1 }
+
     var canGoNext: Bool {
         switch currentStep {
         case 1: return answers.phoneFrequency != nil
@@ -14,12 +18,6 @@ final class SurveyViewModel: ObservableObject {
         default: return false
         }
     }
-
-    var canGoBack: Bool {
-        currentStep > 1
-    }
-
-    var totalSteps: Int = 4
 
     func goNext() -> Bool {
         guard canGoNext else { return false }
@@ -31,9 +29,12 @@ final class SurveyViewModel: ObservableObject {
     }
 
     func goBack() {
-        if canGoBack {
-            currentStep -= 1
-        }
+        guard canGoBack else { return }
+        currentStep -= 1
+    }
+
+    func setPhoneFrequency(_ value: String) {
+        answers.phoneFrequency = value
     }
 
     func toggleFeeling(_ feeling: String) {
@@ -50,5 +51,9 @@ final class SurveyViewModel: ObservableObject {
         } else {
             answers.apps.append(app)
         }
+    }
+
+    func setDailyHoursUsage(_ value: String) {
+        answers.dailyHoursUsage = value
     }
 }

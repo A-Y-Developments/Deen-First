@@ -109,7 +109,7 @@ struct SurveyStep4View: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.answers.dailyHoursUsage = value
+                viewModel.setDailyHoursUsage(value)
             }
         }
     }

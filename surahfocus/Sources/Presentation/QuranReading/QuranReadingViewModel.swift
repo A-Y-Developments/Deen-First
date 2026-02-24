@@ -14,11 +14,14 @@ final class QuranReadingViewModel: ObservableObject {
     @Published var showError: Bool = false
 
     private let quranService: QuranService
+    private let quranPreferences: QuranPreferencesService
 
     init(
-        quranService: QuranService = DIContainer.shared.quranService
+        quranService: QuranService = DIContainer.shared.quranService,
+        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService
     ) {
         self.quranService = quranService
+        self.quranPreferences = quranPreferences
     }
 
     func setup(with surahId: Int) async {
@@ -76,5 +79,9 @@ final class QuranReadingViewModel: ObservableObject {
     func clearSearch() {
         searchQuery = ""
         filteredAyahs = ayahs
+    }
+
+    func getTranslation(for ayah: Ayah) -> String {
+        quranPreferences.getTranslation(for: ayah)
     }
 }

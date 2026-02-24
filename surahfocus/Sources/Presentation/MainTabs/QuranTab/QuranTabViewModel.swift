@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 @MainActor
 final class QuranTabViewModel: ObservableObject {
@@ -11,6 +12,8 @@ final class QuranTabViewModel: ObservableObject {
     @Published var currentStreak: Int = 0
     @Published var user: User?
     @Published var viewMode: QuranViewMode = .surah
+
+    private var cancellables = Set<AnyCancellable>()
     
     enum QuranViewMode {
         case surah
@@ -25,6 +28,18 @@ final class QuranTabViewModel: ObservableObject {
     ) {
         self.quranService = quranService
         self.authService = authService
+
+        setupNotifications()
+    }
+
+    private func setupNotifications() {
+        NotificationCenter.default.publisher(for: .didCompleteSession)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    await self?.refreshUser()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func loadSurahs() async {
@@ -55,5 +70,13 @@ final class QuranTabViewModel: ObservableObject {
     func clearSearch() {
         searchQuery = ""
         filteredSurahs = surahs
+    }
+
+    func refreshUser() async {
+        if let currentUser = try? await authService.getCurrentUser() {
+            user = currentUser
+            currentStreak = currentUser.currentStreak
+            print("🔄 QuranTabViewModel: Refreshed user, streak=\(currentStreak)")
+        }
     }
 }

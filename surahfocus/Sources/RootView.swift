@@ -1,5 +1,5 @@
-import SwiftUI
 import FamilyControls
+import SwiftUI
 
 struct RootView: View {
     @StateObject private var router = Router()
@@ -12,6 +12,16 @@ struct RootView: View {
     @StateObject private var quranTabViewModel = QuranTabViewModel()
     @StateObject private var quranReadingViewModel = QuranReadingViewModel()
     @StateObject private var settingsTabViewModel = SettingsTabViewModel()
+    @StateObject private var activeSessionViewModel = ActiveSessionViewModel()
+    @StateObject private var focusSectionViewModel = FocusSectionViewModel()
+    @StateObject private var ayahRangeSelectionViewModel = AyahRangeSelectionViewModel()
+    @StateObject private var selectSurahViewModel = SelectSurahViewModel()
+    @StateObject private var reciteToUnblockViewModel = ReciteToUnblockViewModel()
+    @StateObject private var subscriptionViewModel = SubscriptionViewModel()
+    @StateObject private var blockingTabViewModel = BlockingTabViewModel()
+    @StateObject private var appLimitViewModel = AppLimitViewModel()
+    @StateObject private var timeLimitViewModel = TimeLimitViewModel()
+    @StateObject private var supportViewModel = SupportViewModel()
 
     @State private var currentUser: User?
     @State private var isPremium = false
@@ -27,11 +37,9 @@ struct RootView: View {
                     AuthView()
                 } else if !currentUser!.hasCompletedOnboarding {
                     SurveyView()
-                        .environmentObject(surveyViewModel)
                 } else if !isPremium {
                     PaywallView()
                 } else if !isScreenTimeAuthorized {
-                    // Subscribed but hasn't granted Screen Time permission
                     PermissionView()
                 } else {
                     MainTabView()
@@ -51,7 +59,21 @@ struct RootView: View {
         .environmentObject(quranTabViewModel)
         .environmentObject(quranReadingViewModel)
         .environmentObject(settingsTabViewModel)
+        .environmentObject(activeSessionViewModel)
+        .environmentObject(focusSectionViewModel)
+        .environmentObject(ayahRangeSelectionViewModel)
+        .environmentObject(selectSurahViewModel)
+        .environmentObject(reciteToUnblockViewModel)
+        .environmentObject(subscriptionViewModel)
+        .environmentObject(blockingTabViewModel)
+        .environmentObject(appLimitViewModel)
+        .environmentObject(timeLimitViewModel)
+        .environmentObject(supportViewModel)
         .task {
+            // FIX: Clean up any orphaned session from a previous force-kill BEFORE
+            // checking user state. This ensures isSessionActiveKey is cleared so
+            // checkUserState → reapplyActiveShields doesn't re-apply stale session shields.
+            await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
@@ -76,16 +98,22 @@ struct RootView: View {
             router.reset()
             Task { await checkUserState() }
         }
-        .onReceive(NotificationCenter.default.publisher(
-            for: UIApplication.willEnterForegroundNotification)
+        .onReceive(
+            NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
-            let defaults = UserDefaults(suiteName: "group.com.aydev.surahfocus")
-            if defaults?.bool(forKey: "reciteRequested") == true {
-                defaults?.set(false, forKey: "reciteRequested") // ✅ clear it
-                defaults?.synchronize()
-                router.navigate(to: .reciteToUnlock)
-            }
             Task {
+                // FIX: Also clean up on foreground — covers the case where the app was
+                // force-killed and relaunched via notification or deep link, bypassing .task.
+                await DIContainer.shared.sessionService.cleanupOrphanedSessions()
+
+                // Handle "Recite to Unblock" deep link from ShieldActionExtension
+                let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+                if defaults?.bool(forKey: AppGroupConstants.reciteRequested) == true {
+                    defaults?.set(false, forKey: AppGroupConstants.reciteRequested)
+                    defaults?.synchronize()
+                    router.navigate(to: .reciteToUnlock)
+                }
+
                 await DIContainer.shared.screenTimeRulesService.reblockIfExpired()
             }
         }
@@ -104,7 +132,6 @@ struct RootView: View {
 
         isPremium = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
 
-        // Only check Screen Time if user is subscribed
         if isPremium {
             isScreenTimeAuthorized = AuthorizationCenter.shared.authorizationStatus == .approved
         }
@@ -130,7 +157,6 @@ struct RootView: View {
                 .navigationBarBackButtonHidden(true)
         case .quranReading(let surahId):
             QuranReadingView(surahId: surahId)
-                .environmentObject(quranReadingViewModel)
                 .toolbar(.hidden, for: .tabBar)
         case .blocks:
             BlockingTabView()
@@ -143,7 +169,7 @@ struct RootView: View {
         case .editTimeLimit(let id):
             TimeLimitView(limitId: id)
         case .focusSection:
-            FocusSectionView(router: router)
+            FocusSectionView()
         case .selectSurah(let surahs):
             SelectSurahView(existingSurahs: surahs)
         case .ayahRange(let surah):
@@ -153,21 +179,12 @@ struct RootView: View {
         case .sessionFinish(let duration, let surahCount):
             SessionFinishView(duration: duration, surahCount: surahCount)
         case .survey(let step, let answers):
-            SurveyView()
-                .onAppear {
-                    surveyViewModel.answers = answers
-                    surveyViewModel.currentStep = step
-                }
+            SurveyView(step: step, answers: answers)
         case .calculateSurvey(let answers):
             CalculateSurveyView(answers: answers)
         case .summary(let step, let answers):
             switch step {
-            case 1:
-                Summary1View()
-                    .onAppear {
-                        summaryViewModel.answers = answers
-                        summaryViewModel.currentStep = 1
-                    }
+            case 1: Summary1View(answers: answers)
             case 2: Summary2View()
             default: EmptyView()
             }
@@ -195,6 +212,10 @@ struct RootView: View {
 extension Notification.Name {
     static let didSignIn = Notification.Name("didSignIn")
     static let didSignOut = Notification.Name("didSignOut")
-    static let didCompleteOnboarding = Notification.Name("didCompleteOnboarding") // NEW
+    static let didCompleteOnboarding = Notification.Name("didCompleteOnboarding")
     static let didCompleteScreenTimeSetup = Notification.Name("didCompleteScreenTimeSetup")
+    static let subscriptionStatusChanged = Notification.Name("subscriptionStatusChanged")
+    static let subscriptionExpired = Notification.Name("subscriptionExpired")
+    static let didPurchaseSubscription = Notification.Name("didPurchaseSubscription")
+    static let didCompleteSession = Notification.Name("didCompleteSession")
 }

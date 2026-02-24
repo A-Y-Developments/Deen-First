@@ -81,7 +81,7 @@ struct SurveyStep1View: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.2)) {
-                viewModel.answers.phoneFrequency = value
+                viewModel.setPhoneFrequency(value)
             }
         }
     }

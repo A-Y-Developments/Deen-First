@@ -96,13 +96,7 @@ struct PermissionView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 48)
         }
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .alert("Error", isPresented: $viewModel.showError) {
             Button("Retry", role: .cancel) {
                 Task {

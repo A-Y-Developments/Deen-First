@@ -222,13 +222,7 @@ struct SubscriptionPlansView: View {
                 
                 Spacer()
         }
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
     }
 }
 

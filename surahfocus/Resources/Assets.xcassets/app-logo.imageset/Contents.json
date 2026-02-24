@@ -1,15 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "app-logo.png",
+      "filename" : "deen first app icon.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
+      "filename" : "deen first app icon 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
+      "filename" : "deen first app icon 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

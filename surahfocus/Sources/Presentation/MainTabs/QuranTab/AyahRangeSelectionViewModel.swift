@@ -6,13 +6,24 @@ final class AyahRangeSelectionViewModel: ObservableObject {
     @Published var endAyah: Int = 1
     @Published var errorMessage: String?
 
-    let surah: Surah
+    private var surah: Surah?
 
-    var isValid: Bool {
-        startAyah >= 1 && endAyah <= surah.numberOfAyahs && startAyah <= endAyah
+    var surahName: String {
+        surah?.name ?? ""
     }
 
-    init(surah: Surah) {
+    var surahAyahCount: Int {
+        surah?.numberOfAyahs ?? 0
+    }
+
+    var isValid: Bool {
+        guard let surah = surah else { return false }
+        return startAyah >= 1 && endAyah <= surah.numberOfAyahs && startAyah <= endAyah
+    }
+
+    init() {}
+
+    func configure(with surah: Surah) {
         self.surah = surah
 
         // Load saved range if exists
@@ -27,10 +38,10 @@ final class AyahRangeSelectionViewModel: ObservableObject {
     }
 
     func validate() -> Bool {
-        guard isValid else {
+        guard let surah = surah, isValid else {
             if startAyah > endAyah {
                 errorMessage = "Start ayah cannot be greater than end ayah"
-            } else if startAyah < 1 || endAyah > surah.numberOfAyahs {
+            } else if let surah = surah, (startAyah < 1 || endAyah > surah.numberOfAyahs) {
                 errorMessage = "Ayah must be between 1 and \(surah.numberOfAyahs)"
             }
             return false
@@ -41,6 +52,7 @@ final class AyahRangeSelectionViewModel: ObservableObject {
 
     func saveRange() {
         guard validate() else { return }
+        guard let surah = surah else { return }
 
         // Save to UserDefaults - use key format "surahRange_{surahNumber}"
         let key = "surahRange_\(surah.number)"
@@ -49,6 +61,8 @@ final class AyahRangeSelectionViewModel: ObservableObject {
     }
 
     func deleteRange() {
+        guard let surah = surah else { return }
+
         // Remove from UserDefaults
         let key = "surahRange_\(surah.number)"
         UserDefaults.standard.removeObject(forKey: key)

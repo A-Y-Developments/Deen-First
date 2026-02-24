@@ -58,19 +58,22 @@ struct AuthView: View {
                         .tint(.white)
                 }
                 
-                Text("Terms of Service • Privacy")
-                    .foregroundStyle(.white)
-                    .font(.caption.weight(.regular))
+                HStack(spacing: 4) {
+                    TappableText("Terms of Service",
+                                 url: AppConstants.Links.termsOfServiceURL,
+                                 foregroundColor: .white)
+                    Text("•")
+                        .foregroundStyle(.white)
+                        .font(.caption)
+                    TappableText("Privacy",
+                                 url: AppConstants.Links.privacyPolicyURL,
+                                 foregroundColor: .white)
+                }
             }
         }
         .padding(.horizontal)
         .padding(.bottom, 48)
-        .background {
-            Image("main-background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-        }
+        .mainBackground()
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {

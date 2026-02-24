@@ -4,8 +4,8 @@ let companyId = Environment.companyId.getString(default: "")
 let teamId = Environment.teamId.getString(default: "")
 let baseBundleId = Environment.baseBundleId.getString(default: "")
 let revenueCatApiKeyDebug = Environment.revenuecatApiKey.getString(default: "")
-let revenueCatApiKeyProd  = Environment.revenuecatProdKey.getString(default: "")
-let openAIApiKey          = Environment.openAIApiKey.getString(default: "")  // ← NEW
+let revenueCatApiKeyProd = Environment.revenuecatProdKey.getString(default: "")
+let openAIApiKey = Environment.openaiApiKey.getString(default: "")  // ← NEW
 
 let project = Project(
     name: "SurahFocus",
@@ -29,12 +29,13 @@ let project = Project(
                 "UILaunchScreen": [:],
                 "NSFamilyControlsUsageDescription":
                     "Deen First needs permission to block distracting apps during your Quran focus sessions.",
-                "NSMicrophoneUsageDescription":                         // ← NEW
+                "NSMicrophoneUsageDescription":  // ← NEW
                     "Deen First needs the microphone to record your Quran recitation.",
                 "UIBackgroundModes": ["audio"],
                 "RevenueCatAPIKey": "$(REVENUECAT_API_KEY)",
-                "OpenAIAPIKey": "$(OPENAI_API_KEY)",                    // ← NEW
-                "com.apple.developer.ubiquity-kvstore-identifier": "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
+                "OpenAIAPIKey": "$(OPENAI_API_KEY)",  // ← NEW
+                "com.apple.developer.ubiquity-kvstore-identifier":
+                    "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
             ]),
             sources: ["surahfocus/Sources/**"],
             resources: ["surahfocus/Resources/**"],
@@ -45,11 +46,13 @@ let project = Project(
                 .external(name: "BottomSheet"),
                 .target(name: "ScreenTimeMonitor"),
                 .target(name: "Shield"),
-                .target(name: "ShieldAction"),                          // ← NEW
+                .target(name: "ShieldAction"),  // ← NEW
             ],
             settings: .settings(
                 base: [
-                    "OTHER_LDFLAGS": .string("$(inherited) -framework FamilyControls -framework DeviceActivity -framework ManagedSettings")
+                    "OTHER_LDFLAGS": .string(
+                        "$(inherited) -framework FamilyControls -framework DeviceActivity -framework ManagedSettings"
+                    )
                 ],
                 configurations: [
                     .debug(
@@ -60,7 +63,7 @@ let project = Project(
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyDebug),
-                            "OPENAI_API_KEY": .string(openAIApiKey),    // ← NEW
+                            "OPENAI_API_KEY": .string(openAIApiKey),  // ← NEW
                         ]
                     ),
                     .release(
@@ -72,7 +75,7 @@ let project = Project(
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
                             "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution"),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyProd),
-                            "OPENAI_API_KEY": .string(openAIApiKey),    // ← NEW
+                            "OPENAI_API_KEY": .string(openAIApiKey),  // ← NEW
                         ]
                     ),
                 ]
@@ -90,32 +93,41 @@ let project = Project(
                 "CFBundleDisplayName": "ScreenTimeMonitor",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.deviceactivity.monitor-extension",
-                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",
-                ]
+                    "NSExtensionPrincipalClass":
+                        "$(PRODUCT_MODULE_NAME).DeviceActivityMonitorExtension",
+                ],
             ]),
-            sources: ["ScreenTimeMonitor/**"],
+            sources: [
+                "ScreenTimeMonitor/**",
+                "surahfocus/Sources/Shared/**",
+            ],
             entitlements: .file(path: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements"),
             dependencies: [
                 .sdk(name: "DeviceActivity", type: .framework),
                 .sdk(name: "ManagedSettings", type: .framework),
-                .sdk(name: "FamilyControls", type: .framework)
+                .sdk(name: "FamilyControls", type: .framework),
             ],
             settings: .settings(
                 base: ["PRODUCT_MODULE_NAME": .string("ScreenTimeMonitor")],
                 configurations: [
-                    .debug(name: "Debug", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                        "CODE_SIGN_STYLE": .string("Automatic"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
-                    ]),
-                    .release(name: "Release", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                        "CODE_SIGN_STYLE": .string("Manual"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                        "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus ScreenTimeMonitor Distribution")
-                    ]),
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                        ]),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(
+                                "SurahFocus ScreenTimeMonitor Distribution"),
+                        ]),
                 ]
             )
         ),
@@ -130,9 +142,11 @@ let project = Project(
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "Shield",
                 "NSExtension": [
-                    "NSExtensionPointIdentifier": "com.apple.ManagedSettingsUI.shield-configuration-service",
-                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShieldConfigurationExtension",
-                ]
+                    "NSExtensionPointIdentifier":
+                        "com.apple.ManagedSettingsUI.shield-configuration-service",
+                    "NSExtensionPrincipalClass":
+                        "$(PRODUCT_MODULE_NAME).ShieldConfigurationExtension",
+                ],
             ]),
             sources: ["Shield/**"],
             entitlements: .file(path: "Shield/Shield.entitlements"),
@@ -143,19 +157,24 @@ let project = Project(
             settings: .settings(
                 base: ["PRODUCT_MODULE_NAME": .string("Shield")],
                 configurations: [
-                    .debug(name: "Debug", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                        "CODE_SIGN_STYLE": .string("Automatic"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
-                    ]),
-                    .release(name: "Release", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                        "CODE_SIGN_STYLE": .string("Manual"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                        "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Shield Distribution")
-                    ]),
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                        ]),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(
+                                "SurahFocus Shield Distribution"),
+                        ]),
                 ]
             )
         ),
@@ -170,31 +189,37 @@ let project = Project(
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "ShieldAction",
                 "NSExtension": [
-                    "NSExtensionPointIdentifier": "com.apple.ManagedSettingsUI.shield-action-service",
+                    "NSExtensionPointIdentifier":
+                        "com.apple.ManagedSettingsUI.shield-action-service",
                     "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShieldActionExtension",
-                ]
+                ],
             ]),
             sources: ["ShieldAction/**"],
             entitlements: .file(path: "ShieldAction/ShieldAction.entitlements"),
             dependencies: [
-                .sdk(name: "ManagedSettings", type: .framework),
+                .sdk(name: "ManagedSettings", type: .framework)
             ],
             settings: .settings(
                 base: ["PRODUCT_MODULE_NAME": .string("ShieldAction")],
                 configurations: [
-                    .debug(name: "Debug", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                        "CODE_SIGN_STYLE": .string("Automatic"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0")
-                    ]),
-                    .release(name: "Release", settings: [
-                        "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                        "CODE_SIGN_STYLE": .string("Manual"),
-                        "DEVELOPMENT_TEAM": .string(teamId),
-                        "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                        "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus ShieldAction Distribution")
-                    ]),
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                        ]),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
+                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(
+                                "SurahFocus ShieldAction Distribution"),
+                        ]),
                 ]
             )
         ),

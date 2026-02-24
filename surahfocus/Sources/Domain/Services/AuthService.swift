@@ -53,6 +53,14 @@ final class AuthServiceImpl: AuthService {
                 didChange = true
             }
 
+            // Restore streaks from iCloud KV (primary source)
+            if let streaks = UserPersistenceHelper.resolveStreaks(userId: appleUserId) {
+                print("🔄 Restoring streaks from iCloud: current=\(streaks.current), longest=\(streaks.longest)")
+                existingUser.currentStreak = streaks.current
+                existingUser.longestStreak = streaks.longest
+                didChange = true
+            }
+
             if didChange {
                 try await userRepository.updateUser(existingUser)
             }

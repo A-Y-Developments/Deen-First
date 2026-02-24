@@ -1,10 +1,3 @@
-//
-//  SetupSummary.swift
-//  SurahFocus
-//
-//  Created by Aditya Rizki on 18/02/26.
-//
-
 import FamilyControls
 import SwiftUI
 
@@ -44,7 +37,7 @@ struct SetupSummary: View {
                                     categoriesCount: rule.categoryTokenData.count,
                                     timeInfo: rule.limitDisplayName ?? "N/A",
                                     daysText: rule.daysDisplayText,
-                                    isShowPencil: false
+                                    showUnblockButton: false   // preview only, no unblock action
                                 )
                             }
                         }
@@ -65,7 +58,7 @@ struct SetupSummary: View {
                                     categoriesCount: rule.categoryTokenData.count,
                                     timeInfo: rule.timeRangeDisplay ?? "N/A",
                                     daysText: rule.daysDisplayText,
-                                    isShowPencil: false
+                                    showUnblockButton: false   // preview only, no unblock action
                                 )
                             }
                         }
@@ -102,12 +95,7 @@ struct SetupSummary: View {
             .padding(.bottom, 48)
         }
         .padding(.horizontal, 24)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK", role: .cancel) {
                 viewModel.errorMessage = nil

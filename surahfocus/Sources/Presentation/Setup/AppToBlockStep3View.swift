@@ -30,6 +30,7 @@ struct AppToBlockStep3View: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
             
             // MARK: - Subtitle
             Text("You can select more than one")

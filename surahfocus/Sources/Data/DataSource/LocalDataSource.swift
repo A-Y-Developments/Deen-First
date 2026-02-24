@@ -39,7 +39,9 @@ final class LocalDataSource {
 
     @MainActor
     func updateUser(_ user: User) throws {
+        print("💾 LocalDataSource.updateUser: Saving user id=\(user.id), currentStreak=\(user.currentStreak)")
         try context.save()
+        print("✅ LocalDataSource.updateUser: Save successful")
     }
 
     @MainActor

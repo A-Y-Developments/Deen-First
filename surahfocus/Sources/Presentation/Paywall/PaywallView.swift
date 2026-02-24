@@ -182,12 +182,7 @@ struct PaywallView: View {
             .padding(.bottom, 48)
         }
         .padding(.horizontal, 20)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .alert("Error", isPresented: $viewModel.showError) {
             Button("OK", role: .cancel) {}
         } message: {

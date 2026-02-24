@@ -2,10 +2,12 @@ import SwiftUI
 
 struct AyahRangeSelectionView: View {
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel: AyahRangeSelectionViewModel
+    @EnvironmentObject private var viewModel: AyahRangeSelectionViewModel
+
+    let surah: Surah
 
     init(surah: Surah) {
-        _viewModel = StateObject(wrappedValue: AyahRangeSelectionViewModel(surah: surah))
+        self.surah = surah
     }
 
     var body: some View {
@@ -21,12 +23,12 @@ struct AyahRangeSelectionView: View {
                 Spacer()
 
                 VStack(spacing: 8) {
-                    Text(viewModel.surah.name)
+                    Text(viewModel.surahName)
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("\(viewModel.surah.numberOfAyahs) verses")
+                    Text("\(viewModel.surahAyahCount) verses")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.7))
                 }
@@ -38,7 +40,7 @@ struct AyahRangeSelectionView: View {
                             .foregroundColor(.white)
 
                         Picker("Start", selection: $viewModel.startAyah) {
-                            ForEach(1...viewModel.surah.numberOfAyahs, id: \.self) { ayah in
+                            ForEach(1...viewModel.surahAyahCount, id: \.self) { ayah in
                                 Text("\(ayah)").tag(ayah)
                             }
                         }
@@ -53,7 +55,7 @@ struct AyahRangeSelectionView: View {
                             .foregroundColor(.white)
 
                         Picker("End", selection: $viewModel.endAyah) {
-                            ForEach(viewModel.startAyah...viewModel.surah.numberOfAyahs, id: \.self) { ayah in
+                            ForEach(viewModel.startAyah...viewModel.surahAyahCount, id: \.self) { ayah in
                                 Text("\(ayah)").tag(ayah)
                             }
                         }
@@ -115,11 +117,16 @@ struct AyahRangeSelectionView: View {
         }
         .navigationTitle("Select Ayah Range")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            viewModel.configure(with: surah)
+        }
     }
 }
 
 #Preview {
     NavigationStack {
         AyahRangeSelectionView(surah: Surah(number: 1, name: "Al-Fatihah", englishName: "The Opening", englishNameTranslation: "The Opening", numberOfAyahs: 7, revelationPlace: "Meccan"))
+            .environmentObject(AyahRangeSelectionViewModel())
+            .environmentObject(Router())
     }
 }

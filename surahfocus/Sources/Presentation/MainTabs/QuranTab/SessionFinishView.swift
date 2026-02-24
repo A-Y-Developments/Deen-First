@@ -48,18 +48,14 @@ struct SessionFinishView: View {
                 radius: 12
             )
         }
-        .navigationBarHidden(true)
         .padding(24)
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
+        .navigationBarHidden(true)
     }
     
     private func navigateToHome() {
+        // Notify that session completed so streak can be refreshed
+        NotificationCenter.default.post(name: .didCompleteSession, object: nil)
         router.navigateBack()
         router.navigateBack()
         router.navigateBack()

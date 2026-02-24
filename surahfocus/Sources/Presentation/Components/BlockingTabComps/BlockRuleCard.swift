@@ -6,7 +6,12 @@ struct BlockRuleCard: View {
     let categoriesCount: Int
     let timeInfo: String
     let daysText: String
-    let isShowPencil: Bool
+
+    var showUnblockButton: Bool
+    var onUnblock: (() -> Void)?
+
+    /// When non-nil, replaces the Unblock button with a disabled countdown label.
+    var countdownDisplay: String?
 
     init(
         settingsName: String = "",
@@ -14,14 +19,18 @@ struct BlockRuleCard: View {
         categoriesCount: Int = 0,
         timeInfo: String = "30 mins/day",
         daysText: String = "Every day",
-        isShowPencil: Bool = true
+        showUnblockButton: Bool = true,
+        onUnblock: (() -> Void)? = nil,
+        countdownDisplay: String? = nil
     ) {
         self.settingsName = settingsName
         self.appsCount = appsCount
         self.categoriesCount = categoriesCount
         self.timeInfo = timeInfo
         self.daysText = daysText
-        self.isShowPencil = isShowPencil
+        self.showUnblockButton = showUnblockButton
+        self.onUnblock = onUnblock
+        self.countdownDisplay = countdownDisplay
     }
 
     private var selectionText: String {
@@ -49,18 +58,81 @@ struct BlockRuleCard: View {
 
                 Spacer()
 
-                if isShowPencil {
-                    Image(systemName: "pencil")
-                        .foregroundColor(.white.opacity(0.7))
+                if showUnblockButton {
+                    if let countdown = countdownDisplay {
+                        // Temporarily unblocked — show disabled countdown
+                        HStack(spacing: 5) {
+                            Image(systemName: "clock")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text(countdown)
+                                .font(.system(size: 15, weight: .semibold))
+                                .monospacedDigit()
+                        }
+                        .foregroundColor(.white.opacity(0.4))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 9)
+                        .background(
+                            Capsule()
+                                .fill(.white.opacity(0.06))
+                                .overlay(
+                                    Capsule()
+                                        .stroke(.white.opacity(0.15), lineWidth: 1)
+                                )
+                        )
+                    } else if let onUnblock {
+                        // Normal state — show active Unblock button
+                        Button {
+                            onUnblock()
+                        } label: {
+                            Text("Unblock")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Color(hex: "ADA666"))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 9)
+                                .background(
+                                    Capsule()
+                                        .fill(Color(hex: "ADA666").opacity(0.15))
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(Color(hex: "ADA666").opacity(0.4), lineWidth: 1)
+                                        )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
+
             Text(selectionText + " • \(timeInfo) • \(daysText)")
                 .font(.caption)
                 .foregroundColor(.white.opacity(0.7))
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color(hex: "092621"))
+        .background(Color.primary900)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
+}
+
+#Preview {
+    VStack(spacing: 12) {
+        BlockRuleCard(
+            settingsName: "Social Media",
+            appsCount: 3,
+            categoriesCount: 1,
+            timeInfo: "1h/day",
+            daysText: "Weekdays",
+            onUnblock: { print("Unblock tapped") }
+        )
+        BlockRuleCard(
+            settingsName: "Prayer Time Block",
+            appsCount: 0,
+            categoriesCount: 2,
+            timeInfo: "12:15 PM - 1:30 PM",
+            daysText: "Everyday"
+            // No onUnblock — button hidden
+        )
+    }
+    .padding()
+    .background(Color.primary800)
 }

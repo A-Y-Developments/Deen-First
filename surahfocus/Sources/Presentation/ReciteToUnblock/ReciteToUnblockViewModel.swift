@@ -50,6 +50,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     // MARK: - Dependencies (from DIContainer)
 
+    private let quranPreferences: QuranPreferencesService
     private var quranService: QuranService {
         DIContainer.shared.quranService
     }
@@ -70,8 +71,9 @@ final class ReciteToUnblockViewModel: ObservableObject {
     // MARK: - Init
 
     init(
-        
+        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService
     ) {
+        self.quranPreferences = quranPreferences
     }
 
     // MARK: - Load Random Ayah
@@ -272,6 +274,12 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private func getAPIKey() -> String? {
         let key = Bundle.main.openAIApiKey
         return key.isEmpty ? nil : key
+    }
+
+    // MARK: - Translation
+
+    func getTranslation(for ayah: Ayah) -> String {
+        quranPreferences.getTranslation(for: ayah)
     }
 }
 

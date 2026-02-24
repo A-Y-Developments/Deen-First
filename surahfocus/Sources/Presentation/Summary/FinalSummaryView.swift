@@ -93,13 +93,7 @@ struct FinalSummaryView: View {
         .padding(.top)
         .padding(.bottom, 48)
         .padding(.horizontal,20)
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
     }
 
     func completeOnboarding() async {

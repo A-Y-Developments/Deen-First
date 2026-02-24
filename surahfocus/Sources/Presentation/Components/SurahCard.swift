@@ -17,7 +17,7 @@ struct SurahCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(surah.englishName)
+                    Text(surah.name)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
                     Text(surah.englishNameTranslation)

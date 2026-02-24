@@ -1,10 +1,12 @@
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 final class ActiveSessionViewModel: ObservableObject {
     @Published var isPlaying = false
     @Published var currentAyahIndex = 0
+    @Published var currentAyah: Ayah?
     @Published var sessionDuration: TimeInterval = 0
     @Published var showEndConfirmation = false
     @Published var errorMessage: String?
@@ -12,30 +14,32 @@ final class ActiveSessionViewModel: ObservableObject {
     private let ayahAudioPlayer: AyahAudioPlayerServiceImpl
     private let sessionService: SessionService
     private let subscriptionService: SubscriptionService
+    private let quranPreferences: QuranPreferencesService
     weak var router: Router?
 
     private var session: Session?
     private var cancellables = Set<AnyCancellable>()
 
-    let surahs: [SurahWithRange]
-    let ayahs: [Ayah]
+    var surahs: [SurahWithRange] = []
+    var ayahs: [Ayah] = []
 
     init(
-        surahs: [SurahWithRange],
-        ayahs: [Ayah],
         ayahAudioPlayer: AyahAudioPlayerServiceImpl? = nil,
         sessionService: SessionService = DIContainer.shared.sessionService,
         subscriptionService: SubscriptionService = DIContainer.shared.subscriptionService,
-        router: Router? = nil
+        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService
     ) {
-        self.surahs = surahs
-        self.ayahs = ayahs
-        self.ayahAudioPlayer = ayahAudioPlayer ?? (DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl)
+        self.ayahAudioPlayer = ayahAudioPlayer ?? DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl
         self.sessionService = sessionService
         self.subscriptionService = subscriptionService
-        self.router = router
+        self.quranPreferences = quranPreferences
 
         setupBindings()
+    }
+
+    func configure(surahs: [SurahWithRange], ayahs: [Ayah]) {
+        self.surahs = surahs
+        self.ayahs = ayahs
     }
 
     private func setupBindings() {
@@ -47,6 +51,9 @@ final class ActiveSessionViewModel: ObservableObject {
 
         ayahAudioPlayer.$sessionDuration
             .assign(to: &$sessionDuration)
+
+        ayahAudioPlayer.$currentAyah
+            .assign(to: &$currentAyah)
 
         ayahAudioPlayer.onQueueFinished = { [weak self] in
             Task { @MainActor in
@@ -71,14 +78,16 @@ final class ActiveSessionViewModel: ObservableObject {
                 return
             }
 
+            let reciterId = quranPreferences.selectedReciterId
+
             // SessionService handles shield application
             session = try await sessionService.startSession(
                 type: .listening,
                 surahNumbers: surahs.map { $0.surah.number },
-                reciterId: 1
+                reciterId: reciterId
             )
 
-            try await ayahAudioPlayer.loadQueue(ayahs, reciterId: 1)
+            try await ayahAudioPlayer.loadQueue(ayahs, reciterId: reciterId)
             ayahAudioPlayer.play()
 
         } catch {
@@ -92,14 +101,6 @@ final class ActiveSessionViewModel: ObservableObject {
         } else {
             ayahAudioPlayer.play()
         }
-    }
-
-    func nextAyah() async {
-        try? await ayahAudioPlayer.nextAyah()
-    }
-
-    func previousAyah() async {
-        try? await ayahAudioPlayer.previousAyah()
     }
 
     func endSession() async {
@@ -116,5 +117,9 @@ final class ActiveSessionViewModel: ObservableObject {
         }
 
         router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))
+    }
+
+    func getTranslation(for ayah: Ayah) -> String {
+        quranPreferences.getTranslation(for: ayah)
     }
 }

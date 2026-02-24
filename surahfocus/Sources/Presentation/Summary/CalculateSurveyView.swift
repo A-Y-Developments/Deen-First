@@ -10,8 +10,10 @@ import SwiftUI
 struct CalculateSurveyView: View {
 
     @EnvironmentObject var router: Router
-    @StateObject private var viewModel = SummaryViewModel()
+    @EnvironmentObject private var viewModel: SummaryViewModel
     let answers: SurveyAnswers
+
+    @State private var isAnimating = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -37,22 +39,36 @@ struct CalculateSurveyView: View {
                         .font(.callout)
                         .foregroundColor(Color.white)
 
-                    ZStack {
-                        Circle()
-                            .stroke(Color(hex: "#ADA666").opacity(0.2), lineWidth: 2)
-                            .frame(width: 220, height: 220)
+                    Spacer() 
 
-                        Circle()
-                            .stroke(Color(hex: "#ADA666").opacity(0.2), lineWidth: 2)
-                            .frame(width: 170, height: 170)
+                    ZStack {
+                        // Wave ripple circles - expand outward and fade
+                        ForEach(0..<2) { i in
+                            Circle()
+                                .stroke(Color(hex: "#ADA666"), lineWidth: 1.5)
+                                .frame(width: 90, height: 90)
+                                .scaleEffect(isAnimating ? 2.5 : 1.0)
+                                .opacity(isAnimating ? 0 : 0.4)
+                                .animation(
+                                    .easeOut(duration: 2)
+                                        .repeatForever(autoreverses: false)
+                                        .delay(Double(i) * 1.0),
+                                    value: isAnimating
+                                )
+                        }
 
                         Image("mosque")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 90, height: 90)
+                            .scaleEffect(isAnimating ? 1.05 : 1.0)
+                            .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true), value: isAnimating)
                     }
+                    .onAppear { isAnimating = true }
                     .padding(.top, 56)
                     .padding(.bottom, 48)
+
+                    Spacer()
 
                     Text("COMMUNITY INSIGHT")
                         .font(.callout)
@@ -69,12 +85,7 @@ struct CalculateSurveyView: View {
             }
             .padding(.horizontal, 72)
             .padding(.top, 100)
-            .background {
-                Image("main-background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-            }
+            .mainBackground()
             .onAppear {
                 viewModel.startCalculation(screenWidth: geometry.size.width) {
                     viewModel.answers = answers
@@ -91,4 +102,5 @@ struct CalculateSurveyView: View {
 #Preview {
     CalculateSurveyView(answers: SurveyAnswers())
         .environmentObject(Router())
+        .environmentObject(SummaryViewModel())
 }

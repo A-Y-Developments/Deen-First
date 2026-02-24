@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsTabView: View {
     @EnvironmentObject var viewModel: SettingsTabViewModel
-    @State private var showDeleteConfirmation = false
     @State private var showSignOutConfirmation = false
     @EnvironmentObject var router: Router
 
@@ -55,24 +54,22 @@ struct SettingsTabView: View {
                     Button {
                         showSignOutConfirmation = true
                     } label: {
-                        Text("Sign Out")
+                        SettingsRow(title: "Sign Out", icon: "rectangle.portrait.and.arrow.right")
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+
+                    HStack(spacing: 4) {
+                        TappableText("Terms of Service",
+                                     url: AppConstants.Links.termsOfServiceURL,
+                                     foregroundColor: Color(hex: "#8E8E93"))
+                        Text("•")
                             .font(.caption)
                             .foregroundColor(Color(hex: "#8E8E93"))
-                            .underline()
+                        TappableText("Privacy",
+                                     url: AppConstants.Links.privacyPolicyURL,
+                                     foregroundColor: Color(hex: "#8E8E93"))
                     }
-
-                    Button {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Text("Delete Account")
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .underline()
-                    }
-
-                    Text("Terms of Service • Privacy")
-                        .font(.caption)
-                        .foregroundColor(Color(hex: "#8E8E93"))
                 }
                 .padding(.top, 16)
 
@@ -80,13 +77,7 @@ struct SettingsTabView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 48)
-        .background {
-            // Background
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
             Button("OK") {
                 viewModel.errorMessage = nil
@@ -95,16 +86,6 @@ struct SettingsTabView: View {
             if let error = viewModel.errorMessage {
                 Text(error)
             }
-        }
-        .confirmationDialog("Delete Account", isPresented: $showDeleteConfirmation) {
-            Button("Delete Account", role: .destructive) {
-                Task {
-                    await viewModel.deleteAccount()
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("This action cannot be undone. All your data will be permanently deleted.")
         }
         .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
             Button("Sign Out", role: .destructive) {

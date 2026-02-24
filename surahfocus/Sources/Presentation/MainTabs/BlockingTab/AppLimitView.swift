@@ -2,7 +2,7 @@ import FamilyControls
 import SwiftUI
 
 struct AppLimitView: View {
-    @StateObject private var viewModel = AppLimitViewModel()
+    @EnvironmentObject private var viewModel: AppLimitViewModel
     @Environment(\.dismiss) private var dismiss
 
     let limitId: UUID?
@@ -19,7 +19,7 @@ struct AppLimitView: View {
 
             if viewModel.isLoading && viewModel.settingsName.isEmpty {
                 ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
+                    .progressViewStyle(CircularProgressViewStyle(tint: Color.secondary400))
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 28) {
@@ -90,7 +90,7 @@ struct AppLimitView: View {
 
             Text("Block app after daily usage limit")
                 .font(.subheadline)
-                .foregroundColor(Color(hex: "999999"))
+                .foregroundColor(.white.opacity(0.6))
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
         }
@@ -101,24 +101,24 @@ struct AppLimitView: View {
     private var settingsNameSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Name Settings")
-                .foregroundColor(Color(hex: "ADA666"))
+                .foregroundColor(Color.secondary400)
                 .fontWeight(.semibold)
 
             HStack {
                 TextField(
                     "",
                     text: $viewModel.settingsName,
-                    prompt: Text("Enter a name").foregroundColor(Color(hex: "999999"))
+                    prompt: Text("Enter a name").foregroundColor(.white.opacity(0.6))
                 )
                 .foregroundColor(.white)
                 .submitLabel(.done)
 
                 Image(systemName: "pencil")
-                    .foregroundColor(Color(hex: "999999"))
+                    .foregroundColor(.white.opacity(0.6))
                     .font(.system(size: 14))
             }
             .padding()
-            .background(Color(hex: "0c292b"))
+            .background(Color.primary500.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
@@ -128,7 +128,7 @@ struct AppLimitView: View {
     private var blockedAppsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Blocked Apps")
-                .foregroundColor(Color(hex: "ADA666"))
+                .foregroundColor(Color.secondary400)
                 .fontWeight(.semibold)
 
             Button {
@@ -139,11 +139,11 @@ struct AppLimitView: View {
                     .foregroundColor(.white)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .foregroundColor(Color(hex: "999999"))
+                        .foregroundColor(.white.opacity(0.6))
                         .font(.system(size: 14, weight: .semibold))
                 }
                 .padding()
-                .background(Color(hex: "0c292b"))
+                .background(Color.primary500.opacity(0.3))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .disabled(viewModel.isLoading)
@@ -155,11 +155,11 @@ struct AppLimitView: View {
     private var timeSettingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Time Settings")
-                .foregroundColor(Color(hex: "ADA666"))
+                .foregroundColor(Color.secondary400)
                 .fontWeight(.semibold)
 
             Text("App Usage Duration")
-                .foregroundColor(Color(hex: "999999"))
+                .foregroundColor(.white.opacity(0.6))
                 .font(.caption)
 
             HStack(spacing: 0) {
@@ -176,7 +176,7 @@ struct AppLimitView: View {
                 .frame(maxWidth: .infinity, maxHeight: 150)
             }
             .colorScheme(.dark)
-            .background(Color(hex: "0c292b"))
+            .background(Color.primary500.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
@@ -187,7 +187,7 @@ struct AppLimitView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Active Time")
-                    .foregroundColor(Color(hex: "999999"))
+                    .foregroundColor(.white.opacity(0.6))
                     .font(.caption)
 
                 Spacer()
@@ -198,9 +198,9 @@ struct AppLimitView: View {
                     HStack(spacing: 4) {
                         Image(systemName: viewModel.isAllDay ? "checkmark.square.fill" : "square")
                             .foregroundColor(
-                                viewModel.isAllDay ? Color(hex: "ADA666") : Color(hex: "999999"))
+                                viewModel.isAllDay ? Color.secondary400 : .white.opacity(0.6))
                         Text("Daily")
-                            .foregroundColor(Color(hex: "999999"))
+                            .foregroundColor(.white.opacity(0.6))
                             .font(.caption)
                     }
                 }
@@ -244,12 +244,12 @@ struct AppLimitView: View {
                 Text("Delete Blocks")
                     .fontWeight(.semibold)
             }
-            .foregroundColor(Color(hex: "ADA666"))
+            .foregroundColor(Color.secondary400)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(hex: "ADA666").opacity(0.12))
+            .background(Color.secondary400.opacity(0.12))
             .clipShape(Capsule())
-            .overlay(Capsule().stroke(Color(hex: "ADA666").opacity(0.3), lineWidth: 1))
+            .overlay(Capsule().stroke(Color.secondary400.opacity(0.3), lineWidth: 1))
         }
         .disabled(viewModel.isLoading)
     }
@@ -264,18 +264,18 @@ struct AppLimitView: View {
             Group {
                 if viewModel.isLoading {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "0c292b")))
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.primary900))
                 } else {
                     Text(title)
                         .fontWeight(.semibold)
                         .foregroundColor(
-                            viewModel.isFormValid ? Color(hex: "0c292b") : Color(hex: "999999"))
+                            viewModel.isFormValid ? Color.primary900 : .white.opacity(0.6))
                 }
             }
             .frame(maxWidth: .infinity)
             .padding()
         }
-        .background(viewModel.isFormValid ? Color.white : Color(hex: "1a3a3a"))
+        .background(viewModel.isFormValid ? Color.white : Color.primary500.opacity(0.4))
         .clipShape(Capsule())
         .disabled(!viewModel.isFormValid || viewModel.isLoading)
         .animation(.easeInOut(duration: 0.2), value: viewModel.isFormValid)
@@ -284,4 +284,5 @@ struct AppLimitView: View {
 
 #Preview {
     AppLimitView()
+        .environmentObject(AppLimitViewModel())
 }

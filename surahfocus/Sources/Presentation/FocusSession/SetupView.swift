@@ -9,15 +9,7 @@ import SwiftUI
 
 struct SetupView: View {
     var body: some View {
-        ZStack {
-            // Background
-            Image("secondary-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-            
-            // Main Content
-            VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 24) {
                 
                 Text("Focus Session")
                     .font(.system(.headline))
@@ -91,7 +83,7 @@ struct SetupView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 40)
-        }
+            .secondaryBackground()
     }
 }
 

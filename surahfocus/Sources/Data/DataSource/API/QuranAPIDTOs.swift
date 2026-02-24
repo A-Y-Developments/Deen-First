@@ -13,6 +13,8 @@ struct SingleVerseResponse: Codable {
     let ayahNo: Int
     let audio: [String: ReciterAudioDTO]
     let english: String
+    let bengali: String
+    let urdu: String
     let arabic1: String
     let arabic2: String
 
@@ -27,6 +29,8 @@ struct SingleVerseResponse: Codable {
         case ayahNo
         case audio
         case english
+        case bengali
+        case urdu
         case arabic1
         case arabic2
     }
@@ -125,6 +129,8 @@ struct SurahChapterResponse: Codable {
     let surahNo: Int
     let audio: [String: ReciterAudioDTO]
     let english: [String]
+    let bengali: [String]
+    let urdu: [String]
     let arabic1: [String]
     let arabic2: [String]
 
@@ -145,6 +151,8 @@ struct SurahChapterResponse: Codable {
                 ayahNo: index,
                 audio: audio,
                 english: englishText,
+                bengali: index <= bengali.count ? bengali[index - 1] : "",
+                urdu: index <= urdu.count ? urdu[index - 1] : "",
                 arabic1: arabic1[index - 1],
                 arabic2: arabic2[index - 1]
             )
@@ -184,6 +192,8 @@ extension SingleVerseResponse {
             text: arabic1,
             numberInSurah: ayahNo,
             english: english,
+            bengali: bengali,
+            urdu: urdu,
             arabic1: arabic1,
             arabic2: arabic2,
             audioUrls: audioUrlsArray,

@@ -53,12 +53,7 @@ struct Summary2View: View {
             .padding(.bottom, 16)
         }
         .padding(.horizontal, 20)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .toolbarBackground(.hidden, for: .navigationBar)
         .onAppear {
             fillProgress = 1

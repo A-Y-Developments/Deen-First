@@ -9,14 +9,12 @@ final class SelectSurahViewModel: ObservableObject {
     @Published var isLoading = false
 
     private let quranService: QuranService
-    private weak var router: Router?
 
-    private var existingSurahs: [SurahWithRange] = []
-
-    init(existingSurahs: [SurahWithRange] = [], router: Router? = nil) {
+    init() {
         self.quranService = DIContainer.shared.quranService
-        self.existingSurahs = existingSurahs
-        self.router = router
+    }
+
+    func configure(existingSurahs: [SurahWithRange]) {
         self.selectedSurahNumbers = Set(existingSurahs.map { $0.surah.number })
     }
 

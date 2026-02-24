@@ -32,6 +32,8 @@ final class DIContainer {
     lazy var subscriptionService: SubscriptionService = SubscriptionServiceImpl()
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
 
+    lazy var quranPreferencesService: QuranPreferencesServiceImpl = QuranPreferencesServiceImpl()
+
     @MainActor
     lazy var screenTimeRulesService: ScreenTimeRulesService = ScreenTimeRulesServiceImpl(
         repository: screenTimeRulesRepository,

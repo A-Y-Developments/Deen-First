@@ -52,6 +52,7 @@ enum UserPersistenceHelper {
         iCloud.set(email, forKey: k)
     }
 
+
     /// Resolves email from Apple credential first, then iCloud KV as fallback.
     /// Note: Apple only sends email on the very first sign-in ever, so iCloud KV
     /// is the only recovery path on reinstall.

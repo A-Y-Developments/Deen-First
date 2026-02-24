@@ -1,58 +1,78 @@
 import FamilyControls
 import SwiftUI
 
-struct BlockingTabView: View {
-    @StateObject private var viewModel = BlockingTabViewModel()
-    @State private var showCreateSheet = false
-    @EnvironmentObject var router: Router
+struct CircularPlusButton: View {
+    var action: () -> Void
 
     var body: some View {
         Group {
-            if viewModel.isLoading {
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ADA666")))
-            } else if !viewModel.hasApps {
-                EmptyBlocksView(showCreateSheet: $showCreateSheet)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    blockedAppsContent
-                        .padding(.top)
+            if #available(iOS 26.0, *) {
+                Button(action: action) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 40)
                 }
-            }
-        }
-        .navigationTitle("Blocks")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showCreateSheet = true
-                } label: {
+                .buttonStyle(.glass)
+            } else {
+                Button(action: action) {
                     Image(systemName: "plus")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(.ultraThinMaterial)
+                        .frame(width: 30, height: 40)
+                        .background(circleBackground)
                         .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
+                        .overlay(Circle().stroke(Color.white.opacity(0.2), lineWidth: 1))
                 }
             }
         }
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+    }
+
+    @ViewBuilder
+    private var circleBackground: some View {
+        if #available(iOS 26.0, *) {
+            Circle()
+                .glassEffect(.regular.interactive())
+        } else {
+            Circle()
+                .fill(.ultraThinMaterial)
         }
+    }
+}
+
+struct BlockingTabView: View {
+    @EnvironmentObject private var viewModel: BlockingTabViewModel
+    @EnvironmentObject var router: Router
+    @State private var showCreateSheet = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            customHeader
+
+            Group {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color.secondary400))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if !viewModel.hasApps {
+                    EmptyBlocksView(showCreateSheet: $showCreateSheet)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView {
+                        blockedAppsContent
+                            .padding(.top)
+                    }
+                    .padding()
+                }
+            }
+        }
+        .mainBackground()
         .sheet(isPresented: $showCreateSheet) {
             CreateBlockSheet()
                 .environmentObject(router)
                 .presentationDetents([.fraction(0.5)])
                 .presentationDragIndicator(.visible)
-                .presentationBackground(Color(hex: "041315"))
+                .presentationBackground(Color.primary900)
         }
         .alert(
             "Error",
@@ -67,44 +87,64 @@ struct BlockingTabView: View {
         }
         .onAppear {
             Task { await viewModel.loadBlockedApps() }
+            viewModel.syncCountdownFromStorage()
         }
-        .onChange(of: router.navigationPath.count) { _, _ in
+        .onChange(of: router.navigationPath.count) { _, newCount in
             Task { await viewModel.loadBlockedApps() }
+            // User returned from ReciteToUnlock — pick up any new expiry that was written
+            viewModel.syncCountdownFromStorage()
         }
+    }
+
+    private var customHeader: some View {
+        HStack {
+            Text("Blocks")
+                .font(.system(size: 34, weight: .bold))
+            Spacer()
+            CircularPlusButton(action: { showCreateSheet = true })
+        }
+        .padding(.horizontal, 16)
+        .padding(.top)
+        .padding(.bottom, 8)
     }
 
     private var blockedAppsContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(viewModel.appLimits) { limit in
-                Button {
+                BlockRuleCard(
+                    settingsName: limit.name,
+                    appsCount: limit.applicationTokenData.count,
+                    categoriesCount: limit.categoryTokenData.count,
+                    timeInfo: limit.limitDisplayName ?? "N/A",
+                    daysText: limit.daysDisplayText,
+                    showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
+                    onUnblock: {
+                        router.navigate(to: .reciteToUnlock)
+                    },
+                    countdownDisplay: viewModel.countdownDisplay
+                )
+                .onTapGesture {
                     router.navigate(to: .editAppLimit(id: limit.id))
-                } label: {
-                    BlockRuleCard(
-                        settingsName: limit.name,
-                        appsCount: limit.applicationTokenData.count,
-                        categoriesCount: limit.categoryTokenData.count,
-                        timeInfo: limit.limitDisplayName ?? "N/A",
-                        daysText: limit.daysDisplayText
-                    )
                 }
-                .buttonStyle(PlainButtonStyle())
             }
 
             ForEach(viewModel.timeLimits) { limit in
-                Button {
+                BlockRuleCard(
+                    settingsName: limit.name,
+                    appsCount: limit.applicationTokenData.count,
+                    categoriesCount: limit.categoryTokenData.count,
+                    timeInfo: limit.timeRangeDisplay ?? "N/A",
+                    daysText: limit.daysDisplayText,
+                    showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
+                    onUnblock: {
+                        router.navigate(to: .reciteToUnlock)
+                    },
+                    countdownDisplay: viewModel.countdownDisplay
+                )
+                .onTapGesture {
                     router.navigate(to: .editTimeLimit(id: limit.id))
-                } label: {
-                    BlockRuleCard(
-                        settingsName: limit.name,
-                        appsCount: limit.applicationTokenData.count,
-                        categoriesCount: limit.categoryTokenData.count,
-                        timeInfo: limit.timeRangeDisplay ?? "N/A",
-                        daysText: limit.daysDisplayText
-                    )
                 }
-                .buttonStyle(PlainButtonStyle())
             }
         }
-//        .padding(.horizontal)
     }
 }

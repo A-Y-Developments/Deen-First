@@ -12,6 +12,12 @@ struct Summary1View: View {
     @EnvironmentObject private var viewModel: SummaryViewModel
     @EnvironmentObject var router: Router
 
+    let answers: SurveyAnswers
+
+    init(answers: SurveyAnswers = SurveyAnswers()) {
+        self.answers = answers
+    }
+
     var body: some View {
         VStack(alignment: .leading) {
 
@@ -154,13 +160,12 @@ struct Summary1View: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical)
-        .background {
-            Image("main-background")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-        }
+        .mainBackground()
         .navigationBarBackButtonHidden(true)
+        .task {
+            viewModel.answers = answers
+            viewModel.currentStep = 1
+        }
     }
 }
 
