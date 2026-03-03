@@ -82,7 +82,7 @@ let project = Project(
     targets: [
         .target(
             name: "MyApp",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .app,
             bundleId: Env.baseBundleId,
             deploymentTargets: .iOS("17.0"),

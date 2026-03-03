@@ -10,9 +10,11 @@ protocol QuranRepository {
 
 final class QuranRepositoryImpl: QuranRepository {
     private let apiDataSource: QuranAPIDataSource
+    private let alQuranDataSource: AlQuranAPIDataSource
 
-    init(apiDataSource: QuranAPIDataSource) {
+    init(apiDataSource: QuranAPIDataSource, alQuranDataSource: AlQuranAPIDataSource) {
         self.apiDataSource = apiDataSource
+        self.alQuranDataSource = alQuranDataSource
     }
 
     func getAllSurahs() async throws -> [Surah] {
@@ -20,11 +22,21 @@ final class QuranRepositoryImpl: QuranRepository {
     }
 
     func getSurah(number: Int) async throws -> (Surah, [Ayah]) {
-        return try await apiDataSource.fetchSurah(number: number)
+        async let surahResult = apiDataSource.fetchSurah(number: number)
+        async let translitResult = alQuranDataSource.fetchSurahTransliteration(surahNo: number)
+        let surahData = try await surahResult
+        let transliterations = (try? await translitResult) ?? [:]
+        let (surah, ayahs) = surahData
+        let enriched = ayahs.map { $0.withTransliteration(transliterations[$0.numberInSurah] ?? "") }
+        return (surah, enriched)
     }
 
     func getVerse(surahNo: Int, ayahNo: Int) async throws -> Ayah {
-        return try await apiDataSource.fetchVerse(surahNo: surahNo, ayahNo: ayahNo)
+        async let verseResult = apiDataSource.fetchVerse(surahNo: surahNo, ayahNo: ayahNo)
+        async let translitResult = alQuranDataSource.fetchVerseTransliteration(surahNo: surahNo, ayahNo: ayahNo)
+        let verse = try await verseResult
+        let translit = (try? await translitResult) ?? ""
+        return verse.withTransliteration(translit)
     }
 
     func getAudioURL(reciterId: Int, surahNo: Int, ayahNo: Int) async throws -> String {

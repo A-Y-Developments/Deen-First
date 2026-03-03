@@ -48,20 +48,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         return true
     }
 
-    // Called when user taps the "Recite to Unblock" notification
+    // Called when user taps a notification (e.g. reblock notification after temp unblock expires).
+    // The actual reblock logic runs in willEnterForeground — this just ensures
+    // the delegate is wired up so foreground presentation also works correctly.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        if let deepLink = response.notification.request.content.userInfo["deepLink"] as? String,
-            deepLink == "reciteToUnlock"
-        {
-            // Safety net — ShieldActionExtension already set this, but set again in case of race
-            let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
-            defaults?.set(true, forKey: AppGroupConstants.reciteRequested)
-            defaults?.synchronize()
-        }
         completionHandler()
     }
 
@@ -93,6 +87,10 @@ final class SubscriptionMonitor: ObservableObject {
     }
 
     private func startListening() {
+        guard !AppConstants.bypassPaywall else {
+            isPremium = true
+            return
+        }
         listenerTask = Task {
             for await customerInfo in Purchases.shared.customerInfoStream {
                 let isActive =
@@ -120,7 +118,6 @@ final class SubscriptionMonitor: ObservableObject {
         NotificationCenter.default.post(name: .subscriptionExpired, object: nil)
     }
 }
-
 
 // MARK: - Bundle Extension
 

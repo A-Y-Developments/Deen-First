@@ -160,6 +160,14 @@ struct QuranReadingView: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundColor(.white)
 
+            if !ayah.transliteration.isEmpty {
+                Text(ayah.transliteration)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
             let translationText = viewModel.getTranslation(for: ayah)
             if !translationText.isEmpty {
                 Text(translationText)

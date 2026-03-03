@@ -122,7 +122,7 @@ struct SubscriptionPlansView: View {
                         }
                         
                         // Save Badge
-                        Text("Save 50%")
+                        Text("4 Months free!")
                             .font(.caption2)
                             .fontWeight(.semibold)
                             .padding(.horizontal, 8)

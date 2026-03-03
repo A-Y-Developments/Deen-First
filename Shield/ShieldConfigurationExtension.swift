@@ -102,7 +102,9 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     /// Returns a random ayah each time the shield appears.
     /// The shield extension is re-invoked on every block, so this always picks fresh.
     private func currentSubtitle() -> String {
-        return subtitles[Int.random(in: 0..<subtitles.count)]
+        let ayah = subtitles[Int.random(in: 0..<subtitles.count)]
+        let hint = "\n\nNeed a break? Open Deen First → Blocks tab\nand tap Unblock on the rule to get 5 or 15 min."
+        return ayah + hint
     }
 }
 

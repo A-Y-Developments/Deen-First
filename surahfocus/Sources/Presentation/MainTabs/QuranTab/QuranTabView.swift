@@ -56,6 +56,12 @@ struct QuranTabView: View {
                     }
                     .shadow(color: Color.primary400, radius: 12)
                     .padding(.top, 8)
+
+                    Text("Listen to Quran, reconnect with your Creator,\nand remove all distractions.")
+                        .font(.system(.footnote))
+                        .foregroundStyle(Color(hex: "DBDABD").opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
                 }
                 .padding(.horizontal, 24)
 

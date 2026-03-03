@@ -13,6 +13,7 @@ struct Ayah: Identifiable, Codable, Hashable {
     let audioUrls: [ReciterAudio]
     let surahNo: Int
     let surahName: String
+    let transliteration: String
 
     // Convenience property to get translation by language
     func translation(for language: TranslationLanguage) -> String {
@@ -34,7 +35,8 @@ struct Ayah: Identifiable, Codable, Hashable {
         arabic2: String = "",
         audioUrls: [ReciterAudio] = [],
         surahNo: Int = 0,
-        surahName: String = ""
+        surahName: String = "",
+        transliteration: String = ""
     ) {
         self.id = number
         self.number = number
@@ -48,5 +50,23 @@ struct Ayah: Identifiable, Codable, Hashable {
         self.audioUrls = audioUrls
         self.surahNo = surahNo
         self.surahName = surahName
+        self.transliteration = transliteration
+    }
+
+    func withTransliteration(_ t: String) -> Ayah {
+        Ayah(
+            number: number,
+            text: text,
+            numberInSurah: numberInSurah,
+            english: english,
+            bengali: bengali,
+            urdu: urdu,
+            arabic1: arabic1,
+            arabic2: arabic2,
+            audioUrls: audioUrls,
+            surahNo: surahNo,
+            surahName: surahName,
+            transliteration: t
+        )
     }
 }

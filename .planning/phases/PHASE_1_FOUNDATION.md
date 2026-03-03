@@ -64,7 +64,7 @@ let project = Project(
         // Main App Target
         .target(
             name: "SurahFocus",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .app,
             bundleId: Env.baseBundleId,
             deploymentTargets: .iOS("17.0"),
@@ -91,7 +91,7 @@ let project = Project(
         // ScreenTimeMonitor Extension
         .target(
             name: "ScreenTimeMonitor",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "\(Env.baseBundleId).ScreenTimeMonitor",
             deploymentTargets: .iOS("17.0"),
@@ -108,7 +108,7 @@ let project = Project(
         // Shield Extension
         .target(
             name: "Shield",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "\(Env.baseBundleId).Shield",
             deploymentTargets: .iOS("17.0"),
@@ -125,7 +125,7 @@ let project = Project(
         // Test Target
         .target(
             name: "SurahFocusTests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .unitTests,
             bundleId: "\(Env.baseBundleId).Tests",
             deploymentTargets: .iOS("17.0"),

@@ -10,13 +10,15 @@ final class DIContainer {
     // Data Sources
     lazy var localDataSource: LocalDataSource = LocalDataSource(container: modelContainer)
     lazy var quranAPIDataSource: QuranAPIDataSource = QuranAPIDataSourceImpl(httpClient: .shared)
+    lazy var alQuranAPIDataSource: AlQuranAPIDataSource = AlQuranAPIDataSourceImpl(httpClient: .shared)
 
     // Repositories
     lazy var userRepository: UserRepository = UserRepositoryImpl(localDataSource: localDataSource)
     lazy var sessionRepository: SessionRepository = SessionRepositoryImpl(
         localDataSource: localDataSource)
     lazy var quranRepository: QuranRepository = QuranRepositoryImpl(
-        apiDataSource: quranAPIDataSource
+        apiDataSource: quranAPIDataSource,
+        alQuranDataSource: alQuranAPIDataSource
     )
     lazy var screenTimeRulesRepository: ScreenTimeRulesRepository = ScreenTimeRulesRepositoryImpl()
 

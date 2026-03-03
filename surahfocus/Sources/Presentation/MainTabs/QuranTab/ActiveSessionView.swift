@@ -170,6 +170,14 @@ struct ActiveAyahCard: View {
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .foregroundColor(.white)
 
+            if !ayah.transliteration.isEmpty {
+                Text(ayah.transliteration)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+
             // Translation
             Text(translation)
                 .foregroundColor(.white)

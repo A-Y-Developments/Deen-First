@@ -70,9 +70,6 @@ struct RootView: View {
         .environmentObject(timeLimitViewModel)
         .environmentObject(supportViewModel)
         .task {
-            // FIX: Clean up any orphaned session from a previous force-kill BEFORE
-            // checking user state. This ensures isSessionActiveKey is cleared so
-            // checkUserState → reapplyActiveShields doesn't re-apply stale session shields.
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
             await checkUserState()
@@ -103,19 +100,8 @@ struct RootView: View {
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
             Task {
-                // FIX: Also clean up on foreground — covers the case where the app was
-                // force-killed and relaunched via notification or deep link, bypassing .task.
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()
                 try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
-
-                // Handle "Recite to Unblock" deep link from ShieldActionExtension
-                let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
-                if defaults?.bool(forKey: AppGroupConstants.reciteRequested) == true {
-                    defaults?.set(false, forKey: AppGroupConstants.reciteRequested)
-                    defaults?.synchronize()
-                    router.navigate(to: .reciteToUnlock)
-                }
-
                 await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
             }
         }
@@ -132,7 +118,9 @@ struct RootView: View {
             return
         }
 
-        isPremium = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
+        let subscriptionActive = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
+        // isPremium = AppConstants.bypassPaywall || subscriptionActive
+        isPremium = true
 
         if isPremium {
             isScreenTimeAuthorized = AuthorizationCenter.shared.authorizationStatus == .approved
@@ -149,7 +137,6 @@ struct RootView: View {
         case .paywall(let isFromSettings, let currentPlan):
             PaywallView(isFromSettings: isFromSettings, currentPlan: currentPlan)
         case .permissionSetup, .setupAppToBlock, .setupSummary:
-            // Guard: Don't show setup routes if user already completed onboarding
             if currentUser?.hasCompletedOnboarding == true {
                 MainTabView()
                     .navigationBarBackButtonHidden(true)
@@ -191,7 +178,6 @@ struct RootView: View {
         case .sessionFinish(let duration, let surahCount):
             SessionFinishView(duration: duration, surahCount: surahCount)
         case .survey, .calculateSurvey, .summary, .howAppWork, .finalSummary:
-            // Guard: Don't show onboarding routes if user already completed onboarding
             if currentUser?.hasCompletedOnboarding == true {
                 MainTabView()
                     .navigationBarBackButtonHidden(true)

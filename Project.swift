@@ -5,7 +5,8 @@ let teamId = Environment.teamId.getString(default: "")
 let baseBundleId = Environment.baseBundleId.getString(default: "")
 let revenueCatApiKeyDebug = Environment.revenuecatApiKey.getString(default: "")
 let revenueCatApiKeyProd = Environment.revenuecatProdKey.getString(default: "")
-let openAIApiKey = Environment.openaiApiKey.getString(default: "")  // ← NEW
+let openAIApiKey = Environment.openaiApiKey.getString(default: "")
+let bypassPaywall = Environment.bypassPaywall.getString(default: "false")
 
 let project = Project(
     name: "Deen First",
@@ -29,11 +30,12 @@ let project = Project(
                 "UILaunchScreen": [:],
                 "NSFamilyControlsUsageDescription":
                     "Deen First needs permission to block distracting apps during your Quran focus sessions.",
-                "NSMicrophoneUsageDescription":  // ← NEW
+                "NSMicrophoneUsageDescription":
                     "Deen First needs the microphone to record your Quran recitation.",
                 "UIBackgroundModes": ["audio"],
                 "RevenueCatAPIKey": "$(REVENUECAT_API_KEY)",
-                "OpenAIAPIKey": "$(OPENAI_API_KEY)",  // ← NEW
+                "OpenAIAPIKey": "$(OPENAI_API_KEY)",
+                "BypassPaywall": "$(BYPASS_PAYWALL)",
                 "com.apple.developer.ubiquity-kvstore-identifier":
                     "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
             ]),
@@ -46,7 +48,8 @@ let project = Project(
                 .external(name: "BottomSheet"),
                 .target(name: "ScreenTimeMonitor"),
                 .target(name: "Shield"),
-                .target(name: "ShieldAction"),  // ← NEW
+                // ShieldAction removed — secondary button deleted from shield,
+                // recite to unblock is now triggered from BlockingTabView directly.
             ],
             settings: .settings(
                 base: [
@@ -63,7 +66,8 @@ let project = Project(
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyDebug),
-                            "OPENAI_API_KEY": .string(openAIApiKey),  // ← NEW
+                            "OPENAI_API_KEY": .string(openAIApiKey),
+                            "BYPASS_PAYWALL": .string(bypassPaywall),
                         ]
                     ),
                     .release(
@@ -75,7 +79,8 @@ let project = Project(
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
                             "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution"),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyProd),
-                            "OPENAI_API_KEY": .string(openAIApiKey),  // ← NEW
+                            "OPENAI_API_KEY": .string(openAIApiKey),
+                            "BYPASS_PAYWALL": .string(bypassPaywall),
                         ]
                     ),
                 ]
@@ -85,7 +90,7 @@ let project = Project(
         // MARK: - ScreenTimeMonitor Extension
         .target(
             name: "ScreenTimeMonitor",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "\(baseBundleId).ScreenTimeMonitor",
             deploymentTargets: .iOS("17.0"),
@@ -132,10 +137,10 @@ let project = Project(
             )
         ),
 
-        // MARK: - Shield Extension (configuration only — fixed duplicate key)
+        // MARK: - Shield Extension
         .target(
             name: "Shield",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "\(baseBundleId).Shield",
             deploymentTargets: .iOS("17.0"),
@@ -179,55 +184,10 @@ let project = Project(
             )
         ),
 
-        // MARK: - ShieldAction Extension (NEW — handles button taps on shield)
-        .target(
-            name: "ShieldAction",
-            destinations: .iOS,
-            product: .appExtension,
-            bundleId: "\(baseBundleId).ShieldAction",
-            deploymentTargets: .iOS("17.0"),
-            infoPlist: .extendingDefault(with: [
-                "CFBundleDisplayName": "ShieldAction",
-                "NSExtension": [
-                    "NSExtensionPointIdentifier":
-                        "com.apple.ManagedSettingsUI.shield-action-service",
-                    "NSExtensionPrincipalClass": "$(PRODUCT_MODULE_NAME).ShieldActionExtension",
-                ],
-            ]),
-            sources: ["ShieldAction/**"],
-            entitlements: .file(path: "ShieldAction/ShieldAction.entitlements"),
-            dependencies: [
-                .sdk(name: "ManagedSettings", type: .framework)
-            ],
-            settings: .settings(
-                base: ["PRODUCT_MODULE_NAME": .string("ShieldAction")],
-                configurations: [
-                    .debug(
-                        name: "Debug",
-                        settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
-                            "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                        ]),
-                    .release(
-                        name: "Release",
-                        settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Manual"),
-                            "DEVELOPMENT_TEAM": .string(teamId),
-                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                            "PROVISIONING_PROFILE_SPECIFIER": .string(
-                                "SurahFocus ShieldAction Distribution"),
-                        ]),
-                ]
-            )
-        ),
-
         // MARK: - Test Target
         .target(
             name: "SurahFocusTests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .unitTests,
             bundleId: "\(baseBundleId).Tests",
             deploymentTargets: .iOS("17.0"),

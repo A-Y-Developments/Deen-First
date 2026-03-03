@@ -1696,7 +1696,7 @@ let project = Project(
     targets: [
         .target(
             name: "SurahFocus",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .app,
             bundleId: "com.aydev.surahfocus",
             deploymentTargets: .iOS("17.0"),
@@ -1717,7 +1717,7 @@ let project = Project(
         // DeviceActivityMonitor Extension
         .target(
             name: "ScreenTimeMonitor",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "com.aydev.surahfocus.ScreenTimeMonitor",
             deploymentTargets: .iOS("17.0"),
@@ -1734,7 +1734,7 @@ let project = Project(
         // ShieldConfiguration Extension
         .target(
             name: "Shield",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .appExtension,
             bundleId: "com.aydev.surahfocus.Shield",
             deploymentTargets: .iOS("17.0"),

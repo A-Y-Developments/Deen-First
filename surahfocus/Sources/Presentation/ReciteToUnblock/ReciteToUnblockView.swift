@@ -67,29 +67,6 @@ struct ReciteToUnblockView: View {
             }
 
             Spacer()
-
-            HStack(spacing: 4) {
-                ForEach([5, 15], id: \.self) { minutes in
-                    Button {
-                        viewModel.unblockDurationMinutes = minutes
-                    } label: {
-                        Text("\(minutes)m")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(
-                                viewModel.unblockDurationMinutes == minutes
-                                    ? Color(hex: "#0B2016") : .white.opacity(0.5)
-                            )
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule().fill(
-                                    viewModel.unblockDurationMinutes == minutes
-                                        ? Color(hex: "#4ADE80") : .white.opacity(0.08)
-                                )
-                            )
-                    }
-                }
-            }
         }
     }
 
@@ -197,6 +174,15 @@ struct ReciteToUnblockView: View {
                 .lineSpacing(10)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
+
+            if !ayah.transliteration.isEmpty {
+                Text(ayah.transliteration)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.trailing)
+                    .environment(\.layoutDirection, .leftToRight)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
 
             Divider()
                 .background(.white.opacity(0.1))

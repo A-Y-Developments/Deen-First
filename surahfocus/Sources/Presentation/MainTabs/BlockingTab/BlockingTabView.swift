@@ -45,6 +45,8 @@ struct BlockingTabView: View {
     @EnvironmentObject private var reciteToUnblockViewModel: ReciteToUnblockViewModel
     @EnvironmentObject var router: Router
     @State private var showCreateSheet = false
+    @State private var showUnblockSheet = false
+    @State private var pendingUnblockRuleId: UUID? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -75,6 +77,14 @@ struct BlockingTabView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.primary900)
         }
+        .sheet(isPresented: $showUnblockSheet) {
+            UnblockDurationSheet(ruleId: pendingUnblockRuleId)
+                .environmentObject(reciteToUnblockViewModel)
+                .environmentObject(router)
+                .presentationDetents([.fraction(0.45)])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.primary900)
+        }
         .alert(
             "Error",
             isPresented: Binding(
@@ -98,9 +108,14 @@ struct BlockingTabView: View {
     }
 
     private var customHeader: some View {
-        HStack {
-            Text("Blocks")
-                .font(.system(size: 34, weight: .bold))
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Blocks")
+                    .font(.system(size: 34, weight: .bold))
+                Text("Build your daily recitation habit")
+                    .font(.system(.subheadline))
+                    .foregroundStyle(.secondary)
+            }
             Spacer()
             CircularPlusButton(action: { showCreateSheet = true })
         }
@@ -120,10 +135,8 @@ struct BlockingTabView: View {
                     daysText: limit.daysDisplayText,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
-                        // Set the target rule BEFORE navigating so ReciteToUnblockViewModel
-                        // knows which rule's shields to remove on a successful recitation.
-                        reciteToUnblockViewModel.targetRuleId = limit.id
-                        router.navigate(to: .reciteToUnlock)
+                        pendingUnblockRuleId = limit.id
+                        showUnblockSheet = true
                     },
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
@@ -141,8 +154,8 @@ struct BlockingTabView: View {
                     daysText: limit.daysDisplayText,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
-                        reciteToUnblockViewModel.targetRuleId = limit.id
-                        router.navigate(to: .reciteToUnlock)
+                        pendingUnblockRuleId = limit.id
+                        showUnblockSheet = true
                     },
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
