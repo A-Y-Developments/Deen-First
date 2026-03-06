@@ -47,6 +47,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var ayah: Ayah?
     @Published var transcript: String = ""
     @Published var unblockDurationMinutes: Int = 5
+    @Published var isPlayingAudio: Bool = false
 
     // MARK: - Target Rule
     
@@ -67,6 +68,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     // MARK: - Private
 
+    private var audioPlayer = AudioPlayerServiceImpl()
     private var audioRecorder: AVAudioRecorder?
     private var audioFileURL: URL?
     private var sharedDefaults: UserDefaults? {
@@ -113,14 +115,43 @@ final class ReciteToUnblockViewModel: ObservableObject {
             self.ayah = picked
             state = .ready
             print("... \(picked.surahNo):\(picked.numberInSurah)")
+            await playAyahAudio()
         } catch {
             state = .error("Could not load ayah: \(error.localizedDescription)")
         }
     }
 
+    // MARK: - Audio Playback
+
+    func playAyahAudio() async {
+        guard let ayah else { return }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+            let reciterId = quranPreferences.selectedReciterId
+            let url = try await quranService.getAudioStreamURL(
+                reciterId: reciterId, surahNo: ayah.surahNo, ayahNo: ayah.numberInSurah)
+            try await audioPlayer.loadAudio(url: url, surahName: ayah.surahName, reciterName: "")
+            audioPlayer.onPlaybackFinished = { [weak self] in
+                Task { @MainActor in self?.isPlayingAudio = false }
+            }
+            audioPlayer.play()
+            isPlayingAudio = true
+        } catch {
+            isPlayingAudio = false
+        }
+    }
+
+    func stopAudio() {
+        audioPlayer.stop()
+        isPlayingAudio = false
+    }
+
     // MARK: - Recording
 
     func startRecording() {
+        stopAudio()
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.record, mode: .default)

@@ -53,6 +53,7 @@ struct SurveyStep4View: View {
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
+                .fixedSize(horizontal: false, vertical: true)
 
 
             // MARK: - Subtitle

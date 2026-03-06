@@ -26,6 +26,7 @@ struct RootView: View {
     @State private var currentUser: User?
     @State private var isPremium = false
     @State private var isScreenTimeAuthorized = false
+    @State private var hasCompletedSetup = false
     @State private var isCheckingState = true
 
     var body: some View {
@@ -103,6 +104,7 @@ struct RootView: View {
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()
                 try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
                 await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
+                await DIContainer.shared.screenTimeRulesService.reblockEmergencyIfExpired()
             }
         }
     }
@@ -117,6 +119,8 @@ struct RootView: View {
             isCheckingState = false
             return
         }
+
+        hasCompletedSetup = currentUser?.hasCompletedSetup ?? false
 
         let subscriptionActive = (try? await DIContainer.shared.subscriptionService.checkSubscriptionStatus()) ?? false
         // isPremium = AppConstants.bypassPaywall || subscriptionActive
@@ -137,7 +141,7 @@ struct RootView: View {
         case .paywall(let isFromSettings, let currentPlan):
             PaywallView(isFromSettings: isFromSettings, currentPlan: currentPlan)
         case .permissionSetup, .setupAppToBlock, .setupSummary:
-            if currentUser?.hasCompletedOnboarding == true {
+            if hasCompletedSetup {
                 MainTabView()
                     .navigationBarBackButtonHidden(true)
             } else {
@@ -213,6 +217,8 @@ struct RootView: View {
             SupportView()
         case .reciteToUnlock:
             ReciteToUnblockView()
+        case .emergencyUnblock:
+            EmergencyUnblockView()
         }
     }
 }

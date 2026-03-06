@@ -243,10 +243,10 @@ final class SessionServiceImpl: SessionService {
         let daysDiff = Calendar.current.dateComponents([.day], from: lastActiveDay, to: today).day ?? 0
 
         if daysDiff > 1 {
-            user.currentStreak = 1
+            user.currentStreak = 0
             try await userRepository.updateUser(user)
-            UserPersistenceHelper.saveStreaks(current: 1, longest: user.longestStreak, userId: user.appleUserId)
-            print("🔄 Streak reset to 1 (missed \(daysDiff) days)")
+            UserPersistenceHelper.saveStreaks(current: 0, longest: user.longestStreak, userId: user.appleUserId)
+            print("🔄 Streak reset to 0 (missed \(daysDiff) days)")
         }
     }
 

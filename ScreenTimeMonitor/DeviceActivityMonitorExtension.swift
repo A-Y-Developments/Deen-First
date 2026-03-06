@@ -35,9 +35,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             removeShieldsForRule(ruleId: ruleId)
             print("✅ Removed shields at interval end for rule: \(ruleId)")
 
+        } else if activity.rawValue.hasPrefix("timeLimit_") {
+            let ruleId = activity.rawValue.replacingOccurrences(of: "timeLimit_", with: "")
+            guard UUID(uuidString: ruleId) != nil else { return }
+            removeShieldsForRule(ruleId: ruleId)
+            print("✅ Removed TimeLimit shields at interval end for rule: \(ruleId)")
+
         } else if activity.rawValue.hasPrefix(AppGroupConstants.tempUnblockActivityPrefix) {
-            // The temporary unblock window for a specific rule has expired.
-            // Extract the ruleId from the activity name suffix.
             let ruleIdString = activity.rawValue.replacingOccurrences(
                 of: AppGroupConstants.tempUnblockActivityPrefix,
                 with: ""
@@ -55,16 +59,43 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         super.eventDidReachThreshold(event, activity: activity)
         print("🚦 THRESHOLD REACHED: \(event.rawValue)")
 
+        let raw = event.rawValue
+        let ruleIdString: String
+        if raw.hasPrefix("limitReached_") {
+            ruleIdString = raw.replacingOccurrences(of: "limitReached_", with: "")
+        } else if raw.hasPrefix("timeLimit_") {
+            ruleIdString = raw.replacingOccurrences(of: "timeLimit_", with: "")
+        } else { return }
+
+        guard isRuleActiveToday(ruleId: ruleIdString) else {
+            print("⏭️ Skipping shield — rule \(ruleIdString) not active today")
+            return
+        }
+
         applyShieldForEvent(event)
 
-        let raw = event.rawValue
         if raw.hasPrefix("limitReached_") {
-            let ruleIdString = raw.replacingOccurrences(of: "limitReached_", with: "")
             if let ruleId = UUID(uuidString: ruleIdString) {
                 ScreenTimeEvents.markRuleAsTriggered(ruleId: ruleId)
                 print("✅ Marked rule as triggered: \(ruleIdString)")
             }
         }
+    }
+
+    private func isRuleActiveToday(ruleId: String) -> Bool {
+        guard let defaults = sharedDefaults,
+              let allRules = defaults.dictionary(forKey: AppGroupConstants.ruleTokensKey),
+              let ruleData = allRules[ruleId] as? [String: Any]
+        else { return true }
+
+        guard let daysActive = ruleData["daysActive"] as? [String], !daysActive.isEmpty else {
+            return true
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE"
+        formatter.locale = Locale(identifier: "en_US")
+        return daysActive.contains(formatter.string(from: Date()))
     }
 
     // MARK: - Temp Unblock Expiry (per-rule)

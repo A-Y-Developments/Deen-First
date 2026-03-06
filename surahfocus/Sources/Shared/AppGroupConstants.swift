@@ -24,6 +24,13 @@ enum AppGroupConstants {
     static let tempUnblockActivityPrefix = "tempUnblock_"
     static let reciteRequested = "reciteRequested"
 
+    // MARK: - Emergency Unblock Keys
+
+    static let emergencyUnblockExpiryKey = "emergencyUnblockExpiry"
+    static let emergencyUnblockUsedCountKey = "emergencyUnblockUsedCount"
+    static let emergencyUnblockWeekStartKey = "emergencyUnblockWeekStart"
+    static let emergencyReblockNotificationId = "emergencyReblock"
+
     // MARK: - Per-Rule Unblock Keys
 
     /// Returns the SharedDefaults key storing the unblock expiry timestamp for a specific rule.

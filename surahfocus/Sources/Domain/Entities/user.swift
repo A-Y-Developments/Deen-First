@@ -8,6 +8,7 @@ final class User {
     var email: String?
     var name: String?
     var hasCompletedOnboarding: Bool
+    var hasCompletedSetup: Bool
     var hasCompletedAppSelection: Bool
     var hasCompletedAppLimitSetup: Bool
     var hasCompletedDowntimeSetup: Bool
@@ -27,6 +28,7 @@ final class User {
         self.email = email
         self.name = name
         self.hasCompletedOnboarding = false
+        self.hasCompletedSetup = false
         self.hasCompletedAppSelection = false
         self.hasCompletedAppLimitSetup = false
         self.hasCompletedDowntimeSetup = false

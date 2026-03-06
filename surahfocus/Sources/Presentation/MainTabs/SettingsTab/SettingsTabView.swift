@@ -47,6 +47,10 @@ struct SettingsTabView: View {
                         SettingsRow(title: "Help & Support")
                     }
                     .buttonStyle(.plain)
+                    Button { router.navigate(to: .emergencyUnblock) } label: {
+                        SettingsRow(title: "Emergency Unblock")
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // MARK: - Footer

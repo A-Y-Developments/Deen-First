@@ -39,6 +39,14 @@ protocol ScreenTimeRulesService {
 
     /// Called on foreground — iterates all rules and re-blocks any whose timer has expired.
     func reblockAllExpired() async
+
+    // MARK: - Emergency Unblock
+
+    func activateEmergencyUnblock() async
+    func deactivateEmergencyUnblock() async
+    func reblockEmergencyIfExpired() async
+    var isEmergencyUnblockActive: Bool { get }
+    func emergencyUnblockQuotaRemaining() -> Int
 }
 
 // MARK: - Implementation

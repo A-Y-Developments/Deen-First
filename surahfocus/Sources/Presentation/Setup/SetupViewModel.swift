@@ -189,6 +189,11 @@ final class SetupViewModel: ObservableObject {
             // Save app selection for use in Focus Session
             saveAppSelection()
 
+            if let user = try? await DIContainer.shared.userRepository.getCurrentUser() {
+                user.hasCompletedSetup = true
+                try? await DIContainer.shared.userRepository.updateUser(user)
+            }
+
             NotificationCenter.default.post(name: .didCompleteScreenTimeSetup, object: nil)
             isLoading = false
         } catch {

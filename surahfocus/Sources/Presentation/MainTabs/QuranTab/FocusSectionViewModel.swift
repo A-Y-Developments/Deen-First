@@ -111,6 +111,7 @@ final class FocusSectionViewModel: ObservableObject {
 
     func updateAppSelection(_ newSelection: FamilyActivitySelection) {
         appSelection = newSelection
+        saveAppSelection()
     }
 
     func saveAppSelection() {

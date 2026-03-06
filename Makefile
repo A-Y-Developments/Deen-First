@@ -13,7 +13,7 @@ NC := \033[0m # No Color
 
 # Default target
 .PHONY: all
-all: clean install env generate
+all: clean install env build generate
 
 # Check and source .env file
 .PHONY: env

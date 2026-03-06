@@ -70,3 +70,9 @@ struct Ayah: Identifiable, Codable, Hashable {
         )
     }
 }
+
+extension Ayah {
+    var uniqueScrollID: String {
+        "\(surahNo)-\(numberInSurah)"
+    }
+}

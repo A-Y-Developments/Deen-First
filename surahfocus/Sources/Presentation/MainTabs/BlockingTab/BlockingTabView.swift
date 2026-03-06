@@ -1,5 +1,6 @@
 import FamilyControls
 import SwiftUI
+import UIKit
 
 struct CircularPlusButton: View {
     var action: () -> Void
@@ -96,15 +97,19 @@ struct BlockingTabView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .onAppear {
-            Task { await viewModel.loadBlockedApps() }
-            viewModel.syncCountdownFromStorage()
-        }
+        .onAppear { refreshBlockingState() }
         .onChange(of: router.navigationPath.count) { _, newCount in
-            Task { await viewModel.loadBlockedApps() }
-            // User returned from ReciteToUnlock — pick up any new per-rule expiry
-            viewModel.syncCountdownFromStorage()
+            _ = newCount
+            refreshBlockingState()
         }
+        .onReceive(
+            NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+        ) { _ in refreshBlockingState() }
+    }
+
+    private func refreshBlockingState() {
+        Task { await viewModel.loadBlockedApps() }
+        viewModel.syncCountdownFromStorage()
     }
 
     private var customHeader: some View {

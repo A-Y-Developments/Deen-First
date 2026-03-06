@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 
 @MainActor
@@ -13,8 +14,12 @@ final class QuranReadingViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showError: Bool = false
 
+    @Published var isPlayingAudio = false
+    @Published var playingAyahId: String?
+
     private let quranService: QuranService
     private let quranPreferences: QuranPreferencesService
+    private var audioPlayer = AudioPlayerServiceImpl()
 
     init(
         quranService: QuranService = DIContainer.shared.quranService,
@@ -83,5 +88,40 @@ final class QuranReadingViewModel: ObservableObject {
 
     func getTranslation(for ayah: Ayah) -> String {
         quranPreferences.getTranslation(for: ayah)
+    }
+
+    func playAyah(_ ayah: Ayah) async {
+        let ayahId = ayah.uniqueScrollID
+        if playingAyahId == ayahId && isPlayingAudio {
+            stopAudio()
+            return
+        }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+            let reciterId = quranPreferences.selectedReciterId
+            let url = try await quranService.getAudioStreamURL(
+                reciterId: reciterId, surahNo: ayah.surahNo, ayahNo: ayah.numberInSurah)
+            try await audioPlayer.loadAudio(url: url, surahName: ayah.surahName, reciterName: "")
+            audioPlayer.onPlaybackFinished = { [weak self] in
+                Task { @MainActor in
+                    self?.isPlayingAudio = false
+                    self?.playingAyahId = nil
+                }
+            }
+            audioPlayer.play()
+            playingAyahId = ayahId
+            isPlayingAudio = true
+        } catch {
+            isPlayingAudio = false
+            playingAyahId = nil
+        }
+    }
+
+    func stopAudio() {
+        audioPlayer.stop()
+        isPlayingAudio = false
+        playingAyahId = nil
     }
 }

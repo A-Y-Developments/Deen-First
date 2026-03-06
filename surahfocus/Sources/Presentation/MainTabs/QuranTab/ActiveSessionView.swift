@@ -191,13 +191,6 @@ struct ActiveAyahCard: View {
     }
 }
 
-// Add this extension to your Ayah model
-extension Ayah {
-    var uniqueScrollID: String {
-        "\(surahNo)-\(numberInSurah)"
-    }
-}
-
 #Preview {
     NavigationStack {
         ActiveSessionView(surahs: [], ayahs: [])

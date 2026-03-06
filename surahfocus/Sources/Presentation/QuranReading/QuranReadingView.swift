@@ -24,6 +24,9 @@ struct QuranReadingView: View {
         .toolbarBackground(Color.primary900, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .errorAlert(isError: $viewModel.showError, errorMessage: $viewModel.errorMessage)
+        .onDisappear {
+            viewModel.stopAudio()
+        }
         .task {
             await viewModel.setup(with: surahId)
         }
@@ -118,6 +121,7 @@ struct QuranReadingView: View {
                 .id("ayahContent")
             }
             .onChange(of: viewModel.selectedSurah) { _, _ in
+                viewModel.stopAudio()
                 withAnimation {
                     proxy.scrollTo("ayahContent", anchor: .top)
                 }
@@ -145,14 +149,27 @@ struct QuranReadingView: View {
     @ViewBuilder
     private func ayahRow(for ayah: Ayah, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(ayah.surahNo):\(ayah.numberInSurah)")
-                .font(.caption2)
-                .fontWeight(.medium)
-                .foregroundStyle(Color.black)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.gray4)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            HStack(spacing: 6) {
+                Text("\(ayah.surahNo):\(ayah.numberInSurah)")
+                    .font(.caption2)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.black)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.gray4)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                Button {
+                    Task { await viewModel.playAyah(ayah) }
+                } label: {
+                    Image(systemName: viewModel.playingAyahId == ayah.uniqueScrollID && viewModel.isPlayingAudio
+                        ? "speaker.wave.2.fill"
+                        : "speaker.fill")
+                        .font(.caption2)
+                        .foregroundColor(.secondary400)
+                }
+                .buttonStyle(.plain)
+            }
 
             Text(ayah.text)
                 .font(.system(size: 24))

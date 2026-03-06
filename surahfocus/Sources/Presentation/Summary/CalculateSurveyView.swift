@@ -87,8 +87,8 @@ struct CalculateSurveyView: View {
             .padding(.top, 100)
             .mainBackground()
             .onAppear {
+                viewModel.answers = answers
                 viewModel.startCalculation(screenWidth: geometry.size.width) {
-                    viewModel.answers = answers
                     router.navigate(to: .summary(step: 1, answers: answers))
                 }
             }

@@ -157,6 +157,14 @@ struct ReciteToUnblockView: View {
 
                 if case .ready = viewModel.state {
                     Button {
+                        Task { await viewModel.playAyahAudio() }
+                    } label: {
+                        Image(systemName: viewModel.isPlayingAudio ? "speaker.wave.2.fill" : "speaker.fill")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+
+                    Button {
                         Task { await viewModel.loadRandomAyah() }
                     } label: {
                         Image(systemName: "arrow.clockwise")
@@ -288,7 +296,12 @@ struct ReciteToUnblockView: View {
             micButton(isRecording: false) { viewModel.startRecording() }
 
         case .recording:
-            micButton(isRecording: true) { viewModel.stopRecordingAndTranscribe() }
+            VStack(spacing: 12) {
+                Text("Speak into the phone now")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.6))
+                micButton(isRecording: true) { viewModel.stopRecordingAndTranscribe() }
+            }
 
         case .transcribing:
             micButton(isRecording: false, disabled: true) {}

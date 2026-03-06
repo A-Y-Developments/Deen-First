@@ -14,27 +14,36 @@ struct AuthView: View {
             .padding(.horizontal, 20)
 
             Spacer()
-            Spacer()
+            Image("quran")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 200)
+                .padding(.vertical, 32)
             Spacer()
 
             VStack(alignment: .leading, spacing: 40) {
                 Text("Hi, there!")
+                    .font(.system(.title2, weight: .semibold))
                     .foregroundStyle(.white)
                 VStack(alignment: .leading) {
-                    Text("Welcome to Deen First")
-                        .font(.system(.title, weight: .bold))
+                    Text("Welcome to Surah Focus")
+                        .font(.system(.largeTitle, weight: .bold))
                         .foregroundStyle(Color.secondary200)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text("Your new way for a better relationship with Allah")
-                        .font(.system(.subheadline, weight: .medium))
+                        .font(.system(.body, weight: .medium))
                         .italic()
                         .foregroundStyle(Color.secondary200)
-                        .padding(.top, 8)
+                        .padding(.top, 4)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Text("Block apps, build better Quran habits")
                     .foregroundStyle(.white)
-                    .font(.footnote)
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
+            Spacer()
             Spacer()
             
             VStack(spacing: 28) {
@@ -51,7 +60,6 @@ struct AuthView: View {
                 .frame(height: 50)
                 .frame(maxWidth: .infinity)
                 .clipShape(Capsule())
-                .padding(.horizontal, 20)
                 .disabled(viewModel.isLoading)
                 if viewModel.isLoading {
                     ProgressView()
@@ -64,7 +72,7 @@ struct AuthView: View {
                                  foregroundColor: .white)
                     Text("•")
                         .foregroundStyle(.white)
-                        .font(.caption)
+                        .font(.footnote)
                     TappableText("Privacy",
                                  url: AppConstants.Links.privacyPolicyURL,
                                  foregroundColor: .white)

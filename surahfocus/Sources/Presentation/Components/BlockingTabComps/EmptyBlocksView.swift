@@ -36,12 +36,12 @@ struct EmptyBlocksView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(Color.white)
                 .padding(.top, 32)
-            Text("Tap plus (+) to add blocking app and manage your focus session")
+            Text("Tap (+) to create a block.\nChoose to block entire categories or specific apps.\n\nWhen your time limit is reached and you get notified, return here to request more time. Recite an Ayah to unlock your phone for an additional 5 or 15 minutes.")
                 .font(.system(.caption, design: .serif))
                 .foregroundColor(Color.secondary400)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 110)
+                .padding(.horizontal, 40)
                 .padding(.top, 10)
         }
         

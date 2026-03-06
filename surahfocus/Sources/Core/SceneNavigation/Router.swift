@@ -31,6 +31,7 @@ final class Router: ObservableObject {
         case preferences
         case support
         case reciteToUnlock
+        case emergencyUnblock
     }
 
     func navigate(to route: Route) {
