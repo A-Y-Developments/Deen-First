@@ -45,4 +45,14 @@ enum AppGroupConstants {
     static func reblockNotificationId(for ruleId: UUID) -> String {
         "reblock_\(ruleId.uuidString)"
     }
+
+    static func timeLimitWarningNotificationId(for ruleId: UUID) -> String {
+        "timeLimitWarning_\(ruleId.uuidString)"
+    }
+
+    static func timeLimitWarningNotificationId(for ruleId: UUID, weekday: Int) -> String {
+        "timeLimitWarning_\(ruleId.uuidString)_\(weekday)"
+    }
+
+    static let motivationalNotificationPrefix = "motivational_"
 }

@@ -75,6 +75,7 @@ struct RootView: View {
         .task {
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
+            await DIContainer.shared.notificationSchedulingService.scheduleMotivationalNotifications()
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
@@ -107,6 +108,7 @@ struct RootView: View {
                 try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
                 await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
                 await DIContainer.shared.screenTimeRulesService.reblockEmergencyIfExpired()
+                await DIContainer.shared.notificationSchedulingService.scheduleMotivationalNotifications()
             }
         }
     }
