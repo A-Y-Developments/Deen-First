@@ -265,25 +265,6 @@ struct ReciteToUnblockView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 28)
 
-            if !viewModel.transcript.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("What was heard")
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.35))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(viewModel.transcript)
-                        .font(.system(size: 18))
-                        .foregroundColor(.white.opacity(0.75))
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(.white.opacity(0.06))
-                )
-                .padding(.horizontal, 24)
-            }
         }
     }
 
