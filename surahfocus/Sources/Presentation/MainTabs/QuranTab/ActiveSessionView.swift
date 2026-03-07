@@ -112,6 +112,16 @@ struct ActiveSessionView: View {
         } message: {
             Text("If you end this session, you need to restart again, focus for a little longer!")
         }
+        .onChange(of: viewModel.sessionDidEnd) { _, newValue in
+            if newValue {
+                router.navigate(
+                    to: .sessionFinish(
+                        duration: viewModel.sessionDuration,
+                        surahCount: viewModel.surahs.count
+                    )
+                )
+            }
+        }
         .alert(
             viewModel.errorMessage ?? "Error",
             isPresented: Binding(
@@ -120,9 +130,6 @@ struct ActiveSessionView: View {
             )
         ) {
             Button("OK") { viewModel.errorMessage = nil }
-        }
-        .onAppear {
-            viewModel.router = router
         }
         .task {
             viewModel.configure(surahs: surahs, ayahs: ayahs)
