@@ -9,14 +9,13 @@ final class ActiveSessionViewModel: ObservableObject {
     @Published var currentAyah: Ayah?
     @Published var sessionDuration: TimeInterval = 0
     @Published var showEndConfirmation = false
+    @Published var sessionDidEnd = false
     @Published var errorMessage: String?
 
     private let ayahAudioPlayer: AyahAudioPlayerServiceImpl
     private let sessionService: SessionService
     private let subscriptionService: SubscriptionService
     private let quranPreferences: QuranPreferencesService
-    weak var router: Router?
-
     private var session: Session?
     private var cancellables = Set<AnyCancellable>()
 
@@ -68,11 +67,13 @@ final class ActiveSessionViewModel: ObservableObject {
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
         }
         // Shields are automatically removed by SessionService
-        router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))
+        sessionDidEnd = true
     }
 
     func startSession() async {
         do {
+            sessionDidEnd = false
+
             guard !ayahs.isEmpty else {
                 errorMessage = "No ayahs to play"
                 return
@@ -116,7 +117,7 @@ final class ActiveSessionViewModel: ObservableObject {
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
         }
 
-        router?.navigate(to: .sessionFinish(duration: sessionDuration, surahCount: surahs.count))
+        sessionDidEnd = true
     }
 
     func getTranslation(for ayah: Ayah) -> String {
