@@ -82,7 +82,7 @@ struct BlockingTabView: View {
             UnblockDurationSheet(ruleId: pendingUnblockRuleId)
                 .environmentObject(reciteToUnblockViewModel)
                 .environmentObject(router)
-                .presentationDetents([.fraction(0.45)])
+                .presentationDetents([.fraction(0.55)])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.primary900)
         }
