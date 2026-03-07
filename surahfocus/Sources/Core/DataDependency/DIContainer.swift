@@ -36,11 +36,13 @@ final class DIContainer {
     lazy var quranService: QuranService = QuranServiceImpl(repository: quranRepository)
 
     lazy var quranPreferencesService: QuranPreferencesServiceImpl = QuranPreferencesServiceImpl()
+    lazy var notificationSchedulingService: NotificationSchedulingService = NotificationSchedulingServiceImpl()
 
     @MainActor
     lazy var screenTimeRulesService: ScreenTimeRulesService = ScreenTimeRulesServiceImpl(
         repository: screenTimeRulesRepository,
-        deviceActivityManager: deviceActivityManager
+        deviceActivityManager: deviceActivityManager,
+        notificationSchedulingService: notificationSchedulingService
     )
 
     lazy var sessionService: SessionService = SessionServiceImpl(

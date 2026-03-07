@@ -54,11 +54,17 @@ protocol ScreenTimeRulesService {
 final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
     let repository: ScreenTimeRulesRepository
     let deviceActivityManager: DeviceActivityManager
+    let notificationSchedulingService: NotificationSchedulingService
     private let authCenter = AuthorizationCenter.shared
 
-    init(repository: ScreenTimeRulesRepository, deviceActivityManager: DeviceActivityManager) {
+    init(
+        repository: ScreenTimeRulesRepository,
+        deviceActivityManager: DeviceActivityManager,
+        notificationSchedulingService: NotificationSchedulingService
+    ) {
         self.repository = repository
         self.deviceActivityManager = deviceActivityManager
+        self.notificationSchedulingService = notificationSchedulingService
     }
 
     // MARK: - Authorization
@@ -153,6 +159,7 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         let name = DeviceActivityName("timeLimit_\(ruleId.uuidString)")
         try await deviceActivityManager.startMonitoring(name: name, schedule: schedule, events: events)
         repository.setTimeLimitRule(rule)
+        notificationSchedulingService.scheduleTimeLimitWarning(for: rule)
 
         if config.isCurrentlyInBlockingPeriod {
             await deviceActivityManager.applyShield(for: selection)
@@ -165,6 +172,7 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         ScreenTimeEvents.removeRuleTokens(ruleId: id)
         ScreenTimeEvents.removeTriggeredRuleId(ruleId: id)
         repository.deleteTimeLimitRule(id: id)
+        notificationSchedulingService.cancelTimeLimitWarning(for: id)
         await reapplyActiveShields()
     }
 
@@ -195,6 +203,9 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
 
     func pauseAllRules() async {
         let allRules = getAllRules()
+        let timeLimitRuleIds = allRules
+            .filter { $0.type == .timeLimit }
+            .map(\.id)
 
         let allNames: [DeviceActivityName] = allRules.map { rule in
             switch rule.type {
@@ -212,6 +223,12 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         }
 
         await deviceActivityManager.removeShield()
+
+        for ruleId in timeLimitRuleIds {
+            notificationSchedulingService.cancelTimeLimitWarning(for: ruleId)
+        }
+        await notificationSchedulingService.cancelMotivationalNotifications()
+
         print("[ScreenTime] All rules paused due to subscription expiry")
     }
 
