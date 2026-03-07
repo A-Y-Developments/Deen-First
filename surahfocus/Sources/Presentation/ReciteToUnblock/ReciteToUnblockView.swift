@@ -48,6 +48,9 @@ struct ReciteToUnblockView: View {
             }
         }
         .navigationBarHidden(true)
+        .onDisappear {
+            viewModel.stopAudio()
+        }
         .task {
             await viewModel.loadRandomAyah()
         }

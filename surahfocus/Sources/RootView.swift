@@ -43,6 +43,8 @@ struct RootView: View {
                     PaywallView()
                 } else if !isScreenTimeAuthorized {
                     PermissionView()
+                } else if !hasCompletedSetup {
+                    AppToBlock()
                 } else {
                     MainTabView()
                 }

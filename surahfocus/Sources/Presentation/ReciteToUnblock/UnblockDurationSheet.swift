@@ -6,9 +6,10 @@ struct UnblockDurationSheet: View {
     @EnvironmentObject var router: Router
 
     let ruleId: UUID?
+    @State private var selectedMinutes: Int = 5
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
+        VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Unblock for how long?")
                     .font(.system(.title2))
@@ -25,16 +26,36 @@ struct UnblockDurationSheet: View {
                     .multilineTextAlignment(.center)
             }
 
-            BlockRow(title: "5 Minutes", description: "Short break to check something") {
-                reciteToUnblockViewModel.targetRuleId = ruleId
-                reciteToUnblockViewModel.unblockDurationMinutes = 5
-                dismiss()
-                router.navigate(to: .reciteToUnlock)
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Duration")
+                    .foregroundColor(Color.secondary400)
+                    .fontWeight(.semibold)
+
+                HStack {
+                    Spacer()
+
+                    Picker("Minutes", selection: $selectedMinutes) {
+                        ForEach(1...15, id: \.self) { minute in
+                            Text("\(minute) min")
+                                .foregroundColor(.white)
+                                .tag(minute)
+                        }
+                    }
+                    .pickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(width: 140, height: 150)
+                    .clipped()
+                    .colorScheme(.dark)
+
+                    Spacer()
+                }
+                .background(Color.primary500.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
 
-            BlockRow(title: "15 Minutes", description: "A bit more time to get something done") {
+            PrimaryButton(title: "Continue") {
                 reciteToUnblockViewModel.targetRuleId = ruleId
-                reciteToUnblockViewModel.unblockDurationMinutes = 15
+                reciteToUnblockViewModel.unblockDurationMinutes = selectedMinutes
                 dismiss()
                 router.navigate(to: .reciteToUnlock)
             }
@@ -43,5 +64,8 @@ struct UnblockDurationSheet: View {
         }
         .padding(24)
         .background(Color.primary900)
+        .onAppear {
+            selectedMinutes = min(max(reciteToUnblockViewModel.unblockDurationMinutes, 1), 15)
+        }
     }
 }

@@ -103,8 +103,8 @@ class ShieldConfigurationExtension: ShieldConfigurationDataSource {
     /// The shield extension is re-invoked on every block, so this always picks fresh.
     private func currentSubtitle() -> String {
         let ayah = subtitles[Int.random(in: 0..<subtitles.count)]
-        let hint = "\n\nNeed a break? Open Deen First → Blocks tab\nand tap Unblock on the rule to get 5 or 15 min."
-        return ayah + hint
+        let hint = "\n\nNeed a break? Open Deen First → Blocks tab\nand tap Unblock on the rule to choose 1-15 min."
+        return hint + "\n\n" + ayah
     }
 }
 
