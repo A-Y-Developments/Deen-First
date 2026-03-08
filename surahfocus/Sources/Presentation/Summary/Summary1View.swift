@@ -73,7 +73,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text(viewModel.pagesDescription)
-                                .font(.caption2)
+                                .font(.callout)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
@@ -96,7 +96,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text("Learned surah Mulk completely")
-                                .font(.caption2)
+                                .font(.callout)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
@@ -119,7 +119,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text("Spend time with your Creator")
-                                .font(.caption2)
+                                .font(.callout)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 

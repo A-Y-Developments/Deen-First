@@ -38,7 +38,7 @@ struct QuranTabView: View {
                             .foregroundColor(.white)
 
                         Text("Check the spelling or try a new search.")
-                            .font(.footnote)
+                            .font(.callout)
                             .foregroundColor(Color.gray4)
                     }
                     .frame(maxWidth: .infinity)

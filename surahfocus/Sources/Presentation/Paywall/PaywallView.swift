@@ -175,7 +175,7 @@ struct PaywallView: View {
                 }
             } label: {
                 Text("Restore purchase")
-                    .font(.footnote)
+                    .font(.callout)
                     .foregroundColor(Color(hex: "8E8E93"))
             }
             .padding(.top, 16)
