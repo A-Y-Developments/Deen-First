@@ -123,6 +123,16 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     // MARK: - Audio Playback
 
+    func toggleAudio() async {
+        if isPlayingAudio {
+            audioPlayer.pause()
+            isPlayingAudio = false
+            return
+        }
+
+        await playAyahAudio()
+    }
+
     func playAyahAudio() async {
         guard let ayah else { return }
         do {
