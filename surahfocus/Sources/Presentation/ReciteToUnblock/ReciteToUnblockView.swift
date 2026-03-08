@@ -160,11 +160,15 @@ struct ReciteToUnblockView: View {
 
                 if case .ready = viewModel.state {
                     Button {
-                        Task { await viewModel.playAyahAudio() }
+                        Task { await viewModel.toggleAudio() }
                     } label: {
-                        Image(systemName: viewModel.isPlayingAudio ? "speaker.wave.2.fill" : "speaker.fill")
+                        Image(systemName: viewModel.isPlayingAudio ? "speaker.wave.3.fill" : "speaker.fill")
                             .font(.system(size: 13))
                             .foregroundColor(.white.opacity(0.4))
+                            .symbolEffect(
+                                .variableColor.iterative.reversing,
+                                isActive: viewModel.isPlayingAudio
+                            )
                     }
 
                     Button {
