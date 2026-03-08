@@ -165,7 +165,7 @@ struct QuranReadingView: View {
                     Image(systemName: viewModel.playingAyahId == ayah.uniqueScrollID && viewModel.isPlayingAudio
                         ? "speaker.wave.2.fill"
                         : "speaker.fill")
-                        .font(.caption2)
+                        .font(.callout)
                         .foregroundColor(.secondary400)
                 }
                 .buttonStyle(.plain)
@@ -179,17 +179,19 @@ struct QuranReadingView: View {
 
             if !ayah.transliteration.isEmpty {
                 Text(ayah.transliteration)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .font(.callout)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             let translationText = viewModel.getTranslation(for: ayah)
             if !translationText.isEmpty {
                 Text(translationText)
-                    .font(.callout)
-                    .foregroundColor(.white)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding()

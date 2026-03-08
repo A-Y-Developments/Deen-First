@@ -37,7 +37,7 @@ struct EmptyBlocksView: View {
                 .foregroundStyle(Color.white)
                 .padding(.top, 32)
             Text("Tap (+) to create a block.\nChoose to block entire categories or specific apps.\n\nWhen your time limit is reached and you get notified, return here to request more time. Recite an Ayah to unlock your phone for an additional 5 or 15 minutes.")
-                .font(.system(.caption, design: .serif))
+                .font(.system(.callout, design: .serif))
                 .foregroundColor(Color.secondary400)
                 .frame(maxWidth: .infinity)
                 .multilineTextAlignment(.center)
@@ -47,4 +47,3 @@ struct EmptyBlocksView: View {
         
     }
 }
-

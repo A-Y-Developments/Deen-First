@@ -179,15 +179,18 @@ struct ActiveAyahCard: View {
 
             if !ayah.transliteration.isEmpty {
                 Text(ayah.transliteration)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .font(.callout)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             // Translation
             Text(translation)
-                .foregroundColor(.white)
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
         .frame(maxWidth: .infinity)

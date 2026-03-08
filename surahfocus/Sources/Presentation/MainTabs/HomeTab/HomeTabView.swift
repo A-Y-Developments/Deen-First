@@ -91,7 +91,7 @@ struct HomeTabView: View {
                 .padding(.trailing, 16)
 
                 Text(viewModel.currentStreak == 0 ? "Start a new streak" : "Keep your streak going!")
-                    .font(.system(.footnote))
+                    .font(.callout)
                     .foregroundStyle(Color(hex: "DBDABD"))
             }
 
@@ -110,7 +110,7 @@ struct HomeTabView: View {
             .padding(.top, 8)
 
             Text("Listen to Quran, reconnect with your Creator,\nand remove all distractions.")
-                .font(.system(.footnote))
+                .font(.callout)
                 .foregroundStyle(Color(hex: "DBDABD").opacity(0.8))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)

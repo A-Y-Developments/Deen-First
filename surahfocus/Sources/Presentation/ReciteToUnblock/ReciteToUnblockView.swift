@@ -188,22 +188,12 @@ struct ReciteToUnblockView: View {
 
             if !ayah.transliteration.isEmpty {
                 Text(ayah.transliteration)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
+                    .font(.callout)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.leading)
                     .environment(\.layoutDirection, .leftToRight)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-
-            Divider()
-                .background(.white.opacity(0.1))
-
-            Text(viewModel.getTranslation(for: ayah))
-                .font(.system(size: 13))
-                .foregroundColor(.white.opacity(0.45))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .lineSpacing(3)
         }
         .padding(20)
         .background(
