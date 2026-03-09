@@ -170,6 +170,13 @@ struct TimeLimitView: View {
             timePickerRow(
                 label: "End", timeText: viewModel.endTimeText, pickerType: .end,
                 binding: $viewModel.endTime)
+
+            if viewModel.durationTooShort {
+                Text("Minimum duration is 15 minutes")
+                    .font(.caption)
+                    .foregroundColor(.red.opacity(0.8))
+                    .padding(.horizontal, 4)
+            }
         }
     }
 

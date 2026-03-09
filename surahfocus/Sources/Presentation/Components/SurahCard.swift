@@ -28,7 +28,7 @@ struct SurahCard: View {
                 Spacer()
             }
             .padding(16)
-            .background(Color.white.opacity(0.05))
+            .background(Color.primary900)
             .cornerRadius(12)
             .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         }

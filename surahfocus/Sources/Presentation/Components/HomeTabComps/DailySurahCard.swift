@@ -53,7 +53,7 @@ struct DailySurahCard: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .background(Color.white.opacity(0.05))
+            .background(Color.primary900)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)

@@ -148,7 +148,15 @@ final class HomeTabViewModel: ObservableObject {
         return String(format: "%d:%02d", m, s)
     }
 
+    var visibleAppLimits: [ScreenTimeRule] {
+        appLimits.filter { isRuleCurrentlyBlocking($0) || countdownDisplay(for: $0.id) != nil }
+    }
+
+    var visibleTimeLimits: [ScreenTimeRule] {
+        timeLimits.filter { isRuleCurrentlyBlocking($0) || countdownDisplay(for: $0.id) != nil }
+    }
+
     var hasBlocks: Bool {
-        !appLimits.isEmpty || !timeLimits.isEmpty
+        !visibleAppLimits.isEmpty || !visibleTimeLimits.isEmpty
     }
 }

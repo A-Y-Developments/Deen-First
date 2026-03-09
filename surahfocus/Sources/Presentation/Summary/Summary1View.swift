@@ -55,7 +55,7 @@ struct Summary1View: View {
                     .font(.subheadline)
                     .fontWeight(.regular)
                     .foregroundColor(Color.gray4)
-                    .padding(.top, 48)
+                    .padding(.top, 24)
 
                 // MARK: - Container
                 VStack(spacing: 16) {
@@ -73,7 +73,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text(viewModel.pagesDescription)
-                                .font(.callout)
+                                .font(.footnote)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
@@ -96,7 +96,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text("Learned surah Mulk completely")
-                                .font(.callout)
+                                .font(.footnote)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
@@ -119,7 +119,7 @@ struct Summary1View: View {
                                 .foregroundColor(Color.gray4)
 
                             Text("Spend time with your Creator")
-                                .font(.callout)
+                                .font(.footnote)
                                 .foregroundColor(Color(hex: "#AEAEB2"))
                         }
 
@@ -138,6 +138,8 @@ struct Summary1View: View {
                     }
                 )
                 .padding(.top)
+            
+                Spacer()
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Humans average about 46 hours/week on screens.")
@@ -153,7 +155,6 @@ struct Summary1View: View {
                         .lineLimit(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(.top, 14)
 
                 Spacer()
 

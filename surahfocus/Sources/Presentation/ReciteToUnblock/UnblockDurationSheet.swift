@@ -52,12 +52,20 @@ struct UnblockDurationSheet: View {
                 .background(Color.primary500.opacity(0.3))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-
-            PrimaryButton(title: "Continue") {
-                reciteToUnblockViewModel.targetRuleId = ruleId
-                reciteToUnblockViewModel.unblockDurationMinutes = selectedMinutes
-                dismiss()
-                router.navigate(to: .reciteToUnlock)
+            
+            Button {
+                    reciteToUnblockViewModel.targetRuleId = ruleId
+                    reciteToUnblockViewModel.unblockDurationMinutes = selectedMinutes
+                    dismiss()
+                    router.navigate(to: .reciteToUnlock)
+            } label: {
+                Text("Continue")
+                    .font(.headline)
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.white)
+                    .clipShape(Capsule())
             }
 
             Spacer()

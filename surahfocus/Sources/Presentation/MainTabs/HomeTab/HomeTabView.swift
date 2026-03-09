@@ -11,9 +11,11 @@ struct HomeTabView: View {
     @State private var pendingUnblockRuleId: UUID?
 
     let onViewAllSurahs: (() -> Void)?
+    let onViewAllBlocks: (() -> Void)?
 
-    init(onViewAllSurahs: (() -> Void)? = nil) {
+    init(onViewAllSurahs: (() -> Void)? = nil, onViewAllBlocks: (() -> Void)? = nil) {
         self.onViewAllSurahs = onViewAllSurahs
+        self.onViewAllBlocks = onViewAllBlocks
     }
 
     var body: some View {
@@ -33,7 +35,7 @@ struct HomeTabView: View {
             UnblockDurationSheet(ruleId: pendingUnblockRuleId)
                 .environmentObject(reciteToUnblockViewModel)
                 .environmentObject(router)
-                .presentationDetents([.fraction(0.45)])
+                .presentationDetents([.fraction(0.55)])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.primary900)
         }
@@ -113,7 +115,7 @@ struct HomeTabView: View {
                 .font(.callout)
                 .foregroundStyle(Color(hex: "DBDABD").opacity(0.8))
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity)
     }
@@ -157,12 +159,25 @@ struct HomeTabView: View {
 
     private var activeBlocksSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Active Blocks")
-                .font(.system(.title3, weight: .semibold))
-                .foregroundColor(.white)
+            HStack {
+                Text("Active Blocks")
+                    .font(.system(.title3, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Spacer()
+
+                Button {
+                    onViewAllBlocks?()
+                } label: {
+                    Text("View All Blocks")
+                        .font(.system(.footnote, weight: .semibold))
+                        .foregroundColor(Color(hex: "AEF29B"))
+                }
+                .buttonStyle(.plain)
+            }
 
             if viewModel.hasBlocks {
-                ForEach(viewModel.appLimits) { limit in
+                ForEach(viewModel.visibleAppLimits) { limit in
                     BlockRuleCard(
                         settingsName: limit.name,
                         appsCount: limit.applicationTokenData.count,
@@ -181,7 +196,7 @@ struct HomeTabView: View {
                     }
                 }
 
-                ForEach(viewModel.timeLimits) { limit in
+                ForEach(viewModel.visibleTimeLimits) { limit in
                     BlockRuleCard(
                         settingsName: limit.name,
                         appsCount: limit.applicationTokenData.count,

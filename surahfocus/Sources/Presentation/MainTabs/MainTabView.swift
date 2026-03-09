@@ -5,9 +5,14 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeTabView(onViewAllSurahs: {
-                selectedTab = 1
-            })
+            HomeTabView(
+                onViewAllSurahs: {
+                    selectedTab = 1
+                },
+                onViewAllBlocks: {
+                    selectedTab = 2
+                }
+            )
                 .tabItem { Label("Home", systemImage: "house.fill") }
                 .tag(0)
 

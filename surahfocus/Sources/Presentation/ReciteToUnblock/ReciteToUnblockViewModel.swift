@@ -322,11 +322,26 @@ final class ReciteToUnblockViewModel: ObservableObject {
         sharedDefaults?.synchronize()
 
         if let ruleId = targetRuleId {
-            // BlockingTabView path — unblock only the tapped rule
+            // Validate rule is still blocking — user may have finished reciting after the block window ended
+            guard let rule = screenTimeService.getRule(id: ruleId),
+                  isRuleStillBlocking(rule) else {
+                print("⏭️ [Recite] Rule \(ruleId) no longer blocking at recitation completion — skipping unblock")
+                return
+            }
             await screenTimeService.temporaryUnblock(minutes: unblockDurationMinutes, ruleId: ruleId)
         } else {
-            // Shield path — no specific rule, unblock all currently blocking rules
+            // Shield path — temporaryUnblockAll already filters by currently blocking
             await screenTimeService.temporaryUnblockAll(minutes: unblockDurationMinutes)
+        }
+    }
+
+    private func isRuleStillBlocking(_ rule: ScreenTimeRule) -> Bool {
+        guard DayHelper.isActiveToday(daysActive: rule.daysActive) else { return false }
+        switch rule.type {
+        case .appLimit:
+            return ScreenTimeEvents.getTriggeredRuleIds().contains(rule.id.uuidString)
+        case .timeLimit:
+            return rule.isCurrentlyInBlockingPeriod
         }
     }
 

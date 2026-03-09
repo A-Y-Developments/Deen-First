@@ -87,10 +87,20 @@ final class TimeLimitViewModel: ObservableObject {
         }
     }
 
+    private static let minimumDurationMinutes = 15
+
+    var durationMinutes: Int {
+        max(Calendar.current.dateComponents([.minute], from: startTime, to: endTime).minute ?? 0, 0)
+    }
+
+    var durationTooShort: Bool {
+        endTime > startTime && durationMinutes < Self.minimumDurationMinutes
+    }
+
     var isFormValid: Bool {
         !settingsName.trimmingCharacters(in: .whitespaces).isEmpty
             && appsCount > 0
-            && endTime > startTime
+            && durationMinutes >= Self.minimumDurationMinutes
             && !activeDays.isEmpty
     }
 
@@ -248,7 +258,7 @@ final class TimeLimitViewModel: ObservableObject {
             )
 
             if let id = editingRuleId {
-                try? await screenTimeRulesService.deleteTimeLimit(id: id)
+                try await screenTimeRulesService.deleteTimeLimit(id: id)
             }
 
             try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
