@@ -334,7 +334,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     func retry() {
         transcript = ""
-        Task { await loadRandomAyah() }
+        state = .ready
     }
 
     // MARK: - API Key
