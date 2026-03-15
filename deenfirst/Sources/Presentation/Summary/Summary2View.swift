@@ -9,34 +9,49 @@ import SwiftUI
 
 struct Summary2View: View {
 
-    @State private var fillProgress: CGFloat = 0
     @EnvironmentObject var router: Router
 
+    let answers: SurveyAnswers
+
+    init(answers: SurveyAnswers = SurveyAnswers()) {
+        self.answers = answers
+    }
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Spacer()
 
-            Text("We are with you!")
-                .font(.title)
-                .bold()
-                .foregroundColor(Color.secondary200)
-                .multilineTextAlignment(.center)
+            VStack(spacing: 16) {
+                Text("We spend on average")
+                    .font(.title2)
+                    .foregroundColor(Color.secondary300)
+                    .multilineTextAlignment(.center)
 
-            Image("dua-hands")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 120)
+                Text("46 hours")
+                    .font(.system(size: 64, weight: .bold))
+                    .foregroundColor(Color.secondary200)
+                    .multilineTextAlignment(.center)
 
-            Text("You are a few steps away from a distraction-free relationship with the Quran.")
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 24)
+                Text("every week on screens.")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+
+            Text(
+                "We help you take some of that time back and turn it into Qur'an time, dhikr, and closeness to Allah."
+            )
+            .font(.subheadline)
+            .foregroundColor(Color.secondary300)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 8)
 
             Spacer()
 
             Button(action: {
-                router.navigate(to: .howAppWork(step: 1))
+                router.navigate(to: .summary(step: 3, answers: answers))
             }) {
                 HStack(spacing: 8) {
                     Text("Next")
@@ -50,14 +65,11 @@ struct Summary2View: View {
                 .clipShape(Capsule())
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.bottom, 16)
         }
         .padding(.horizontal, 20)
+        .padding(.vertical)
         .mainBackground()
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .onAppear {
-            fillProgress = 1
-        }
+        .navigationBarBackButtonHidden(true)
     }
 }
 

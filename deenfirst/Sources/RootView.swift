@@ -199,7 +199,8 @@ struct RootView: View {
                 case .summary(let step, let answers):
                     switch step {
                     case 1: Summary1View(answers: answers)
-                    case 2: Summary2View()
+                    case 2: Summary2View(answers: answers)
+                    case 3: Summary3View()
                     default: EmptyView()
                     }
                 case .howAppWork(let step):
