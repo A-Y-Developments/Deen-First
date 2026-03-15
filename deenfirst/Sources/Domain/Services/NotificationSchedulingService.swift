@@ -58,7 +58,7 @@ final class NotificationSchedulingServiceImpl: NotificationSchedulingService {
 
         let content = UNMutableNotificationContent()
         content.title = "Deen First"
-        content.body = "your \"\(rule.name)\" apps will be blocked in 10 minutes"
+        content.body = "\"\(rule.name)\" will be blocked in 10 minutes"
         content.sound = .default
 
         for weekday in weekdays {

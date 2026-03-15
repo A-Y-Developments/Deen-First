@@ -39,7 +39,7 @@ final class SubscriptionServiceImpl: SubscriptionService {
             return isPremiumActive(customerInfo: result.customerInfo)
         } catch {
             let nsError = error as NSError
-            if nsError.domain == PurchasesErrorDomain,
+            if nsError.domain == ErrorCode.errorDomain,
                nsError.code == ErrorCode.purchaseCancelledError.rawValue {
                 throw SubscriptionError.purchaseCancelled
             }
