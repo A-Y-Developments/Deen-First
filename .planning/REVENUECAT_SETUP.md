@@ -1,7 +1,7 @@
-# RevenueCat Integration Guide - Surah Focus
+# RevenueCat Integration Guide - Deen First
 
 ## Overview
-This guide walks through the complete RevenueCat integration for Surah Focus app.
+This guide walks through the complete RevenueCat integration for Deen First app.
 
 ---
 
@@ -14,7 +14,7 @@ RevenueCat is already installed via Tuist in `Tuist/Package.swift`:
 ```
 
 ### 2. Configuration
-RevenueCat is configured in `Sources/SurahFocusApp.swift`:
+RevenueCat is configured in `Sources/DeenFirstApp.swift`:
 - API Key: `test_GigTjmiydMdJecOcMpeoxAtxtyi` (test mode)
 - Customer info streaming enabled via `customerInfoStream`
 - Delegate pattern for real-time subscription updates
@@ -38,14 +38,14 @@ RevenueCat is configured in `Sources/SurahFocusApp.swift`:
 #### Create Products
 
 **Monthly Product:**
-- Product ID: `com.aydev.surahfocus.monthly`
-- Display Name: `Surah Focus Monthly`
+- Product ID: `com.aydev.deenfirst.monthly`
+- Display Name: `Deen First Monthly`
 - Price: `$4.99/month`
 - Trial: 3 days
 
 **Yearly Product:**
-- Product ID: `com.aydev.surahfocus.yearly`
-- Display Name: `Surah Focus Yearly`
+- Product ID: `com.aydev.deenfirst.yearly`
+- Display Name: `Deen First Yearly`
 - Price: `$29.99/year`
 - Trial: 7 days
 
@@ -54,8 +54,8 @@ RevenueCat is configured in `Sources/SurahFocusApp.swift`:
 1. Navigate to **Offerings** in RevenueCat dashboard
 2. Create a new offering called **"default"**
 3. Add both products:
-   - Monthly package → `com.aydev.surahfocus.monthly`
-   - Annual package → `com.aydev.surahfocus.yearly`
+   - Monthly package → `com.aydev.deenfirst.monthly`
+   - Annual package → `com.aydev.deenfirst.yearly`
 
 ### Step 3: Create Entitlement
 
@@ -66,11 +66,11 @@ RevenueCat is configured in `Sources/SurahFocusApp.swift`:
 ### Step 4: Configure App Store Connect
 
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. Navigate to **My Apps** > **Surah Focus**
-3. **Subscriptions** > **Create Subscription Group** ("Surah Focus Premium")
+2. Navigate to **My Apps** > **Deen First**
+3. **Subscriptions** > **Create Subscription Group** ("Deen First Premium")
 
 #### Add Subscription - Monthly:
-- Product ID: `com.aydev.surahfocus.monthly`
+- Product ID: `com.aydev.deenfirst.monthly`
 - Name: "Monthly Premium"
 - Price: $4.99
 - Duration: 1 Month
@@ -80,7 +80,7 @@ RevenueCat is configured in `Sources/SurahFocusApp.swift`:
   - Duration: 3 days
 
 #### Add Subscription - Yearly:
-- Product ID: `com.aydev.surahfocus.yearly`
+- Product ID: `com.aydev.deenfirst.yearly`
 - Name: "Yearly Premium"
 - Price: $29.99
 - Duration: 1 Year
@@ -196,7 +196,7 @@ do {
 The app already syncs subscription status with local User entity via `SubscriptionService`.
 
 ### 3. Monitor Subscription Changes
-The `SubscriptionMonitor` in `SurahFocusApp.swift` already listens to `customerInfoStream` for real-time updates.
+The `SubscriptionMonitor` in `DeenFirstApp.swift` already listens to `customerInfoStream` for real-time updates.
 
 ### 4. Test in Production
 For production, update the API key:

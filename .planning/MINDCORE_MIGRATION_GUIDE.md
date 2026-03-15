@@ -1,10 +1,10 @@
-# MINDCORE TO SURAH FOCUS MIGRATION GUIDE
+# MINDCORE TO DEEN FIRST MIGRATION GUIDE
 # Exact Changes When Copying Screen Time Code
 
 **Source:** `/Users/adithyafp_/Projects/mindcore`  
-**Target:** Your SurahFocus project  
-**Bundle ID Change:** `com.alexis.*` → `com.aydev.surahfocus`  
-**App Group Change:** `group.com.alexis.screentime` → `group.com.aydev.surahfocus`
+**Target:** Your DeenFirst project  
+**Bundle ID Change:** `com.alexis.*` → `com.aydev.deenfirst`  
+**App Group Change:** `group.com.alexis.screentime` → `group.com.aydev.deenfirst`
 
 ---
 
@@ -14,16 +14,16 @@
 
 **Copy these folders AS-IS first:**
 ```bash
-# From mindcore to your SurahFocus project root
-cp -r /Users/adithyafp_/Projects/mindcore/ScreenTimeMonitor /path/to/SurahFocus/
-cp -r /Users/adithyafp_/Projects/mindcore/Shield /path/to/SurahFocus/
+# From mindcore to your DeenFirst project root
+cp -r /Users/adithyafp_/Projects/mindcore/ScreenTimeMonitor /path/to/DeenFirst/
+cp -r /Users/adithyafp_/Projects/mindcore/Shield /path/to/DeenFirst/
 ```
 
 ---
 
 ### Step 2: Update ScreenTimeMonitor Entitlements
 
-**File:** `SurahFocus/ScreenTimeMonitor/ScreenTimeMonitor.entitlements`
+**File:** `DeenFirst/ScreenTimeMonitor/ScreenTimeMonitor.entitlements`
 
 **FIND:**
 ```xml
@@ -32,7 +32,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield /path/to/SurahFocus/
 
 **REPLACE WITH:**
 ```xml
-<string>group.com.aydev.surahfocus</string>
+<string>group.com.aydev.deenfirst</string>
 ```
 
 **Complete file should look like:**
@@ -43,7 +43,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield /path/to/SurahFocus/
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.aydev.surahfocus</string>
+		<string>group.com.aydev.deenfirst</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>
@@ -55,7 +55,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield /path/to/SurahFocus/
 
 ### Step 3: Update Shield Entitlements
 
-**File:** `SurahFocus/Shield/Shield.entitlements`
+**File:** `DeenFirst/Shield/Shield.entitlements`
 
 Currently mindcore has:
 ```xml
@@ -74,7 +74,7 @@ Currently mindcore has:
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.aydev.surahfocus</string>
+		<string>group.com.aydev.deenfirst</string>
 	</array>
 </dict>
 </plist>
@@ -93,7 +93,7 @@ UserDefaults(suiteName: "group.com.alexis.screentime")
 
 **REPLACE WITH:**
 ```swift
-UserDefaults(suiteName: "group.com.aydev.surahfocus")
+UserDefaults(suiteName: "group.com.aydev.deenfirst")
 ```
 
 **Files likely to contain this:**
@@ -102,7 +102,7 @@ UserDefaults(suiteName: "group.com.aydev.surahfocus")
 
 **Search command:**
 ```bash
-# From SurahFocus root
+# From DeenFirst root
 grep -r "group.com.alexis.screentime" ScreenTimeMonitor/ Shield/
 ```
 
@@ -112,27 +112,27 @@ grep -r "group.com.alexis.screentime" ScreenTimeMonitor/ Shield/
 
 ### Step 5: Copy Helper Utilities to Utils/ScreenTime/
 
-**From mindcore Helper/ to SurahFocus Utils/ScreenTime/:**
+**From mindcore Helper/ to DeenFirst Utils/ScreenTime/:**
 
 ```bash
 # Create the directory first
-mkdir -p /path/to/SurahFocus/Sources/Utils/ScreenTime
+mkdir -p /path/to/DeenFirst/Sources/Utils/ScreenTime
 
 # Copy and rename
 cp /Users/adithyafp_/Projects/mindcore/Helper/TimeLimit.swift \
-   /path/to/SurahFocus/Sources/Utils/ScreenTime/TimeLimit.swift
+   /path/to/DeenFirst/Sources/Utils/ScreenTime/TimeLimit.swift
 
 cp /Users/adithyafp_/Projects/mindcore/Helper/ScreenTimeEvents.swift \
-   /path/to/SurahFocus/Sources/Utils/ScreenTime/ScreenTimeEvents.swift
+   /path/to/DeenFirst/Sources/Utils/ScreenTime/ScreenTimeEvents.swift
 
 cp /Users/adithyafp_/Projects/mindcore/Helper/TimeLimitHelper.swift \
-   /path/to/SurahFocus/Sources/Utils/ScreenTime/TimeLimitHelper.swift
+   /path/to/DeenFirst/Sources/Utils/ScreenTime/TimeLimitHelper.swift
 ```
 
 **Then check each file for:**
 ```swift
 ❌ UserDefaults(suiteName: "group.com.alexis.screentime")
-✅ UserDefaults(suiteName: "group.com.aydev.surahfocus")
+✅ UserDefaults(suiteName: "group.com.aydev.deenfirst")
 ```
 
 ---
@@ -143,13 +143,13 @@ cp /Users/adithyafp_/Projects/mindcore/Helper/TimeLimitHelper.swift \
 
 **DON'T copy this directly.** Use it as reference to implement your own:
 
-`SurahFocus/Sources/Data/Repositories/ScreenTimeRepository.swift`
+`DeenFirst/Sources/Data/Repositories/ScreenTimeRepository.swift`
 
 **Key changes:**
 1. Update app group string in UserDefaults
-2. Adapt to SurahFocus entity models (User, Session, BlockedApp)
+2. Adapt to DeenFirst entity models (User, Session, BlockedApp)
 3. Remove mindcore-specific logic (reward system, etc.)
-4. Follow SurahFocus PRD requirements (no reward system, streak-based)
+4. Follow DeenFirst PRD requirements (no reward system, streak-based)
 
 ---
 
@@ -159,7 +159,7 @@ After copying and updating all files, run these checks:
 
 ### Check 1: No Old App Group References
 ```bash
-# From SurahFocus root - should return ZERO results
+# From DeenFirst root - should return ZERO results
 grep -r "group.com.alexis.screentime" .
 grep -r "com.alexis" .
 ```
@@ -167,13 +167,13 @@ grep -r "com.alexis" .
 ### Check 2: All Entitlements Correct
 ```bash
 # Check ScreenTimeMonitor entitlements
-cat ScreenTimeMonitor/ScreenTimeMonitor.entitlements | grep "group.com.aydev.surahfocus"
+cat ScreenTimeMonitor/ScreenTimeMonitor.entitlements | grep "group.com.aydev.deenfirst"
 
 # Check Shield entitlements
-cat Shield/Shield.entitlements | grep "group.com.aydev.surahfocus"
+cat Shield/Shield.entitlements | grep "group.com.aydev.deenfirst"
 
 # Check main app entitlements
-cat SurahFocus/SurahFocus.entitlements | grep "group.com.aydev.surahfocus"
+cat DeenFirst/DeenFirst.entitlements | grep "group.com.aydev.deenfirst"
 ```
 
 ### Check 3: Project.swift Has Correct Bundle IDs
@@ -183,9 +183,9 @@ cat Project.swift | grep "bundleId"
 ```
 
 **Should show:**
-- Main: `com.aydev.surahfocus`
-- Monitor: `com.aydev.surahfocus.ScreenTimeMonitor`
-- Shield: `com.aydev.surahfocus.Shield`
+- Main: `com.aydev.deenfirst`
+- Monitor: `com.aydev.deenfirst.ScreenTimeMonitor`
+- Shield: `com.aydev.deenfirst.Shield`
 
 ### Check 4: Tuist Generation Works
 ```bash
@@ -206,8 +206,8 @@ make generate
 ### ❌ Mistake 2: Wrong Bundle ID Pattern
 **Problem:** Extensions don't load  
 **Solution:** Must be:
-- Main: `com.aydev.surahfocus`
-- Extension: `com.aydev.surahfocus.ExtensionName` (NO `.app` in between)
+- Main: `com.aydev.deenfirst`
+- Extension: `com.aydev.deenfirst.ExtensionName` (NO `.app` in between)
 
 ### ❌ Mistake 3: Missing family-controls Entitlement
 **Problem:** Screen Time permission denied  
@@ -246,15 +246,15 @@ Main app sets limit → Extension receives it → Shield applies correctly
 
 ```
 Company ID:           com.aydev
-Base Bundle ID:       com.aydev.surahfocus
-App Group:            group.com.aydev.surahfocus
+Base Bundle ID:       com.aydev.deenfirst
+App Group:            group.com.aydev.deenfirst
 
-Main App:             com.aydev.surahfocus
-ScreenTimeMonitor:    com.aydev.surahfocus.ScreenTimeMonitor
-Shield:               com.aydev.surahfocus.Shield
+Main App:             com.aydev.deenfirst
+ScreenTimeMonitor:    com.aydev.deenfirst.ScreenTimeMonitor
+Shield:               com.aydev.deenfirst.Shield
 
-Monthly Product:      com.aydev.surahfocus.monthly
-Yearly Product:       com.aydev.surahfocus.yearly
+Monthly Product:      com.aydev.deenfirst.monthly
+Yearly Product:       com.aydev.deenfirst.yearly
 Entitlement:          premium
 ```
 

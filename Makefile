@@ -67,14 +67,14 @@ edit:
 .PHONY: build
 build:
 	@echo "$(BLUE)Building the app...$(NC)"
-	@xcodebuild -workspace SurahFocus.xcworkspace -scheme SurahFocus -sdk iphoneos -destination 'id=00008120-001A025C1EC00032' build 2>&1 | grep "error:" | head -10
+	@xcodebuild -workspace DeenFirst.xcworkspace -scheme DeenFirst -sdk iphoneos -destination 'id=00008120-001A025C1EC00032' build 2>&1 | grep "error:" | head -10
 	@echo "$(GREEN)✓ App built successfully$(NC)"
 
 # Run unit tests
 .PHONY: test
 test:
 	@echo "$(BLUE)Running unit tests...$(NC)"
-	@xcodebuild -scheme SurahFocus -destination 'platform=iOS Simulator' test | xcpretty
+	@xcodebuild -scheme DeenFirst -destination 'platform=iOS Simulator' test | xcpretty
 	@echo "$(GREEN)✓ Unit tests completed successfully$(NC)"
 
 # Show help

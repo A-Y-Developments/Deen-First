@@ -206,7 +206,7 @@ extension View {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class OnboardingFlowTests: XCTestCase {
@@ -254,7 +254,7 @@ final class OnboardingFlowTests: XCTestCase {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class ListeningSessionFlowTests: XCTestCase {
@@ -319,7 +319,7 @@ final class ListeningSessionFlowTests: XCTestCase {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class SubscriptionFlowTests: XCTestCase {
@@ -453,7 +453,7 @@ AsyncImage(url: imageURL) { image in
 ## BUILD & VERIFY
 
 ```bash
-cd ~/Projects/SurahFocus
+cd ~/Projects/DeenFirst
 make test
 
 # Expected: 165+ tests passing

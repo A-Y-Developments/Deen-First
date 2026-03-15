@@ -10,7 +10,7 @@ Onboarding saved settings but didn't:
 ## Solution Implemented
 
 ### 1. AppSelectionViewModel ✅
-**File**: `surahfocus/Sources/Presentation/Onboarding/AppSelectionView/AppSelectionViewModel.swift`
+**File**: `deenfirst/Sources/Presentation/Onboarding/AppSelectionView/AppSelectionViewModel.swift`
 
 Changes:
 - Added `AppLimitService`, `ScreenTimeService`, `UserRepository` dependencies
@@ -20,7 +20,7 @@ Changes:
 - Updated `AppSelectionView` to call `saveAndApply()` on completion
 
 ### 2. DowntimeSetupViewModel ✅
-**File**: `surahfocus/Sources/Presentation/Onboarding/DowntimeSetupView/DowntimeSetupViewModel.swift`
+**File**: `deenfirst/Sources/Presentation/Onboarding/DowntimeSetupView/DowntimeSetupViewModel.swift`
 
 Changes:
 - Added `ScreenTimeService` dependency

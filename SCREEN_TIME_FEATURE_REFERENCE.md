@@ -3,7 +3,7 @@
 ## Feature Explanation
 
 ### Overview
-SurahFocus implements app blocking using Apple's DeviceActivity, ManagedSettings, and Shield frameworks. The system allows users to:
+DeenFirst implements app blocking using Apple's DeviceActivity, ManagedSettings, and Shield frameworks. The system allows users to:
 1. Set daily time limits for apps (App Limit)
 2. Block apps during specific time windows (Time Limit / Prayer Times)
 3. Start focus sessions that block selected apps
@@ -101,7 +101,7 @@ Recite to Unblock Flow
 | Service Layer | Business logic in separate service classes (ScreenTimeRulesService, SessionService) |
 | Dependency Injection | DIContainer provides singleton services to all ViewModels |
 | Extension Architecture | Background monitoring in separate processes (ScreenTimeMonitor, Shield, ShieldAction) |
-| App Group Communication | SharedUserDefaults (group.com.aydev.surahfocus) for cross-process data |
+| App Group Communication | SharedUserDefaults (group.com.aydev.deenfirst) for cross-process data |
 | Union-Based Shielding | Multiple sources contribute without overwriting each other |
 | Coordinator | RootView manages navigation, deep links, notification listeners |
 
@@ -124,7 +124,7 @@ The main app and extensions communicate via SharedUserDefaults with these keys:
 ## File Structure
 
 ```
-surahfocus/
+deenfirst/
 │
 ├── ScreenTimeMonitor/                          # Background Extension
 │   ├── DeviceActivityMonitorExtension.swift    # Threshold events, daily reset, temp unblock expiry
@@ -136,9 +136,9 @@ surahfocus/
 ├── ShieldAction/                               # Shield Action Extension
 │   └── ShieldActionExtension.swift            # Handle button taps (close, recite)
 │
-└── surahfocus/Sources/
+└── deenfirst/Sources/
     │
-    ├── SurahFocusApp.swift                     # App entry point
+    ├── DeenFirstApp.swift                     # App entry point
     ├── RootView.swift                          # Coordinator - navigation, notifications, env objects
     │
     ├── Core/DataDependency/
@@ -214,39 +214,39 @@ zip -j ~/Downloads/ScreenTimeFeature.zip \
   ScreenTimeMonitor/ScreenTimeMonitor.entitlements \
   Shield/ShieldConfigurationExtension.swift \
   ShieldAction/ShieldActionExtension.swift \
-  surahfocus/Sources/SurahFocusApp.swift \
-  surahfocus/Sources/RootView.swift \
-  surahfocus/Sources/Core/DataDependency/DIContainer.swift \
-  surahfocus/Sources/Domain/Entities/ScreenTimeRule.swift \
-  surahfocus/Sources/Domain/Entities/TimeLimitConfig.swift \
-  surahfocus/Sources/Domain/Services/ScreenTimeRulesService.swift \
-  surahfocus/Sources/Domain/Services/ScreenTimeRulesService+Unblock.swift \
-  surahfocus/Sources/Domain/Services/DeviceActivityManager.swift \
-  surahfocus/Sources/Domain/Services/ManagedSettingsWrapper.swift \
-  surahfocus/Sources/Domain/Services/SessionService.swift \
-  surahfocus/Sources/Data/Repositories/ScreenTimeRulesRepository.swift \
-  surahfocus/Sources/Data/Repositories/SessionRepository.swift \
-  surahfocus/Sources/Shared/ScreenTimeEvents.swift \
-  surahfocus/Sources/Shared/AppGroupConstants.swift \
-  surahfocus/Sources/Shared/DayHelper.swift \
-  surahfocus/Sources/Utils/DeviceActivityScheduleHelper.swift \
-  surahfocus/Sources/Utils/UserPersistenceHelper.swift \
-  surahfocus/Sources/Presentation/FocusSession/SetupView.swift \
-  surahfocus/Sources/Presentation/Setup/SetupViewModel.swift \
-  surahfocus/Sources/Presentation/Setup/SetupSummary.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/BlockingTabView.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/BlockingTabViewModel.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/TimeLimitView.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/TimeLimitViewModel.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/AppLimitView.swift \
-  surahfocus/Sources/Presentation/MainTabs/BlockingTab/AppLimitViewModel.swift \
-  surahfocus/Sources/Presentation/MainTabs/QuranTab/FocusSectionView.swift \
-  surahfocus/Sources/Presentation/MainTabs/QuranTab/FocusSectionViewModel.swift \
-  surahfocus/Sources/Presentation/MainTabs/QuranTab/SessionFinishView.swift \
-  surahfocus/Sources/Presentation/Components/BlockingTabComps/CreateBlockSheet.swift \
-  surahfocus/Sources/Presentation/Components/BlockingTabComps/EmptyBlocksView.swift \
-  surahfocus/Sources/Presentation/ReciteToUnblock/ReciteToUnblockView.swift \
-  surahfocus/Sources/Presentation/ReciteToUnblock/ReciteToUnblockViewModel.swift
+  deenfirst/Sources/DeenFirstApp.swift \
+  deenfirst/Sources/RootView.swift \
+  deenfirst/Sources/Core/DataDependency/DIContainer.swift \
+  deenfirst/Sources/Domain/Entities/ScreenTimeRule.swift \
+  deenfirst/Sources/Domain/Entities/TimeLimitConfig.swift \
+  deenfirst/Sources/Domain/Services/ScreenTimeRulesService.swift \
+  deenfirst/Sources/Domain/Services/ScreenTimeRulesService+Unblock.swift \
+  deenfirst/Sources/Domain/Services/DeviceActivityManager.swift \
+  deenfirst/Sources/Domain/Services/ManagedSettingsWrapper.swift \
+  deenfirst/Sources/Domain/Services/SessionService.swift \
+  deenfirst/Sources/Data/Repositories/ScreenTimeRulesRepository.swift \
+  deenfirst/Sources/Data/Repositories/SessionRepository.swift \
+  deenfirst/Sources/Shared/ScreenTimeEvents.swift \
+  deenfirst/Sources/Shared/AppGroupConstants.swift \
+  deenfirst/Sources/Shared/DayHelper.swift \
+  deenfirst/Sources/Utils/DeviceActivityScheduleHelper.swift \
+  deenfirst/Sources/Utils/UserPersistenceHelper.swift \
+  deenfirst/Sources/Presentation/FocusSession/SetupView.swift \
+  deenfirst/Sources/Presentation/Setup/SetupViewModel.swift \
+  deenfirst/Sources/Presentation/Setup/SetupSummary.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/BlockingTabView.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/BlockingTabViewModel.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/TimeLimitView.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/TimeLimitViewModel.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/AppLimitView.swift \
+  deenfirst/Sources/Presentation/MainTabs/BlockingTab/AppLimitViewModel.swift \
+  deenfirst/Sources/Presentation/MainTabs/QuranTab/FocusSectionView.swift \
+  deenfirst/Sources/Presentation/MainTabs/QuranTab/FocusSectionViewModel.swift \
+  deenfirst/Sources/Presentation/MainTabs/QuranTab/SessionFinishView.swift \
+  deenfirst/Sources/Presentation/Components/BlockingTabComps/CreateBlockSheet.swift \
+  deenfirst/Sources/Presentation/Components/BlockingTabComps/EmptyBlocksView.swift \
+  deenfirst/Sources/Presentation/ReciteToUnblock/ReciteToUnblockView.swift \
+  deenfirst/Sources/Presentation/ReciteToUnblock/ReciteToUnblockViewModel.swift
 
 echo "✅ Created ~/Downloads/ScreenTimeFeature.zip with 40+ files"
 ```

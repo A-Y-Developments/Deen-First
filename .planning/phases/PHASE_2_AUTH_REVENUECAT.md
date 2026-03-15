@@ -40,7 +40,7 @@ This phase implements complete authentication and monetization:
 
 1. Go to https://www.revenuecat.com
 2. Sign up with your email
-3. Create new project: "Surah Focus"
+3. Create new project: "Deen First"
 4. Select iOS platform
 
 ### Step 2: Configure App in RevenueCat
@@ -48,8 +48,8 @@ This phase implements complete authentication and monetization:
 **In RevenueCat Dashboard:**
 
 1. **Project Settings:**
-   - App Name: Surah Focus
-   - Bundle ID: `com.aydev.surahfocus`
+   - App Name: Deen First
+   - Bundle ID: `com.aydev.deenfirst`
    - Platform: iOS
 
 2. **Apple App Store Connect:**
@@ -60,14 +60,14 @@ This phase implements complete authentication and monetization:
 ### Step 3: Create Products
 
 **Product 1: Monthly Subscription**
-- Product ID: `com.aydev.surahfocus.monthly`
+- Product ID: `com.aydev.deenfirst.monthly`
 - Type: Auto-renewable subscription
 - Price: $4.99/month
 - Trial: 3 days
 - Subscription Group: Default
 
 **Product 2: Yearly Subscription**
-- Product ID: `com.aydev.surahfocus.yearly`
+- Product ID: `com.aydev.deenfirst.yearly`
 - Type: Auto-renewable subscription
 - Price: $29.99/year
 - Trial: 7 days
@@ -79,8 +79,8 @@ This phase implements complete authentication and monetization:
 - Entitlement ID: `premium`
 - Description: Premium access to all features
 - Attach Products:
-  - ✅ com.aydev.surahfocus.monthly
-  - ✅ com.aydev.surahfocus.yearly
+  - ✅ com.aydev.deenfirst.monthly
+  - ✅ com.aydev.deenfirst.yearly
 
 ### Step 5: Get API Key
 
@@ -238,7 +238,7 @@ final class UserRepositoryImpl: UserRepository {
 ```swift
 import XCTest
 import SwiftData
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class UserRepositoryTests: XCTestCase {
@@ -429,7 +429,7 @@ enum AuthError: Error, LocalizedError {
 ```swift
 import XCTest
 import AuthenticationServices
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class AuthServiceTests: XCTestCase {
@@ -533,7 +533,7 @@ Test Suite 'AuthServiceTests' passed (4 tests)
 
 ### Step 1: Initialize RevenueCat in App
 
-**Update `Sources/SurahFocusApp.swift`:**
+**Update `Sources/DeenFirstApp.swift`:**
 
 ```swift
 import SwiftUI
@@ -541,7 +541,7 @@ import SwiftData
 import RevenueCat
 
 @main
-struct SurahFocusApp: App {
+struct DeenFirstApp: App {
     
     init() {
         // Configure RevenueCat
@@ -691,7 +691,7 @@ enum SubscriptionError: Error, LocalizedError {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class SubscriptionServiceTests: XCTestCase {
@@ -839,7 +839,7 @@ struct AuthView: View {
                 
                 // App Name & Tagline
                 VStack(spacing: 8) {
-                    Text("Surah Focus")
+                    Text("Deen First")
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(.white)
                     
@@ -897,7 +897,7 @@ struct AuthView: View {
 ```swift
 import XCTest
 import AuthenticationServices
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class AuthViewModelTests: XCTestCase {
@@ -1349,7 +1349,7 @@ struct SubscriptionCard: View {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class PaywallViewModelTests: XCTestCase {
@@ -1507,7 +1507,7 @@ Test Suite 'SubscriptionServiceTests' passed (1 test)
 Test Suite 'AuthViewModelTests' passed (3 tests)
 Test Suite 'PaywallViewModelTests' passed (3 tests)
 
-Test Suite 'SurahFocusTests' passed (48 tests)
+Test Suite 'DeenFirstTests' passed (48 tests)
 ```
 
 ### Step 2: Build All Targets

@@ -254,7 +254,7 @@ final class OnboardingViewModel: ObservableObject {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class OnboardingViewModelTests: XCTestCase {
@@ -823,7 +823,7 @@ enum TimeLimit: Int, CaseIterable {
 import Foundation
 
 enum AppGroupConstants {
-    static let suiteName = "group.com.aydev.surahfocus"
+    static let suiteName = "group.com.aydev.deenfirst"
     
     static var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -846,7 +846,7 @@ Search and replace all instances of:
 UserDefaults(suiteName: "group.com.alexis.screentime")
 
 // NEW:
-UserDefaults(suiteName: "group.com.aydev.surahfocus")
+UserDefaults(suiteName: "group.com.aydev.deenfirst")
 ```
 
 Or better yet, use the constant:
@@ -952,7 +952,7 @@ struct ScreenTimePermissionView: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                     
-                    Text("To block distracting apps, we need Screen Time permission. This allows Surah Focus to temporarily restrict apps during your Quran sessions.")
+                    Text("To block distracting apps, we need Screen Time permission. This allows Deen First to temporarily restrict apps during your Quran sessions.")
                         .font(.system(size: 16))
                         .foregroundColor(.white.opacity(0.7))
                         .multilineTextAlignment(.center)
@@ -1059,7 +1059,7 @@ struct InfoRow: View {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class ScreenTimePermissionViewModelTests: XCTestCase {
@@ -1374,7 +1374,7 @@ struct AppLimitCard: View {
 ```swift
 import XCTest
 import FamilyControls
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class AppSelectionViewModelTests: XCTestCase {
@@ -1432,7 +1432,7 @@ Test Suite 'OnboardingViewModelTests' passed (12 tests)
 Test Suite 'ScreenTimePermissionViewModelTests' passed (1 test)
 Test Suite 'AppSelectionViewModelTests' passed (2 tests)
 
-Test Suite 'SurahFocusTests' passed (65+ tests)
+Test Suite 'DeenFirstTests' passed (65+ tests)
 ```
 
 ### Step 2: Update RootView
@@ -1522,7 +1522,7 @@ grep -r "group.com.alexis.screentime" .
 # Should return ZERO results
 
 # Check new identifiers present
-grep -r "group.com.aydev.surahfocus" .
+grep -r "group.com.aydev.deenfirst" .
 # Should find multiple files
 ```
 

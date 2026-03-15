@@ -85,14 +85,14 @@ This phase integrates the Quran API from quranapi.pages.dev:
 
 ## TASK 4.1: UPDATE DOMAIN ENTITIES (Day 7 Morning - 30 min)
 
-### File: surahfocus/Sources/Domain/Entities/surah.swift
+### File: deenfirst/Sources/Domain/Entities/surah.swift
 
 **Add properties:**
 - `surahNameArabic: String`
 - `surahNameArabicLong: String`
 - `revelationPlace: String` (rename from `revelationType`)
 
-### File: surahfocus/Sources/Domain/Entities/ayah.swift
+### File: deenfirst/Sources/Domain/Entities/ayah.swift
 
 **Add properties:**
 - `arabic1: String` (Uthmani script)
@@ -112,7 +112,7 @@ struct ReciterAudio: Codable, Hashable {
 }
 ```
 
-### File: surahfocus/Sources/Domain/Entities/reciter.swift
+### File: deenfirst/Sources/Domain/Entities/reciter.swift
 
 **Update to match API:**
 - `id: Int` (1-5 for the 5 reciters)
@@ -123,7 +123,7 @@ struct ReciterAudio: Codable, Hashable {
 
 ## TASK 4.2: CREATE API DTOS (Day 7 Morning - 1 hour)
 
-### File: surahfocus/Sources/Data/DataSource/API/QuranAPIDTOs.swift
+### File: deenfirst/Sources/Data/DataSource/API/QuranAPIDTOs.swift
 
 **Create DTOs matching API response structure:**
 
@@ -151,7 +151,7 @@ struct ReciterAudio: Codable, Hashable {
 
 ## TASK 4.3: QURAN API DATA SOURCE (Day 7 Morning - 2 hours)
 
-### File: surahfocus/Sources/Data/DataSource/API/QuranAPIDataSource.swift
+### File: deenfirst/Sources/Data/DataSource/API/QuranAPIDataSource.swift
 
 **Protocol:**
 ```swift
@@ -179,7 +179,7 @@ protocol QuranAPIDataSource {
 
 ## TASK 4.4: CACHE MANAGER (Day 7 Afternoon - 1.5 hours)
 
-### File: surahfocus/Sources/Data/DataSource/Cache/QuranCacheManager.swift
+### File: deenfirst/Sources/Data/DataSource/Cache/QuranCacheManager.swift
 
 **Cache Strategy:**
 - Surah list: 30 days
@@ -206,7 +206,7 @@ protocol QuranAPIDataSource {
 
 ## TASK 4.5: QURAN REPOSITORY (Day 7 Afternoon - 1.5 hours)
 
-### File: surahfocus/Sources/Data/Repositories/QuranRepository.swift
+### File: deenfirst/Sources/Data/Repositories/QuranRepository.swift
 
 **Protocol:**
 ```swift
@@ -229,7 +229,7 @@ protocol QuranRepository {
 
 ## TASK 4.6: QURAN SERVICE (Day 7 Evening - 1 hour)
 
-### File: surahfocus/Sources/Domain/Services/QuranService.swift
+### File: deenfirst/Sources/Domain/Services/QuranService.swift
 
 **Protocol:**
 ```swift
@@ -253,7 +253,7 @@ protocol QuranService {
 
 ## TASK 4.7: UPDATE DIContainer (Day 7 Evening - 30 min)
 
-### File: surahfocus/Sources/Core/DataDependency/DIContainer.swift
+### File: deenfirst/Sources/Core/DataDependency/DIContainer.swift
 
 **Add registrations:**
 ```swift
@@ -351,19 +351,19 @@ make test
 ## FILES TO MODIFY
 
 ### Domain Layer
-- `surahfocus/Sources/Domain/Entities/surah.swift` - add new fields
-- `surahfocus/Sources/Domain/Entities/ayah.swift` - add Arabic variants, audio
-- `surahfocus/Sources/Domain/Entities/reciter.swift` - update for API mapping
-- `surahfocus/Sources/Domain/Services/QuranService.swift` - create
+- `deenfirst/Sources/Domain/Entities/surah.swift` - add new fields
+- `deenfirst/Sources/Domain/Entities/ayah.swift` - add Arabic variants, audio
+- `deenfirst/Sources/Domain/Entities/reciter.swift` - update for API mapping
+- `deenfirst/Sources/Domain/Services/QuranService.swift` - create
 
 ### Data Layer
-- `surahfocus/Sources/Data/DataSource/API/QuranAPIDTOs.swift` - create
-- `surahfocus/Sources/Data/DataSource/API/QuranAPIDataSource.swift` - create
-- `surahfocus/Sources/Data/DataSource/Cache/QuranCacheManager.swift` - create
-- `surahfocus/Sources/Data/Repositories/QuranRepository.swift` - create
+- `deenfirst/Sources/Data/DataSource/API/QuranAPIDTOs.swift` - create
+- `deenfirst/Sources/Data/DataSource/API/QuranAPIDataSource.swift` - create
+- `deenfirst/Sources/Data/DataSource/Cache/QuranCacheManager.swift` - create
+- `deenfirst/Sources/Data/Repositories/QuranRepository.swift` - create
 
 ### Core Layer
-- `surahfocus/Sources/Core/DataDependency/DIContainer.swift` - update
+- `deenfirst/Sources/Core/DataDependency/DIContainer.swift` - update
 
 ### Tests
 - `Tests/Data/DataSource/QuranAPIDTOsTests.swift` - create

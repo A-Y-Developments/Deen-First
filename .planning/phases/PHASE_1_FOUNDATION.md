@@ -42,8 +42,8 @@ This phase establishes the complete foundation:
 
 ```bash
 cd ~/Projects
-mkdir SurahFocus
-cd SurahFocus
+mkdir DeenFirst
+cd DeenFirst
 ```
 
 ### Step 2: Create Tuist Configuration Files
@@ -54,7 +54,7 @@ cd SurahFocus
 import ProjectDescription
 
 let project = Project(
-    name: "SurahFocus",
+    name: "DeenFirst",
     options: .options(
         automaticSchemesOptions: .enabled(
             targetSchemeName: .targetName
@@ -63,7 +63,7 @@ let project = Project(
     targets: [
         // Main App Target
         .target(
-            name: "SurahFocus",
+            name: "DeenFirst",
             destinations: [.iPhone],
             product: .app,
             bundleId: Env.baseBundleId,
@@ -72,7 +72,7 @@ let project = Project(
                 "CFBundleShortVersionString": "1.0.0",
                 "CFBundleVersion": "1",
                 "UILaunchScreen": [:],
-                "NSFamilyControlsUsageDescription": "Surah Focus needs permission to block distracting apps during your Quran focus sessions.",
+                "NSFamilyControlsUsageDescription": "Deen First needs permission to block distracting apps during your Quran focus sessions.",
                 "UIBackgroundModes": ["audio"]
             ]),
             sources: ["Sources/**"],
@@ -124,14 +124,14 @@ let project = Project(
         
         // Test Target
         .target(
-            name: "SurahFocusTests",
+            name: "DeenFirstTests",
             destinations: [.iPhone],
             product: .unitTests,
             bundleId: "\(Env.baseBundleId).Tests",
             deploymentTargets: .iOS("17.0"),
             sources: ["Tests/**"],
             dependencies: [
-                .target(name: "SurahFocus")
+                .target(name: "DeenFirst")
             ]
         )
     ]
@@ -155,9 +155,9 @@ public extension Env {
     
     static var baseBundleId: String {
         guard let value = Environment.shared["TUIST_BASE_BUNDLE_ID"] else {
-            return "\(companyId).surahfocus"
+            return "\(companyId).deenfirst"
         }
-        return value.getString(default: "\(companyId).surahfocus")
+        return value.getString(default: "\(companyId).deenfirst")
     }
 }
 ```
@@ -182,7 +182,7 @@ let dependencies = Dependencies(
 ```bash
 TUIST_COMPANY_ID=com.aydev
 TUIST_TEAM_ID=YOUR_TEAM_ID_HERE
-TUIST_BASE_BUNDLE_ID=com.aydev.surahfocus
+TUIST_BASE_BUNDLE_ID=com.aydev.deenfirst
 ```
 
 **⚠️ IMPORTANT:** Replace `YOUR_TEAM_ID_HERE` with your actual Apple Team ID!
@@ -203,8 +203,8 @@ generate:
 
 build:
 	@echo "✓ Building app..."
-	@xcodebuild -workspace SurahFocus.xcworkspace \
-		-scheme SurahFocus \
+	@xcodebuild -workspace DeenFirst.xcworkspace \
+		-scheme DeenFirst \
 		-destination 'platform=iOS Simulator,name=iPhone 15' \
 		build | xcpretty
 
@@ -223,8 +223,8 @@ edit:
 test:
 	@echo "✓ Running tests..."
 	@xcodebuild test \
-		-workspace SurahFocus.xcworkspace \
-		-scheme SurahFocus \
+		-workspace DeenFirst.xcworkspace \
+		-scheme DeenFirst \
 		-destination 'platform=iOS Simulator,name=iPhone 15' \
 		| xcpretty
 ```
@@ -270,15 +270,15 @@ Project generated successfully!
 
 ```bash
 # Should open Xcode with 3 targets visible
-open SurahFocus.xcworkspace
+open DeenFirst.xcworkspace
 ```
 
 **In Xcode, verify:**
-- [ ] 3 targets: SurahFocus, ScreenTimeMonitor, Shield
+- [ ] 3 targets: DeenFirst, ScreenTimeMonitor, Shield
 - [ ] Bundle IDs correct:
-  - SurahFocus: `com.aydev.surahfocus`
-  - ScreenTimeMonitor: `com.aydev.surahfocus.ScreenTimeMonitor`
-  - Shield: `com.aydev.surahfocus.Shield`
+  - DeenFirst: `com.aydev.deenfirst`
+  - ScreenTimeMonitor: `com.aydev.deenfirst.ScreenTimeMonitor`
+  - Shield: `com.aydev.deenfirst.Shield`
 
 ---
 
@@ -316,7 +316,7 @@ mkdir -p Tests/Presentation
 
 ```bash
 # Main app entry
-touch Sources/SurahFocusApp.swift
+touch Sources/DeenFirstApp.swift
 touch Sources/RootView.swift
 
 # Utils
@@ -411,7 +411,7 @@ final class User {
 ```swift
 import XCTest
 import SwiftData
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class UserTests: XCTestCase {
@@ -566,7 +566,7 @@ final class Session {
 ```swift
 import XCTest
 import SwiftData
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class SessionTests: XCTestCase {
@@ -682,7 +682,7 @@ final class BlockedApp {
 ```swift
 import XCTest
 import SwiftData
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class BlockedAppTests: XCTestCase {
@@ -1058,7 +1058,7 @@ class QuranAPIDataSource {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 final class DIContainerTests: XCTestCase {
     
@@ -1151,7 +1151,7 @@ final class Router: ObservableObject {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 @MainActor
 final class RouterTests: XCTestCase {
@@ -1277,7 +1277,7 @@ enum NetworkError: Error, LocalizedError {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 final class HTTPClientTests: XCTestCase {
     var client: HTTPClient!
@@ -1336,7 +1336,7 @@ make build
 ### Step 1: Copy Extension Folders from Mindcore
 
 ```bash
-# From your SurahFocus project root
+# From your DeenFirst project root
 cp -r /Users/adithyafp_/Projects/mindcore/ScreenTimeMonitor ./
 cp -r /Users/adithyafp_/Projects/mindcore/Shield ./
 ```
@@ -1352,7 +1352,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield ./
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.aydev.surahfocus</string>
+		<string>group.com.aydev.deenfirst</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>
@@ -1371,7 +1371,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield ./
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.aydev.surahfocus</string>
+		<string>group.com.aydev.deenfirst</string>
 	</array>
 </dict>
 </plist>
@@ -1386,7 +1386,7 @@ cp -r /Users/adithyafp_/Projects/mindcore/Shield ./
 grep -r "group.com.alexis.screentime" ScreenTimeMonitor/ Shield/
 
 # Each file found, replace:
-# group.com.alexis.screentime → group.com.aydev.surahfocus
+# group.com.alexis.screentime → group.com.aydev.deenfirst
 ```
 
 **Files likely to update:**
@@ -1395,7 +1395,7 @@ grep -r "group.com.alexis.screentime" ScreenTimeMonitor/ Shield/
 
 ### Step 5: Create Main App Entitlements
 
-**Create `Sources/SurahFocus.entitlements`:**
+**Create `Sources/DeenFirst.entitlements`:**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1404,7 +1404,7 @@ grep -r "group.com.alexis.screentime" ScreenTimeMonitor/ Shield/
 <dict>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.aydev.surahfocus</string>
+		<string>group.com.aydev.deenfirst</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>
@@ -1423,22 +1423,22 @@ make generate
 
 **Open Xcode:**
 ```bash
-open SurahFocus.xcworkspace
+open DeenFirst.xcworkspace
 ```
 
 **Verify in Xcode:**
 1. Check all 3 targets are present
 2. Check Signing & Capabilities for each target:
-   - [ ] Main app: App Groups enabled (`group.com.aydev.surahfocus`)
+   - [ ] Main app: App Groups enabled (`group.com.aydev.deenfirst`)
    - [ ] Main app: Family Controls enabled
    - [ ] ScreenTimeMonitor: App Groups enabled
    - [ ] ScreenTimeMonitor: Family Controls enabled
    - [ ] Shield: App Groups enabled
 
 3. Check bundle IDs are correct:
-   - [ ] Main: `com.aydev.surahfocus`
-   - [ ] Monitor: `com.aydev.surahfocus.ScreenTimeMonitor`
-   - [ ] Shield: `com.aydev.surahfocus.Shield`
+   - [ ] Main: `com.aydev.deenfirst`
+   - [ ] Monitor: `com.aydev.deenfirst.ScreenTimeMonitor`
+   - [ ] Shield: `com.aydev.deenfirst.Shield`
 
 **Search for old identifiers:**
 ```bash
@@ -1453,14 +1453,14 @@ grep -r "com.alexis" .
 
 ### Create App Entry Point
 
-**Create `Sources/SurahFocusApp.swift`:**
+**Create `Sources/DeenFirstApp.swift`:**
 
 ```swift
 import SwiftUI
 import SwiftData
 
 @main
-struct SurahFocusApp: App {
+struct DeenFirstApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -1482,7 +1482,7 @@ struct RootView: View {
     
     var body: some View {
         NavigationStack(path: $router.navigationPath) {
-            Text("Surah Focus")
+            Text("Deen First")
                 .font(.largeTitle)
                 .navigationDestination(for: Router.Route.self) { route in
                     destinationView(for: route)
@@ -1584,7 +1584,7 @@ Test Suite 'DIContainerTests' passed (5 tests)
 Test Suite 'RouterTests' passed (7 tests)
 Test Suite 'HTTPClientTests' passed (2 tests)
 
-Test Suite 'SurahFocusTests' passed (30 tests)
+Test Suite 'DeenFirstTests' passed (30 tests)
 ```
 
 ### Step 2: Build All Targets
@@ -1605,12 +1605,12 @@ Build succeeded
 
 ```bash
 # Open Xcode
-open SurahFocus.xcworkspace
+open DeenFirst.xcworkspace
 
 # In Xcode:
 # 1. Select iPhone 15 simulator
 # 2. Press Cmd+R to build and run
-# 3. App should launch showing "Surah Focus" text
+# 3. App should launch showing "Deen First" text
 ```
 
 ### Step 4: Test on Physical Device
@@ -1660,7 +1660,7 @@ open SurahFocus.xcworkspace
 - [ ] No references to old bundle IDs remain
 
 ### App Files
-- [ ] SurahFocusApp.swift created
+- [ ] DeenFirstApp.swift created
 - [ ] RootView.swift created with basic navigation
 - [ ] Extensions.swift created
 
@@ -1685,7 +1685,7 @@ grep -r "com.alexis" .
 # Both should return ZERO results
 
 # Correct identifiers present
-grep -r "group.com.aydev.surahfocus" .
+grep -r "group.com.aydev.deenfirst" .
 # Should find multiple files
 ```
 
@@ -1697,7 +1697,7 @@ grep -r "group.com.aydev.surahfocus" .
 **Solution:**
 1. Run `make clean && make generate`
 2. Verify test target has dependency on main target in Project.swift
-3. Check all test files have `@testable import SurahFocus`
+3. Check all test files have `@testable import DeenFirst`
 
 ### Issue: Extensions not showing in Xcode
 **Solution:**

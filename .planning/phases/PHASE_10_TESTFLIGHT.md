@@ -53,7 +53,7 @@ infoPlist: .extendingDefault(with: [
 **Regenerate project:**
 
 ```bash
-cd ~/Projects/SurahFocus
+cd ~/Projects/DeenFirst
 make clean
 make generate
 ```
@@ -62,7 +62,7 @@ make generate
 
 ```bash
 # In Xcode:
-# 1. Select SurahFocus target
+# 1. Select DeenFirst target
 # 2. Signing & Capabilities tab
 # 3. Verify Team selected
 # 4. Verify "Automatically manage signing" checked
@@ -103,7 +103,7 @@ make test
 
 ```
 In Organizer:
-- App name: SurahFocus
+- App name: DeenFirst
 - Version: 1.0.0
 - Build: 1
 - Date: Today
@@ -119,7 +119,7 @@ In Organizer:
 3. Choose your team
 4. Accept defaults
 5. Wait for validation (~2-3 minutes)
-6. Should show "SurahFocus.app passed validation"
+6. Should show "DeenFirst.app passed validation"
 ```
 
 **Common validation errors:**
@@ -154,7 +154,7 @@ In Organizer:
 ```
 1. Open https://appstoreconnect.apple.com
 2. Go to "My Apps"
-3. Select SurahFocus
+3. Select DeenFirst
 4. Click "TestFlight" tab
 5. Wait for build to process (~10-20 minutes)
 6. Status will change from "Processing" to "Ready to Submit"
@@ -171,10 +171,10 @@ In Organizer:
 2. My Apps > "+" > New App
 3. Fill in:
    - Platform: iOS
-   - Name: Surah Focus - Muslim Lock
+   - Name: Deen First - Muslim Lock
    - Primary Language: English
-   - Bundle ID: com.aydev.surahfocus
-   - SKU: surahfocus001
+   - Bundle ID: com.aydev.deenfirst
+   - SKU: deenfirst001
 4. Click "Create"
 ```
 
@@ -228,13 +228,13 @@ In Organizer:
 
 ```markdown
 # App Name
-Surah Focus - Muslim Lock
+Deen First - Muslim Lock
 
 # Subtitle (30 chars max)
 Block Apps, Build Quran Habits
 
 # Description (4000 chars max)
-Surah Focus helps you build a daily Quran habit by temporarily blocking distracting apps during your reading and listening sessions.
+Deen First helps you build a daily Quran habit by temporarily blocking distracting apps during your reading and listening sessions.
 
 **FEATURES:**
 • Read all 114 surahs with English translations
@@ -247,7 +247,7 @@ Surah Focus helps you build a daily Quran habit by temporarily blocking distract
 Replace mindless scrolling with meaningful Quran engagement. Set daily limits for social media and use that time to strengthen your connection with the Quran.
 
 **SCREEN TIME INTEGRATION:**
-Surah Focus uses Apple's Screen Time API to temporarily block apps you choose during your Quran sessions. You're always in control - shields are only active during your listening or reading time.
+Deen First uses Apple's Screen Time API to temporarily block apps you choose during your Quran sessions. You're always in control - shields are only active during your listening or reading time.
 
 **TRACK YOUR PROGRESS:**
 Build consistency with our streak system. Complete a session each day to maintain your streak. Every engagement counts - start reading or listening and you're building your streak. Watch as your dedication grows day by day.
@@ -319,7 +319,7 @@ Contact Information:
 - Email: [Your email]
 
 Notes for Reviewer:
-"Surah Focus uses Screen Time API to help users block distracting apps during their Quran reading and listening sessions. The app requires authorization through FamilyControls framework. Shields are only applied when the user actively starts a session and are automatically removed when the session ends. Test credentials are not required as sign in uses Apple's authentication."
+"Deen First uses Screen Time API to help users block distracting apps during their Quran reading and listening sessions. The app requires authorization through FamilyControls framework. Shields are only applied when the user actively starts a session and are automatically removed when the session ends. Test credentials are not required as sign in uses Apple's authentication."
 
 Demo Account:
 - Not required (uses Sign in with Apple)
@@ -419,7 +419,7 @@ Demo Account:
 ```
 1. Install TestFlight app on device
 2. Accept invitation email
-3. Install Surah Focus from TestFlight
+3. Install Deen First from TestFlight
 4. Work through test plan
 5. Document any bugs found
 6. Rate severity: Critical / High / Medium / Low

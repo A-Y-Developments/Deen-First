@@ -496,7 +496,7 @@ Section("Activity") {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 final class StreakEdgeCaseTests: XCTestCase {
     var sut: SessionServiceImpl!
@@ -730,7 +730,7 @@ final class StreakEdgeCaseTests: XCTestCase {
 ## BUILD & VERIFY
 
 ```bash
-cd ~/Projects/SurahFocus
+cd ~/Projects/DeenFirst
 make test
 
 # Expected: 155+ tests passing

@@ -58,7 +58,7 @@ protocol ScreenTimeRepository {
 
 final class ScreenTimeRepositoryImpl: ScreenTimeRepository {
     private let store = ManagedSettingsStore()
-    private let sharedDefaults = UserDefaults(suiteName: "group.com.aydev.surahfocus")
+    private let sharedDefaults = UserDefaults(suiteName: "group.com.aydev.deenfirst")
     
     // MARK: - Shield Management
     
@@ -227,7 +227,7 @@ final class ScreenTimeServiceImpl: ScreenTimeService {
     
     func updateAppTimeLimit(appToken: ApplicationToken, limit: TimeLimit) async throws {
         // Get current limits
-        let defaults = UserDefaults(suiteName: "group.com.aydev.surahfocus")
+        let defaults = UserDefaults(suiteName: "group.com.aydev.deenfirst")
         var limits: [String: String] = defaults?.dictionary(forKey: "timeLimits") as? [String: String] ?? [:]
         
         // Update limit for this app (using token's encoded string as key)
@@ -265,7 +265,7 @@ final class ScreenTimeServiceImpl: ScreenTimeService {
         }
         
         // Get time limits
-        let defaults = UserDefaults(suiteName: "group.com.aydev.surahfocus")
+        let defaults = UserDefaults(suiteName: "group.com.aydev.deenfirst")
         let limits: [String: String] = defaults?.dictionary(forKey: "timeLimits") as? [String: String] ?? [:]
         
         // Map tokens to BlockedAppInfo
@@ -821,7 +821,7 @@ final class DIContainer {
 ```swift
 import XCTest
 import FamilyControls
-@testable import SurahFocus
+@testable import DeenFirst
 
 final class ScreenTimeRepositoryTests: XCTestCase {
     var sut: ScreenTimeRepositoryImpl!
@@ -878,7 +878,7 @@ final class ScreenTimeRepositoryTests: XCTestCase {
 
 ```swift
 import XCTest
-@testable import SurahFocus
+@testable import DeenFirst
 
 final class BlockingTabViewModelTests: XCTestCase {
     var sut: BlockingTabViewModel!
@@ -962,7 +962,7 @@ enum TestError: Error {
 ### Step 1: Run All Tests
 
 ```bash
-cd ~/Projects/SurahFocus
+cd ~/Projects/DeenFirst
 make test
 
 # Expected: 145+ tests passing

@@ -14,7 +14,7 @@ let project = Project(
 
         // MARK: - Main App Target
         .target(
-            name: "SurahFocus",
+            name: "DeenFirst",
             destinations: [.iPhone],
             product: .app,
             bundleId: baseBundleId,
@@ -39,9 +39,9 @@ let project = Project(
                 "com.apple.developer.ubiquity-kvstore-identifier":
                     "$(TeamIdentifierPrefix)$(CFBundleIdentifier)",
             ]),
-            sources: ["surahfocus/Sources/**"],
-            resources: ["surahfocus/Resources/**"],
-            entitlements: "surahfocus/Sources/SurahFocus.entitlements",
+            sources: ["deenfirst/Sources/**"],
+            resources: ["deenfirst/Resources/**"],
+            entitlements: "deenfirst/Sources/DeenFirst.entitlements",
             dependencies: [
                 .external(name: "RevenueCat"),
                 .external(name: "Alamofire"),
@@ -74,10 +74,9 @@ let project = Project(
                         name: "Release",
                         settings: [
                             "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                            "PROVISIONING_PROFILE_SPECIFIER": .string("SurahFocus Distribution"),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyProd),
                             "OPENAI_API_KEY": .string(openAIApiKey),
                             "BYPASS_PAYWALL": .string(bypassPaywall),
@@ -104,7 +103,7 @@ let project = Project(
             ]),
             sources: [
                 "ScreenTimeMonitor/**",
-                "surahfocus/Sources/Shared/**",
+                "deenfirst/Sources/Shared/**",
             ],
             entitlements: .file(path: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements"),
             dependencies: [
@@ -127,11 +126,9 @@ let project = Project(
                         name: "Release",
                         settings: [
                             "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                            "PROVISIONING_PROFILE_SPECIFIER": .string(
-                                "SurahFocus ScreenTimeMonitor Distribution"),
                         ]),
                 ]
             )
@@ -174,11 +171,9 @@ let project = Project(
                         name: "Release",
                         settings: [
                             "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
-                            "PROVISIONING_PROFILE_SPECIFIER": .string(
-                                "SurahFocus Shield Distribution"),
                         ]),
                 ]
             )
@@ -186,22 +181,22 @@ let project = Project(
 
         // MARK: - Test Target
         .target(
-            name: "SurahFocusTests",
+            name: "DeenFirstTests",
             destinations: [.iPhone],
             product: .unitTests,
             bundleId: "\(baseBundleId).Tests",
             deploymentTargets: .iOS("17.0"),
-            sources: ["surahfocus/Tests/**"],
+            sources: ["deenfirst/Tests/**"],
             dependencies: [
-                .target(name: "SurahFocus")
+                .target(name: "DeenFirst")
             ]
         ),
     ],
     schemes: [
         .scheme(
-            name: "SurahFocus",
-            buildAction: .buildAction(targets: ["SurahFocus"]),
-            testAction: .targets(["SurahFocusTests"]),
+            name: "DeenFirst",
+            buildAction: .buildAction(targets: ["DeenFirst"]),
+            testAction: .targets(["DeenFirstTests"]),
             runAction: .runAction(configuration: "Debug")
         )
     ]

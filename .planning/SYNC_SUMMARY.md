@@ -2,7 +2,7 @@
 # All Documentation Files Corrected & Aligned
 
 **Date:** February 3, 2026  
-**Project:** Muslim Lock - Surah Focus  
+**Project:** Muslim Lock - Deen First  
 **Status:** ✅ ALL FILES SYNCHRONIZED
 
 ---
@@ -12,15 +12,15 @@
 ### 1. PROJECT_RULES.md ✅
 
 **Fixed:**
-- ❌ `lumi/Sources/` → ✅ `SurahFocus/Sources/`
-- ❌ `struct lumiApp` → ✅ `struct SurahFocusApp`
+- ❌ `lumi/Sources/` → ✅ `DeenFirst/Sources/`
+- ❌ `struct lumiApp` → ✅ `struct DeenFirstApp`
 - ❌ `Helper/` folder → ✅ `Utils/ScreenTime/` folder
 - Updated naming conventions to reference `Utils` instead of `Helpers`
 - Updated organization pattern to show `Utils/ScreenTime/` for Screen Time utilities
 
 **Folder Structure (Final):**
 ```
-SurahFocus/Sources/
+DeenFirst/Sources/
 ├── Core/
 │   ├── DataDepency/DIContainer.swift
 │   ├── Networking/
@@ -43,55 +43,55 @@ SurahFocus/Sources/
 │   └── ScreenTime/
 │       └── {ScreenTimeHelper}.swift
 ├── RootView.swift
-└── SurahFocusApp.swift
+└── DeenFirstApp.swift
 ```
 
 ---
 
-### 2. SURAH_FOCUS_PRD.md ✅
+### 2. DEEN_FIRST_PRD.md ✅
 
 **Fixed:**
-- ❌ Product ID: `com.surahfocus.monthly`
-  - ✅ Product ID: `com.aydev.surahfocus.monthly`
-- ❌ Product ID: `com.surahfocus.yearly`
-  - ✅ Product ID: `com.aydev.surahfocus.yearly`
+- ❌ Product ID: `com.deenfirst.monthly`
+  - ✅ Product ID: `com.aydev.deenfirst.monthly`
+- ❌ Product ID: `com.deenfirst.yearly`
+  - ✅ Product ID: `com.aydev.deenfirst.yearly`
 
 **RevenueCat Configuration (Correct):**
-- Monthly Product ID: `com.aydev.surahfocus.monthly` ($4.99/month, 3-day trial)
-- Yearly Product ID: `com.aydev.surahfocus.yearly` ($29.99/year, 7-day trial)
+- Monthly Product ID: `com.aydev.deenfirst.monthly` ($4.99/month, 3-day trial)
+- Yearly Product ID: `com.aydev.deenfirst.yearly` ($29.99/year, 7-day trial)
 - Entitlement ID: `premium`
 
 ---
 
-### 3. SURAH_FOCUS_SYSTEM_DESIGN.md ✅
+### 3. DEEN_FIRST_SYSTEM_DESIGN.md ✅
 
 **Fixed:**
-- ❌ Bundle ID: `com.surahfocus.app`
-  - ✅ Bundle ID: `com.aydev.surahfocus`
-- ❌ App Group: `group.com.surahfocus.screentime`
-  - ✅ App Group: `group.com.aydev.surahfocus`
-- ❌ Extension: `com.surahfocus.app.ScreenTimeMonitor`
-  - ✅ Extension: `com.aydev.surahfocus.ScreenTimeMonitor`
-- ❌ Extension: `com.surahfocus.app.Shield`
-  - ✅ Extension: `com.aydev.surahfocus.Shield`
-- ❌ TUIST_COMPANY_ID: `com.surahfocus`
+- ❌ Bundle ID: `com.deenfirst.app`
+  - ✅ Bundle ID: `com.aydev.deenfirst`
+- ❌ App Group: `group.com.deenfirst.screentime`
+  - ✅ App Group: `group.com.aydev.deenfirst`
+- ❌ Extension: `com.deenfirst.app.ScreenTimeMonitor`
+  - ✅ Extension: `com.aydev.deenfirst.ScreenTimeMonitor`
+- ❌ Extension: `com.deenfirst.app.Shield`
+  - ✅ Extension: `com.aydev.deenfirst.Shield`
+- ❌ TUIST_COMPANY_ID: `com.deenfirst`
   - ✅ TUIST_COMPANY_ID: `com.aydev`
-- ❌ TUIST_BASE_BUNDLE_ID: `com.surahfocus.app`
-  - ✅ TUIST_BASE_BUNDLE_ID: `com.aydev.surahfocus`
+- ❌ TUIST_BASE_BUNDLE_ID: `com.deenfirst.app`
+  - ✅ TUIST_BASE_BUNDLE_ID: `com.aydev.deenfirst`
 
 ---
 
-### 4. SURAH_FOCUS_MILESTONES.md ✅
+### 4. DEEN_FIRST_MILESTONES.md ✅
 
 **Status:** Already correct! Created with proper bundle IDs from the start.
 
 **Bundle IDs (Verified):**
-- Main App: `com.aydev.surahfocus`
-- App Group: `group.com.aydev.surahfocus`
-- Screen Time Monitor: `com.aydev.surahfocus.ScreenTimeMonitor`
-- Shield Extension: `com.aydev.surahfocus.Shield`
-- Monthly Product: `com.aydev.surahfocus.monthly`
-- Yearly Product: `com.aydev.surahfocus.yearly`
+- Main App: `com.aydev.deenfirst`
+- App Group: `group.com.aydev.deenfirst`
+- Screen Time Monitor: `com.aydev.deenfirst.ScreenTimeMonitor`
+- Shield Extension: `com.aydev.deenfirst.Shield`
+- Monthly Product: `com.aydev.deenfirst.monthly`
+- Yearly Product: `com.aydev.deenfirst.yearly`
 
 ---
 
@@ -99,7 +99,7 @@ SurahFocus/Sources/
 
 **PROJECT_SETUP.md** - No changes needed (generic template)  
 **SCREEN_TIME_API_GUIDE.md** - No changes needed (references mindcore as example)  
-**SURAH_FOCUS_UI_UX_DESIGN.md** - No changes needed (UI/UX specs)
+**DEEN_FIRST_UI_UX_DESIGN.md** - No changes needed (UI/UX specs)
 
 ---
 
@@ -107,21 +107,21 @@ SurahFocus/Sources/
 
 ### Main App
 ```
-Bundle ID: com.aydev.surahfocus
+Bundle ID: com.aydev.deenfirst
 Team ID: [YOUR_TEAM_ID]
-App Group: group.com.aydev.surahfocus
+App Group: group.com.aydev.deenfirst
 ```
 
 ### Extensions
 ```
-ScreenTimeMonitor: com.aydev.surahfocus.ScreenTimeMonitor
-Shield: com.aydev.surahfocus.Shield
+ScreenTimeMonitor: com.aydev.deenfirst.ScreenTimeMonitor
+Shield: com.aydev.deenfirst.Shield
 ```
 
 ### RevenueCat Products
 ```
-Monthly: com.aydev.surahfocus.monthly ($4.99, 3-day trial)
-Yearly: com.aydev.surahfocus.yearly ($29.99, 7-day trial)
+Monthly: com.aydev.deenfirst.monthly ($4.99, 3-day trial)
+Yearly: com.aydev.deenfirst.yearly ($29.99, 7-day trial)
 Entitlement: premium
 ```
 
@@ -129,7 +129,7 @@ Entitlement: premium
 ```bash
 TUIST_COMPANY_ID=com.aydev
 TUIST_TEAM_ID=YOUR_TEAM_ID_HERE
-TUIST_BASE_BUNDLE_ID=com.aydev.surahfocus
+TUIST_BASE_BUNDLE_ID=com.aydev.deenfirst
 REVENUECAT_API_KEY=your_api_key_here
 ```
 
@@ -173,14 +173,14 @@ REVENUECAT_API_KEY=your_api_key_here
 Before starting development, verify:
 
 ### Bundle IDs
-- [ ] Main app: `com.aydev.surahfocus`
-- [ ] App Group: `group.com.aydev.surahfocus`
-- [ ] ScreenTimeMonitor: `com.aydev.surahfocus.ScreenTimeMonitor`
-- [ ] Shield: `com.aydev.surahfocus.Shield`
+- [ ] Main app: `com.aydev.deenfirst`
+- [ ] App Group: `group.com.aydev.deenfirst`
+- [ ] ScreenTimeMonitor: `com.aydev.deenfirst.ScreenTimeMonitor`
+- [ ] Shield: `com.aydev.deenfirst.Shield`
 
 ### RevenueCat
-- [ ] Monthly product: `com.aydev.surahfocus.monthly`
-- [ ] Yearly product: `com.aydev.surahfocus.yearly`
+- [ ] Monthly product: `com.aydev.deenfirst.monthly`
+- [ ] Yearly product: `com.aydev.deenfirst.yearly`
 - [ ] Entitlement: `premium`
 
 ### Folder Structure
@@ -190,9 +190,9 @@ Before starting development, verify:
 - [ ] All services in `Domain/Services/` (PascalCase)
 
 ### Documentation Sync
-- [ ] All files reference `com.aydev.surahfocus`
+- [ ] All files reference `com.aydev.deenfirst`
 - [ ] No references to `lumi` or other projects
-- [ ] App group consistent: `group.com.aydev.surahfocus`
+- [ ] App group consistent: `group.com.aydev.deenfirst`
 - [ ] All extension bundle IDs match pattern
 
 ---
@@ -204,7 +204,7 @@ Before starting development, verify:
 cat > .env << EOF
 TUIST_COMPANY_ID=com.aydev
 TUIST_TEAM_ID=YOUR_TEAM_ID
-TUIST_BASE_BUNDLE_ID=com.aydev.surahfocus
+TUIST_BASE_BUNDLE_ID=com.aydev.deenfirst
 REVENUECAT_API_KEY=your_key_here
 EOF
 
@@ -212,13 +212,13 @@ EOF
 make
 
 # 3. Verify bundle IDs in Xcode
-# Main Target: com.aydev.surahfocus
-# ScreenTimeMonitor Target: com.aydev.surahfocus.ScreenTimeMonitor
-# Shield Target: com.aydev.surahfocus.Shield
+# Main Target: com.aydev.deenfirst
+# ScreenTimeMonitor Target: com.aydev.deenfirst.ScreenTimeMonitor
+# Shield Target: com.aydev.deenfirst.Shield
 
 # 4. Verify entitlements
-# - Main app: group.com.aydev.surahfocus
-# - Extensions: group.com.aydev.surahfocus + family-controls
+# - Main app: group.com.aydev.deenfirst
+# - Extensions: group.com.aydev.deenfirst + family-controls
 ```
 
 ---
@@ -230,7 +230,7 @@ make
 3. **Verify all bundle IDs** in Xcode project settings
 4. **Create RevenueCat account** and configure products with correct IDs
 5. **Copy Screen Time files** from mindcore to appropriate locations
-6. **Start Phase 1** of SURAH_FOCUS_MILESTONES.md
+6. **Start Phase 1** of DEEN_FIRST_MILESTONES.md
 
 ---
 
@@ -240,16 +240,16 @@ make
 A: Removed. Use `Utils/ScreenTime/` for Screen Time utilities.
 
 **Q: Where do Screen Time helpers go?**  
-A: `SurahFocus/Sources/Utils/ScreenTime/`
+A: `DeenFirst/Sources/Utils/ScreenTime/`
 
 **Q: What about mindcore references?**  
 A: Keep them in SCREEN_TIME_API_GUIDE.md as examples. You'll manually adapt the code.
 
 **Q: Are all bundle IDs consistent?**  
-A: Yes! All docs now use `com.aydev.surahfocus` base.
+A: Yes! All docs now use `com.aydev.deenfirst` base.
 
 **Q: Can I start development now?**  
-A: Yes! All documentation is synchronized. Follow SURAH_FOCUS_MILESTONES.md starting from Phase 1.
+A: Yes! All documentation is synchronized. Follow DEEN_FIRST_MILESTONES.md starting from Phase 1.
 
 ---
 
@@ -257,14 +257,14 @@ A: Yes! All documentation is synchronized. Follow SURAH_FOCUS_MILESTONES.md star
 
 **Files Updated:**
 1. ✅ PROJECT_RULES.md (removed lumi, updated structure)
-2. ✅ SURAH_FOCUS_PRD.md (fixed product IDs)
-3. ✅ SURAH_FOCUS_SYSTEM_DESIGN.md (fixed all bundle IDs & app groups)
-4. ✅ SURAH_FOCUS_MILESTONES.md (already correct)
+2. ✅ DEEN_FIRST_PRD.md (fixed product IDs)
+3. ✅ DEEN_FIRST_SYSTEM_DESIGN.md (fixed all bundle IDs & app groups)
+4. ✅ DEEN_FIRST_MILESTONES.md (already correct)
 
 **Files Unchanged (but copied for completeness):**
 5. ✅ PROJECT_SETUP.md (generic template)
 6. ✅ SCREEN_TIME_API_GUIDE.md (mindcore reference)
-7. ✅ SURAH_FOCUS_UI_UX_DESIGN.md (UI specs)
+7. ✅ DEEN_FIRST_UI_UX_DESIGN.md (UI specs)
 
 ---
 

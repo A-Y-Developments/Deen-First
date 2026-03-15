@@ -3,7 +3,7 @@
 ## FOLDER STRUCTURE
 
 ```
-SurahFocus/Sources/
+DeenFirst/Sources/
 ├── Core/
 │   ├── DataDepency/DIContainer.swift
 │   ├── ImageCaching/
@@ -29,7 +29,7 @@ SurahFocus/Sources/
 │   └── ScreenTime/
 │       └── {ScreenTimeHelper}.swift
 ├── RootView.swift
-└── SurahFocusApp.swift
+└── DeenFirstApp.swift
 ```
 
 ## ARCHITECTURE: CLEAN ARCH + MVVM
@@ -620,7 +620,7 @@ struct RootView: View {
 **App Entry:**
 ```swift
 @main
-struct SurahFocusApp: App {
+struct DeenFirstApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -704,7 +704,7 @@ For project initialization, Tuist configuration, Makefile, and environment setup
 
 **Use this command to verify builds:**
 ```bash
-xcodebuild -workspace SurahFocus.xcworkspace -scheme SurahFocus -destination 'generic/platform=iOS Simulator' build 2>&1 | grep -E "(BUILD|error:)" | tail -10
+xcodebuild -workspace DeenFirst.xcworkspace -scheme DeenFirst -destination 'generic/platform=iOS Simulator' build 2>&1 | grep -E "(BUILD|error:)" | tail -10
 ```
 
 **Build Rules:**
@@ -716,9 +716,9 @@ xcodebuild -workspace SurahFocus.xcworkspace -scheme SurahFocus -destination 'ge
 ## DEVELOPMENT WORKFLOW
 
 **ALWAYS REFERENCE PLANNING DOCS:**
-- SURAH_FOCUS_PRD.md - feature requirements & user stories
-- SURAH_FOCUS_SYSTEM_DESIGN.md - architecture & service specs
-- SURAH_FOCUS_MILESTONES.md - timeline & phase tasks
+- DEEN_FIRST_PRD.md - feature requirements & user stories
+- DEEN_FIRST_SYSTEM_DESIGN.md - architecture & service specs
+- DEEN_FIRST_MILESTONES.md - timeline & phase tasks
 - PROJECT_SETUP.md - build system & environment
 - MINDCORE_MIGRATION_GUIDE.md - Screen Time code reference
 

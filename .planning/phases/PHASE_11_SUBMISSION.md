@@ -42,7 +42,7 @@ This is the final phase before launch:
 **App Store Connect - Complete Verification:**
 
 - [ ] **App Information:**
-  - [ ] Name: "Surah Focus - Muslim Lock"
+  - [ ] Name: "Deen First - Muslim Lock"
   - [ ] Subtitle: "Block Apps, Build Quran Habits"
   - [ ] Privacy Policy URL works: https://aydev.com/privacy
   - [ ] Support URL works: https://aydev.com/support
@@ -91,12 +91,12 @@ This is the final phase before launch:
 **Minimum Privacy Policy (hosted at https://aydev.com/privacy):**
 
 ```markdown
-# Privacy Policy for Surah Focus
+# Privacy Policy for Deen First
 
 **Last Updated:** February 18, 2026
 
 ## Introduction
-Surah Focus ("we", "our", "us") respects your privacy. This policy explains how we collect, use, and protect your information.
+Deen First ("we", "our", "us") respects your privacy. This policy explains how we collect, use, and protect your information.
 
 ## Information We Collect
 
@@ -125,7 +125,7 @@ We use your information to:
 - We do not sell your personal information
 
 ## Screen Time API
-Surah Focus uses Apple's Screen Time API to:
+Deen First uses Apple's Screen Time API to:
 - Block selected apps during sessions
 - Help you build better habits
 - All blocking is user-initiated and temporary
@@ -152,7 +152,7 @@ Questions? Email us at: support@aydev.com
 
 ## Data Deletion
 To delete your account and data:
-1. Open Surah Focus
+1. Open Deen First
 2. Go to Settings
 3. Tap "Delete Account"
 4. Confirm deletion
@@ -165,11 +165,11 @@ All data will be permanently deleted within 30 days.
 **Hosted at https://aydev.com/support:**
 
 ```markdown
-# Surah Focus Support
+# Deen First Support
 
 ## Frequently Asked Questions
 
-### How do I start using Surah Focus?
+### How do I start using Deen First?
 1. Download the app from the App Store
 2. Sign in with Apple
 3. Complete onboarding
@@ -193,7 +193,7 @@ Complete a session each day to maintain your streak. Every engagement counts - s
 1. Open Settings app on iPhone
 2. Tap your name at top
 3. Tap "Subscriptions"
-4. Select Surah Focus
+4. Select Deen First
 5. Tap "Cancel Subscription"
 
 ### Can I use the app without subscribing?
@@ -206,7 +206,7 @@ You can browse surahs for free, but blocking features and audio require a subscr
 - Device restart may be needed
 
 ### How do I restore my purchases?
-1. Open Surah Focus
+1. Open Deen First
 2. Go to Paywall
 3. Tap "Restore Purchases"
 
@@ -308,7 +308,7 @@ Answer: NO
 
 **You should see:**
 ```
-✓ "Surah Focus - Muslim Lock" has been submitted for review.
+✓ "Deen First - Muslim Lock" has been submitted for review.
 
 Status: Waiting for Review
 ```
@@ -377,7 +377,7 @@ Evening (6 PM):
 ```
 Dear App Review Team,
 
-Surah Focus uses the Screen Time API to help users build better habits by temporarily blocking distracting apps during their Quran reading and listening sessions.
+Deen First uses the Screen Time API to help users build better habits by temporarily blocking distracting apps during their Quran reading and listening sessions.
 
 Specifically:
 1. User selects which apps to block (via FamilyActivityPicker)
@@ -493,7 +493,7 @@ Best regards,
 
 ### Morning
 - [ ] Release app (click "Release this version")
-- [ ] Verify app appears in App Store (search "Surah Focus")
+- [ ] Verify app appears in App Store (search "Deen First")
 - [ ] Download and test from App Store
 - [ ] Verify all features work in production
 
@@ -539,7 +539,7 @@ Week 1 Goals:
 
 **Twitter/X:**
 ```
-🚀 Excited to launch Surah Focus - a new app to help Muslims build consistent Quran habits!
+🚀 Excited to launch Deen First - a new app to help Muslims build consistent Quran habits!
 
 ✨ Read all 114 surahs
 🎧 Listen to beautiful recitations
@@ -560,7 +560,7 @@ Image: App icon + key screenshots
 Caption:
 Building a daily Quran habit starts today 📖
 
-Surah Focus helps you:
+Deen First helps you:
 • Read the Quran with translations
 • Listen to world-class reciters
 • Block distracting apps during your session
@@ -578,9 +578,9 @@ Link in bio
 
 **Auto-responder template:**
 ```
-Subject: Re: Surah Focus Support
+Subject: Re: Deen First Support
 
-Thank you for contacting Surah Focus support!
+Thank you for contacting Deen First support!
 
 We've received your message and will respond within 24 hours.
 
@@ -592,7 +592,7 @@ Common issues:
 - Subscription issues? Settings > Subscriptions
 
 Best regards,
-Surah Focus Team
+Deen First Team
 ```
 
 ---

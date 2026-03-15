@@ -261,7 +261,7 @@ Quran Tab
 ## BUILD & VERIFY
 
 ```bash
-cd ~/Projects/surahfocus
+cd ~/Projects/deenfirst
 make build
 ```
 
