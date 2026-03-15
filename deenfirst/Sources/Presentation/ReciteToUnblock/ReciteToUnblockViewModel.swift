@@ -1,5 +1,6 @@
 import AVFoundation
 import Combine
+import CoreFoundation
 import Foundation
 
 private func normalizeArabic(_ text: String) -> String {
@@ -20,6 +21,26 @@ private func normalizeArabic(_ text: String) -> String {
     result = result.replacingOccurrences(of: "ى", with: "ي")
     return result
         .components(separatedBy: .whitespaces)
+        .filter { !$0.isEmpty }
+        .joined(separator: " ")
+}
+
+private func transliterateArabic(_ text: String) -> String {
+    let mutable = NSMutableString(string: text) as CFMutableString
+    CFStringTransform(mutable, nil, kCFStringTransformToLatin, false)
+    CFStringTransform(mutable, nil, kCFStringTransformStripCombiningMarks, false)
+    return mutable as String
+}
+
+private func normalizeTransliteration(_ text: String) -> String {
+    let latin = transliterateArabic(text).lowercased()
+    let allowed = CharacterSet.alphanumerics.union(.whitespacesAndNewlines)
+    let sanitized = latin.unicodeScalars
+        .map { allowed.contains($0) ? String($0) : " " }
+        .joined()
+
+    return sanitized
+        .components(separatedBy: .whitespacesAndNewlines)
         .filter { !$0.isEmpty }
         .joined(separator: " ")
 }
@@ -223,12 +244,26 @@ final class ReciteToUnblockViewModel: ObservableObject {
         do {
             let transcribed = try await callWhisperAPI(audioURL: audioURL, apiKey: apiKey)
             self.transcript = transcribed
+            let spokenTransliteration = transliterateArabic(transcribed)
 
-            let score = calculateSimilarity(reference: ayah.arabic2, spoken: transcribed)
+            let score = calculateSimilarity(
+                reference: ayah.arabic2,
+                referenceTransliteration: ayah.transliteration,
+                spoken: transcribed,
+                spokenTransliteration: spokenTransliteration
+            )
+
+            let normalizedReferenceTransliteration = normalizeTransliteration(ayah.transliteration)
+            let usesTransliteration = !normalizedReferenceTransliteration.isEmpty
 
             print("[Recite Similarity]")
-            print("  Ref: \(normalizeArabic(ayah.arabic2))")
-            print("  Got: \(normalizeArabic(transcribed))")
+            print("  Mode: \(usesTransliteration ? "transliteration" : "arabic")")
+            print(
+                "  Ref: \(usesTransliteration ? normalizedReferenceTransliteration : normalizeArabic(ayah.arabic2))"
+            )
+            print(
+                "  Got: \(usesTransliteration ? normalizeTransliteration(spokenTransliteration) : normalizeArabic(transcribed))"
+            )
             print("  Score: \(score)%")
 
             let passed = score >= 70
@@ -307,12 +342,43 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     // MARK: - Similarity
 
-    private func calculateSimilarity(reference: String, spoken: String) -> Int {
-        let refWords = Set(normalizeArabic(reference).split(separator: " ").map(String.init))
-        let gotWords = Set(normalizeArabic(spoken).split(separator: " ").map(String.init))
+    private func calculateSimilarity(
+        reference: String,
+        referenceTransliteration: String,
+        spoken: String,
+        spokenTransliteration: String
+    ) -> Int {
+        let normalizedReferenceTransliteration = normalizeTransliteration(referenceTransliteration)
+        let refWords: Set<String>
+        let gotWords: Set<String>
+
+        if !normalizedReferenceTransliteration.isEmpty {
+            refWords = Set(normalizedReferenceTransliteration.split(separator: " ").map(String.init))
+            gotWords = Set(
+                normalizeTransliteration(spokenTransliteration).split(separator: " ").map(String.init)
+            )
+        } else {
+            refWords = Set(normalizeArabic(reference).split(separator: " ").map(String.init))
+            gotWords = Set(normalizeArabic(spoken).split(separator: " ").map(String.init))
+        }
+
         guard !refWords.isEmpty else { return 0 }
         let matched = refWords.intersection(gotWords).count
-        return Int(Double(matched) / Double(refWords.count) * 100)
+        let baseScore = baseScore(for: refWords.count)
+        let wordMatchRatio = Double(matched) / Double(refWords.count)
+        let score = baseScore + wordMatchRatio * (100 - baseScore)
+        return Int(score)
+    }
+
+    private func baseScore(for wordCount: Int) -> Double {
+        switch wordCount {
+        case 1...2:
+            return 30
+        case 3...4:
+            return 20
+        default:
+            return 0
+        }
     }
 
     // MARK: - Unblock on Pass
