@@ -1,36 +1,142 @@
 # PROJECT RULES - iOS Swift MVVM Clean Architecture
+# Deen First
 
 ## FOLDER STRUCTURE
 
 ```
-DeenFirst/Sources/
+deenfirst/Sources/
 ├── Core/
-│   ├── DataDepency/DIContainer.swift
-│   ├── ImageCaching/
+│   ├── DataDependency/DIContainer.swift
 │   ├── Networking/
+│   │   ├── HTTPClient.swift
+│   │   └── NetworkLoggingInterceptor.swift
 │   └── SceneNavigation/Router.swift
-├── Data/
-│   ├── DataSource/LocalDataSource.swift
-│   └── Repositories/
-│       └── {Name}Repository.swift
 ├── Domain/
 │   ├── Entities/
 │   │   └── {entity}.swift (snake_case)
 │   └── Services/
 │       └── {Name}Service.swift
+├── Data/
+│   ├── DataSource/
+│   │   ├── API/
+│   │   │   ├── AlQuranAPIDataSource.swift
+│   │   │   ├── AlQuranAPIDTOs.swift
+│   │   │   ├── QuranAPIDataSource.swift
+│   │   │   └── QuranAPIDTOs.swift
+│   │   └── LocalDataSource.swift
+│   └── Repositories/
+│       └── {Name}Repository.swift
 ├── Presentation/
 │   ├── Components/
 │   │   └── {ComponentName}.swift
-│   └── {FeatureName}View/
-│       ├── {FeatureName}View.swift
-│       └── {FeatureName}Viewmodel.swift
+│   ├── Auth/
+│   │   ├── AuthView.swift
+│   │   └── AuthViewModel.swift
+│   ├── Paywall/
+│   │   ├── PaywallView.swift
+│   │   └── PaywallViewModel.swift
+│   ├── Survey/
+│   │   ├── SurveyView.swift
+│   │   ├── SurveyViewModel.swift
+│   │   ├── SurveyStep1View.swift
+│   │   ├── SurveyStep2View.swift
+│   │   ├── SurveyStep3View.swift
+│   │   └── SurveyStep4View.swift
+│   ├── Summary/
+│   │   ├── Summary1View.swift
+│   │   ├── Summary2View.swift
+│   │   ├── Summary3View.swift
+│   │   ├── SummaryViewModel.swift
+│   │   ├── CalculateSurveyView.swift
+│   │   ├── FinalSummaryView.swift
+│   │   ├── HowAppWork1View.swift
+│   │   ├── HowAppWork2View.swift
+│   │   └── HowAppWork3View.swift
+│   ├── Setup/
+│   │   ├── PermissionView.swift
+│   │   ├── PermissionSetupViewModel.swift
+│   │   ├── AppToBlock.swift
+│   │   ├── AppToBlockStep1View.swift
+│   │   ├── AppToBlockStep2View.swift
+│   │   ├── AppToBlockStep3View.swift
+│   │   ├── StarterPageView.swift
+│   │   ├── SetupViewModel.swift
+│   │   └── SetupSummary.swift
+│   ├── MainTabs/
+│   │   ├── MainTabView.swift
+│   │   ├── HomeTab/
+│   │   │   ├── HomeTabView.swift
+│   │   │   └── HomeTabViewModel.swift
+│   │   ├── QuranTab/
+│   │   │   ├── QuranTabView.swift
+│   │   │   ├── QuranTabViewModel.swift
+│   │   │   ├── SelectSurahView.swift
+│   │   │   ├── SelectSurahViewModel.swift
+│   │   │   ├── AyahRangeSelectionView.swift
+│   │   │   ├── AyahRangeSelectionViewModel.swift
+│   │   │   ├── FocusSectionView.swift
+│   │   │   ├── FocusSectionViewModel.swift
+│   │   │   ├── ActiveSessionView.swift
+│   │   │   ├── ActiveSessionViewModel.swift
+│   │   │   └── SessionFinishView.swift
+│   │   ├── BlockingTab/
+│   │   │   ├── BlockingTabView.swift
+│   │   │   ├── BlockingTabViewModel.swift
+│   │   │   ├── AppLimitView.swift
+│   │   │   ├── AppLimitViewModel.swift
+│   │   │   ├── TimeLimitView.swift
+│   │   │   └── TimeLimitViewModel.swift
+│   │   └── SettingsTab/
+│   │       ├── SettingsTabView.swift
+│   │       ├── SettingsTabViewModel.swift
+│   │       ├── PreferencesView.swift
+│   │       ├── PreferencesViewModel.swift
+│   │       ├── SubscriptionView.swift
+│   │       ├── SubscriptionViewModel.swift
+│   │       ├── SubscriptionPlansView.swift
+│   │       ├── SupportView.swift
+│   │       ├── SupportViewModel.swift
+│   │       ├── ReciterSelectionSheet.swift
+│   │       ├── TranslationSelectionSheet.swift
+│   │       └── EmergencyUnblock/
+│   │           ├── EmergencyUnblockView.swift
+│   │           └── EmergencyUnblockViewModel.swift
+│   ├── ReciteToUnblock/
+│   │   ├── ReciteToUnblockView.swift
+│   │   ├── ReciteToUnblockViewModel.swift
+│   │   ├── ReciteAlertView.swift
+│   │   └── UnblockDurationSheet.swift
+│   ├── QuranReading/
+│   │   ├── QuranReadingView.swift
+│   │   └── QuranReadingViewModel.swift
+│   ├── FocusSession/
+│   │   ├── StartView.swift
+│   │   ├── SelectSurahFocusView.swift
+│   │   ├── SetupView.swift
+│   │   └── EndView.swift
+│   └── Components/
+│       ├── (shared reusable components)
+│       ├── BlockingTabComps/
+│       ├── HomeTabComps/
+│       ├── FocusSessionComps/
+│       └── SettingsTabComps/
+├── Shared/
+│   ├── AppGroupConstants.swift
+│   ├── DayHelper.swift
+│   └── ScreenTimeEvents.swift
 ├── Utils/
-│   ├── Extensions.swift
-│   └── ScreenTime/
-│       └── {ScreenTimeHelper}.swift
+│   ├── AppConstants.swift
+│   ├── Color+Extension.swift
+│   ├── Date+Extension.swift
+│   ├── DeviceActivityScheduleHelper.swift
+│   ├── KeychainHelper.swift
+│   ├── TimeLimitHelper.swift
+│   └── UserPersistenceHelper.swift
 ├── RootView.swift
 └── DeenFirstApp.swift
 ```
+
+---
 
 ## ARCHITECTURE: CLEAN ARCH + MVVM
 
@@ -42,48 +148,45 @@ Domain (Service + Entity)
 Data (Repository + DataSource)
 ```
 
+---
+
 ## NAMING CONVENTIONS
 
 ### Files
-- Views: `PascalCase` → `CameraView.swift`
-- ViewModels: `PascalCase` → `CameraViewmodel.swift`
-- Entities: `snake_case` → `shade.swift`, `skin_tone.swift`
-- Services: `PascalCase` → `ProductService.swift`
-- Repositories: `PascalCase` → `ProductRepository.swift`
-- Components: `PascalCase` → `CustomButton.swift`
-- Utils: `PascalCase` → `Extensions.swift`, `ScreenTimeHelper.swift`
+- Views: `PascalCase` → `HomeTabView.swift`
+- ViewModels: `PascalCase` → `HomeTabViewModel.swift`
+- Entities: `snake_case` → `user.swift`, `session.swift`
+- Services: `PascalCase` → `QuranService.swift`
+- Repositories: `PascalCase` → `QuranRepository.swift`
+- Components: `PascalCase` → `PrimaryButton.swift`
+- Utils: `PascalCase` → `Date+Extension.swift`
 
 ### Classes/Structs
-- Views: `{Name}View` → `struct CameraView: View`
-- ViewModels: `{Name}Viewmodel` → `class CameraViewmodel: ObservableObject`
-- Services Protocol: `{Name}Service` → `protocol ProductService`
-- Services Impl: `{Name}ServiceImpl` → `class ProductServiceImpl: ProductService`
-- Repositories: Same pattern as services
-- Entities: `PascalCase` → `struct Shade`, `class SkinTone`
-- Components: Descriptive → `CustomButton`, `BackButton`
+- Views: `{Name}View` → `struct HomeTabView: View`
+- ViewModels: `{Name}Viewmodel` → `final class HomeTabViewModel: ObservableObject`
+- Services Protocol: `{Name}Service` → `protocol QuranService`
+- Services Impl: `{Name}ServiceImpl` → `class QuranServiceImpl: QuranService`
+- Repositories: same pattern as services
+- Entities: `PascalCase` class/struct, `snake_case` file name
 
 ### Variables/Properties
 - camelCase: `var searchText: String = ""`
-- Booleans: `is/has` prefix → `isLoading`, `hasError`
-- Private: `private let` → `private let repo: ProductRepository`
-- Published: `@Published var brands: [Brand] = []`
+- Booleans: `is/has` prefix → `isLoading`, `hasCompletedOnboarding`
+- Private: `private let service: QuranService`
+- Published: `@Published var surahs: [Surah] = []`
 
-### Functions
-- camelCase: `func load()`, `func getBrands()`
-- Async: `async` suffix in context → `async func calculateMatches() throws`
-- Private helpers: `private func startAnalysis()`
+---
 
 ## VIEW PATTERN
 
 ```swift
-struct ChooseBrandView: View {
+struct HomeTabView: View {
     @EnvironmentObject var router: Router
-    @EnvironmentObject var vm: ChooseBrandViewModel
-    @State private var isSearchFocused: Bool = false
+    @EnvironmentObject var vm: HomeTabViewModel
 
     var body: some View {
         VStack {
-            // UI
+            // UI only, no business logic
         }
         .onAppear {
             vm.load()
@@ -95,31 +198,36 @@ struct ChooseBrandView: View {
 **Rules:**
 - `struct` + `View` protocol
 - `@EnvironmentObject var router: Router` for navigation
-- `@EnvironmentObject var vm: {Name}ViewModel` for state
+- `@EnvironmentObject var vm: {Name}Viewmodel` for state
 - `@State` for local UI state only
 - Call `vm.load()` in `.onAppear`
 - No business logic in views
+
+---
 
 ## VIEWMODEL PATTERN
 
 ```swift
 @MainActor
-final class ChooseBrandViewModel: ObservableObject {
-    @Published var productService: ProductService
-    @Published var searchText: String = ""
+final class HomeTabViewModel: ObservableObject {
+    @Published var user: User?
     @Published var isLoading: Bool = true
-    @Published var brands: [Brand] = []
-    @Published var selectedBrands: Set<Brand> = []
+    @Published var activeBlocks: [ScreenTimeRule] = []
+
+    private let userRepo: UserRepository
+    private let screenTimeService: ScreenTimeRulesService
 
     init() {
-        productService = DIContainer.shared.productService
+        self.userRepo = DIContainer.shared.userRepository
+        self.screenTimeService = DIContainer.shared.screenTimeRulesService
     }
 
     func load() {
         Task {
             do {
                 isLoading = true
-                brands = try await productService.getBrands()
+                user = try userRepo.getCurrentUser()
+                activeBlocks = try screenTimeService.getActiveRules()
             } catch {
                 print("Error: \(error)")
             }
@@ -136,34 +244,29 @@ final class ChooseBrandViewModel: ObservableObject {
 - `@Published var` for reactive state
 - Wrap async in `Task { }`
 - Set `isLoading = true` before, `false` after
-- Use `do/catch` with print for errors
-- No UI code in viewmodel
+- Use `do/catch` for errors
+- No UI code in ViewModel
+
+---
 
 ## SERVICE PATTERN
 
 ```swift
-protocol ProductService {
-    func getBrands() async throws -> [Brand]
-    func calculateMatches() async throws
+protocol QuranService {
+    func getAllSurahs() async throws -> [Surah]
+    func getSurahById(id: Int, translation: String) async throws -> Surah
+    func getAudioURL(surahNumber: Int, reciterId: Int) async throws -> URL
 }
 
-class ProductServiceImpl: ProductService {
-    private let repo: ProductRepository
-    private let skinAnalysisRepo: SkinAnalysisRepository
+class QuranServiceImpl: QuranService {
+    private let repo: QuranRepository
 
-    init(repo: ProductRepository, skinAnalysisRepo: SkinAnalysisRepository) {
+    init(repo: QuranRepository) {
         self.repo = repo
-        self.skinAnalysisRepo = skinAnalysisRepo
     }
 
-    func getBrands() async throws -> [Brand] {
-        return try await repo.getBrands()
-    }
-
-    func calculateMatches() async throws {
-        // business logic
-        let recommendations = try await repo.getRecommendations()
-        // process...
+    func getAllSurahs() async throws -> [Surah] {
+        return try await repo.getAllSurahs()
     }
 }
 ```
@@ -171,28 +274,27 @@ class ProductServiceImpl: ProductService {
 **Rules:**
 - Protocol first: `protocol {Name}Service`
 - Implementation: `class {Name}ServiceImpl: {Name}Service`
-- Inject repos in `init()`
-- Business logic layer (wraps repos)
+- Inject repositories in `init()`
+- Business logic layer only
 - Use `async throws` for async methods
-- Return types explicit
+
+---
 
 ## REPOSITORY PATTERN
 
 ```swift
-protocol ProductRepository {
-    func insertAllBrand(_ brands: [Brand]) async throws
-    func getBrands() async throws -> [Brand]
+protocol QuranRepository {
+    func getAllSurahs() async throws -> [Surah]
+    func getSurahById(id: Int, translation: String) async throws -> Surah
 }
 
-class ProductRepositoryImpl: ProductRepository {
-    private let ds: LocalDataSource
+class QuranRepositoryImpl: QuranRepository {
+    private let apiDataSource: QuranAPIDataSource
+    private let localDataSource: LocalDataSource
 
-    init(localDataSource: LocalDataSource) {
-        self.ds = localDataSource
-    }
-
-    func getBrands() async throws -> [Brand] {
-        return try ds.getBrandsCatalog()
+    init(apiDataSource: QuranAPIDataSource, localDataSource: LocalDataSource) {
+        self.apiDataSource = apiDataSource
+        self.localDataSource = localDataSource
     }
 }
 ```
@@ -200,43 +302,34 @@ class ProductRepositoryImpl: ProductRepository {
 **Rules:**
 - Protocol first: `protocol {Name}Repository`
 - Implementation: `class {Name}RepositoryImpl: {Name}Repository`
-- Inject `LocalDataSource` in init
-- Data access layer only
-- Delegate to DataSource methods
+- Data access layer only (no business logic)
+- Inject DataSources in `init()`
 - `async throws` for async operations
+
+---
 
 ## DEPENDENCY INJECTION
 
 ```swift
 final class DIContainer {
-    private let modelContainer: ModelContainer
+    static let shared: DIContainer = { ... }()
 
-    lazy var localDataSource: LocalDataSource =
-        LocalDataSource(container: modelContainer)
-
-    lazy var productRepository: ProductRepository =
-        ProductRepositoryImpl(localDataSource: localDataSource)
-
-    lazy var productService: ProductService =
-        ProductServiceImpl(repo: productRepository, skinAnalysisRepo: skinAnalysisRepository)
-
-    static let shared: DIContainer = {
-        let container = try? ModelContainer(for: AppData.self)
-        return DIContainer(modelContainer: container ?? inMemoryContainer)
-    }()
-
-    private init(modelContainer: ModelContainer) {
-        self.modelContainer = modelContainer
-    }
+    // Registration order: DataSource → Repository → Service
+    lazy var localDataSource: LocalDataSource = ...
+    lazy var quranRepository: QuranRepository = QuranRepositoryImpl(...)
+    lazy var quranService: QuranService = QuranServiceImpl(repo: quranRepository)
+    // ... etc
 }
 ```
 
 **Rules:**
 - Singleton: `static let shared`
 - `lazy var` for all dependencies
-- Register: DataSource → Repositories → Services
+- Register: DataSources → Repositories → Services
 - Inject protocol types, not implementations
 - ViewModels get deps via `DIContainer.shared.{service}`
+
+---
 
 ## NAVIGATION PATTERN
 
@@ -245,109 +338,83 @@ class Router: ObservableObject {
     @Published var navigationPath = NavigationPath()
 
     enum Route: Hashable {
-        case onboarding
-        case brandPreference(isEdit: Bool)
-        case detailShade(shadeRecommendation: ShadeRecommendation)
+        case auth
+        case mainTabs
+        case quranReading(surahId: Int)
+        case reciteToUnlock
+        case emergencyUnblock
+        // ... all routes
     }
 
-    func navigate(to route: Route) {
-        navigationPath.append(route)
-    }
-
-    func navigateBack() {
-        if !navigationPath.isEmpty {
-            navigationPath.removeLast()
-        }
-    }
-
-    func replaceNavigationPath(with routes: [Route]) {
-        navigationPath = NavigationPath()
-        routes.forEach { navigationPath.append($0) }
-    }
-}
-```
-
-**RootView:**
-```swift
-NavigationStack(path: $router.navigationPath) {
-    SplashView()
-        .navigationDestination(for: Router.Route.self) { route in
-            destinationView(for: route)
-        }
-}
-.environmentObject(router)
-
-@ViewBuilder
-private func destinationView(for route: Router.Route) -> some View {
-    switch route {
-    case .onboarding:
-        OnboardingView()
-    case .brandPreference(let isEdit):
-        ChooseBrandView(isEdit: isEdit)
-    }
+    func navigate(to route: Route) { navigationPath.append(route) }
+    func navigateBack() { if !navigationPath.isEmpty { navigationPath.removeLast() } }
+    func replaceWith(_ routes: [Route]) { navigationPath = NavigationPath(); routes.forEach { navigationPath.append($0) } }
+    func reset() { navigationPath = NavigationPath() }
 }
 ```
 
 **Rules:**
 - Single `Router` class with `NavigationPath`
 - `enum Route: Hashable` for type-safe routes
-- Associated values for params
+- Associated values for parameters
 - Inject as `@EnvironmentObject var router: Router`
-- Navigate: `router.navigate(to: .detailShade(shade))`
+- Navigate: `router.navigate(to: .quranReading(surahId: 1))`
 - Back: `router.navigateBack()`
+
+---
+
+## ROOT VIEW PATTERN
+
+All ViewModels created as `@StateObject` in RootView and injected as environment objects. This makes ViewModels persistent across navigation and avoids recreation.
+
+```swift
+struct RootView: View {
+    @StateObject private var router = Router()
+    @StateObject private var homeTabVM = HomeTabViewModel()
+    @StateObject private var quranTabVM = QuranTabViewModel()
+    // ... all 23 ViewModels
+
+    var body: some View {
+        NavigationStack(path: $router.navigationPath) {
+            // Initial view based on state check
+        }
+        .environmentObject(router)
+        .environmentObject(homeTabVM)
+        .environmentObject(quranTabVM)
+        // ... inject all VMs
+    }
+}
+```
+
+---
 
 ## COMPONENTS PATTERN
 
 ```swift
-struct CustomButton: View {
+struct PrimaryButton: View {
     let title: String
     let action: () -> Void
-    var isDense: Bool = false
-    var isFilled: Bool = true
-    var variant: ButtonVariant = .active
-
-    enum ButtonVariant {
-        case active, disabled
-    }
+    var isLoading: Bool = false
+    var isDisabled: Bool = false
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.system(size: isDense ? 14 : 16, design: .monospaced))
+            // UI
         }
-        .disabled(variant == .disabled)
+        .disabled(isDisabled || isLoading)
     }
 }
 ```
 
 **Rules:**
-- Stateless or minimal state
+- Stateless or minimal `@State` only
 - Accept closures: `let action: () -> Void`
 - Default values for optional params
 - Located in `Presentation/Components/`
+- Tab-specific components in `Components/{Tab}Comps/`
 - Reusable across features
 
-## STATE MANAGEMENT
-
-**Data Flow:**
-```
-View reads @Published
-    ↓
-ViewModel (ObservableObject)
-    ↓
-Service (business logic)
-    ↓
-Repository (data access)
-    ↓
-DataSource (persistence)
-```
-
-**Rules:**
-- View: `@State` for local UI, `@EnvironmentObject` for ViewModel
-- ViewModel: `@Published var` for reactive properties
-- ViewModel: `@MainActor` for thread safety
-- Service/Repo: No state, stateless functions
-- Async: wrap in `Task { }`
+---
 
 ## ASYNC/AWAIT PATTERN
 
@@ -356,7 +423,7 @@ func load() {
     Task {
         do {
             isLoading = true
-            brands = try await productService.getBrands()
+            data = try await service.getData()
         } catch {
             print("Error: \(error)")
         }
@@ -372,61 +439,43 @@ func load() {
 - Use `async throws` for service/repo methods
 - `@MainActor` on ViewModels ensures main thread
 
-## ERROR HANDLING
-
-```swift
-// In ViewModels:
-do {
-    try await service.doSomething()
-} catch {
-    print("Error: \(error)")
-}
-
-// In Services/Repos:
-func getBrands() async throws -> [Brand] {
-    return try await repo.getBrands()
-}
-```
-
-**Rules:**
-- Use `throws` for service/repo methods
-- `try/catch` in ViewModels
-- Print errors: `print("Error: \(error)")`
-- Silent failures: `catch {}` where appropriate
-- No alert/toast error handling (just logging)
+---
 
 ## ENTITY PATTERN
 
 ```swift
-// SwiftData Model
+// SwiftData Model (local persistence)
 @Model
-class SkinTone {
-    var hex: String
-    var skinToneTimestamp: Date
+class User {
+    @Attribute(.unique) var id: String
+    var name: String
+    var isPremium: Bool
+    init(id: String, name: String) { ... }
+}
 
-    init(hex: String) {
-        self.hex = hex
-        self.skinToneTimestamp = Date()
-    }
+// Codable struct (API response / App Groups)
+struct ScreenTimeRule: Codable, Identifiable, Hashable {
+    let id: UUID
+    var name: String
+    var type: RuleType
 }
 
 // Enum
-enum Undertone: String, Codable {
-    case warm = "warm"
-    case cool = "cool"
-    case neutral = "neutral"
+enum RuleType: String, Codable {
+    case timeLimit
+    case timeLimit
+    case allDay
 }
-
-// Typealias
-typealias Brand = String
 ```
 
 **Rules:**
-- Use `@Model` for SwiftData persistence
-- snake_case file names: `skin_tone.swift`
-- PascalCase class/struct names: `SkinTone`
-- Enums with raw values for serialization
-- Simple types can be typealias
+- `@Model` for SwiftData entities
+- `Codable` structs for App Groups / API data
+- `snake_case` file names: `user.swift`, `session.swift`
+- `PascalCase` class/struct names: `User`, `Session`
+- Enums with `RawValue` for serialization
+
+---
 
 ## DATA SOURCE PATTERN
 
@@ -440,14 +489,13 @@ final class LocalDataSource {
         self.context = ModelContext(container)
     }
 
-    func getBrandsCatalog() throws -> [Brand] {
-        let appData = try getOrCreateAppData()
-        return appData.selectedBrands
+    func getCurrentUser() throws -> User? {
+        let descriptor = FetchDescriptor<User>()
+        return try context.fetch(descriptor).first
     }
 
-    func updateAppData(_ apply: (AppData) -> Void) throws {
-        let appData = try getOrCreateAppData()
-        apply(appData)
+    func save(_ user: User) throws {
+        context.insert(user)
         try context.save()
     }
 }
@@ -455,218 +503,85 @@ final class LocalDataSource {
 
 **Rules:**
 - Single `LocalDataSource` class
-- Wrap SwiftData operations
-- Use FetchDescriptor for queries
+- Wraps all SwiftData operations
+- Use `FetchDescriptor` for queries
 - Manual `context.save()` after mutations
-- Throw errors, don't catch
+- Throw errors, don't catch internally
 
-## UTILS PATTERN
+---
 
-**Utils** (`/Utils/`): Extensions and utilities
-- `Extensions.swift` - Generic extensions (Color(hex:), Array safe subscript, Date helpers)
-- `/ScreenTime/` - Screen Time specific utilities (when needed for FamilyControls)
-  - `ScreenTimeHelper.swift` - Shield configuration helpers
-  - `TimeLimit.swift` - Time limit enums
-  - `ScreenTimeEvents.swift` - Event creation utilities
+## SHARED / APP GROUPS
 
-**Rules:**
-- Utils: generic extensions and specific utilities
-- Screen Time helpers go in Utils/ScreenTime/ subfolder
-- No business logic in utils (use Services instead)
-- Pure functions preferred
+Files in `Shared/` are accessible to both the main app and extensions:
+- `AppGroupConstants.swift` — shared UserDefaults suite name, key constants
+- `DayHelper.swift` — day name utilities for scheduling
+- `ScreenTimeEvents.swift` — event creation utilities for DeviceActivity
 
-## EXTENSION PATTERN
+**App Group**: `group.com.aydev.deenfirst`
 
 ```swift
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 6: (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        default: (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: Double(a) / 255)
-    }
-}
-
-extension Array {
-    subscript(safe index: Index) -> Element? {
-        return indices.contains(index) ? self[index] : nil
-    }
-}
+let sharedDefaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
 ```
 
-**Rules:**
-- Put all extensions in `Utils/Extensions.swift`
-- Generic helpers only (no feature-specific)
-- Use `extension {Type} { }`
-- Add convenience inits/computed props
+---
 
-## PROPERTY DEFINITION STYLE
+## SCREEN TIME EXTENSION PATTERN
 
-```swift
-// Published state
-@Published var searchText: String = ""
-@Published var brands: [Brand] = []
+Two separate extension targets required:
 
-// Private constants
-private let service: ProductService
+**DeviceActivityMonitor** (`com.aydev.deenfirst.ScreenTimeMonitor`):
+- Subclass of `DeviceActivityMonitor`
+- Implements `intervalDidStart`, `intervalDidEnd`, `eventDidReachThreshold`
+- Reads token mappings from shared UserDefaults
+- Applies shields via `ManagedSettingsStore`
 
-// Computed properties
-var filteredBrands: [Brand] {
-    brands.filter { $0.contains(searchText) }
-}
+**ShieldConfiguration** (`com.aydev.deenfirst.Shield`):
+- Subclass of `ShieldConfigurationDataSource`
+- Implements `configuration(shielding:)` variants
+- Returns branded `ShieldConfiguration` (Deen First title, branding color)
 
-// State with default
-@State private var isLoading: Bool = false
+Both targets must:
+- Share app group `group.com.aydev.deenfirst`
+- Have `com.apple.developer.family-controls` entitlement (monitor extension only)
+
+---
+
+## STATE MANAGEMENT
+
+```
+View reads @Published
+    ↓
+ViewModel (ObservableObject, @MainActor)
+    ↓
+Service (business logic, stateless functions)
+    ↓
+Repository (data access, stateless functions)
+    ↓
+DataSource (persistence)
 ```
 
-**Rules:**
-- Explicit types: `var name: Type = value`
-- `@Published` for reactive ViewModel state
-- `@State private` for local View state
-- No implicit types unless obvious
-
-## FUNCTION DEFINITION STYLE
-
-```swift
-// Simple sync
-func load() {
-    // Task wrapper
-}
-
-// Async throws
-async func getBrands() throws -> [Brand] {
-    return try await repo.getBrands()
-}
-
-// Private helper
-private func startAnalysis() {
-    // logic
-}
-
-// With closure param
-func fetchData(completion: @escaping (Result<Data, Error>) -> Void) {
-    // async work
-}
-```
-
-**Rules:**
-- camelCase names
-- Explicit return types for public methods
-- `private` for internal helpers
-- `async throws` for async that can fail
-- `@MainActor` when needed for UI updates
-
-## SWIFTUI STYLE
-
-```swift
-var body: some View {
-    VStack(spacing: 16) {
-        Text("Title")
-            .font(.system(size: 20, weight: .bold, design: .monospaced))
-
-        Button(action: { vm.load() }) {
-            Text("Load")
-        }
-    }
-    .padding(.horizontal, 16)
-    .onAppear {
-        vm.load()
-    }
-}
-```
-
-**Rules:**
-- Use `.font(.system(..., design: .monospaced))` for consistency
-- Spacing: 8pt, 16pt standard
-- Padding: `.padding(.horizontal, 16)`
-- Call VM methods in `.onAppear`
-- Closure actions: `action: { vm.methodName() }`
-
-## ROOT VIEW PATTERN
-
-```swift
-struct RootView: View {
-    @StateObject private var router = Router()
-    @StateObject private var cameraVM = CameraViewmodel()
-    @StateObject private var chooseBrandVM = ChooseBrandViewModel()
-
-    var body: some View {
-        NavigationStack(path: $router.navigationPath) {
-            SplashView()
-                .navigationDestination(for: Router.Route.self) { route in
-                    destinationView(for: route)
-                }
-        }
-        .environmentObject(router)
-        .environmentObject(cameraVM)
-        .environmentObject(chooseBrandVM)
-    }
-}
-```
-
-**Rules:**
-- Create all ViewModels as `@StateObject`
-- Single Router instance
-- Inject via `.environmentObject()`
-- Use `NavigationStack` with path binding
-
-## LIFECYCLE PATTERN
-
-**App Entry:**
-```swift
-@main
-struct DeenFirstApp: App {
-    var body: some Scene {
-        WindowGroup {
-            RootView()
-        }
-    }
-}
-```
-
-**View Lifecycle:**
-```swift
-.onAppear {
-    vm.load()  // fetch data
-}
-
-.task {
-    await vm.initialize()  // async init
-}
-```
+---
 
 ## THREADING
 
-**Rules:**
-- `@MainActor` on all ViewModels
-- UI updates automatic on main thread
-- Manual dispatch if needed: `await MainActor.run { }`
-- Background work in `Task { }` (actor-isolated)
+- `@MainActor` on all ViewModels — UI updates automatic on main thread
+- Background network/DB work runs in `Task { }` (actor-isolated to main since ViewModel is @MainActor)
+- Services and Repositories: no actor annotation — called from ViewModel's Task context
 
-## CODE STYLE PREFERENCES
+---
 
-**General:**
-- No force unwraps (!), use optional binding
-- Prefer `if let` over guard for simple checks
-- Use `guard` for early returns
-- Monospaced fonts in UI
-- Dark/light mode support
+## CODE STYLE
 
-**Comments:**
-- Minimal comments
-- Code should be self-documenting
-- Only comment complex algorithms
-
-**Formatting:**
-- 4-space indent (or Xcode default)
+- No force unwraps (`!`) — use optional binding or `guard`
+- `guard` for early returns, `if let` for simple checks
+- Explicit types: `var name: String = ""`
+- 4-space indent (Xcode default)
 - Opening brace same line: `func foo() {`
-- Line length: flexible, prefer readable
 - Blank line between methods
+- Minimal comments — code should be self-documenting
+- Only comment complex algorithms (e.g., recitation similarity scoring)
+
+---
 
 ## CHECKLIST FOR NEW FEATURES
 
@@ -679,69 +594,49 @@ struct DeenFirstApp: App {
 7. Inject service via `DIContainer.shared`
 8. Create View in `Presentation/{Feature}/`
 9. Add route to `Router.Route` enum
-10. Add destination in `RootView.destinationView()`
-11. Create ViewModels in `RootView` as `@StateObject`
+10. Add destination in `RootView` navigation destinations
+11. Create `@StateObject` for ViewModel in `RootView`
 12. Inject ViewModel via `.environmentObject()`
-13. Add Components to `Presentation/Components/` if reusable
+13. Add reusable components to `Presentation/Components/` if needed
+
+---
 
 ## QUICK REFERENCE
 
-| Layer | Protocol | Implementation | DI |
-|-------|----------|----------------|-----|
+| Layer | Protocol | Implementation | DI Access |
+|-------|----------|----------------|-----------|
 | Service | `protocol XService` | `class XServiceImpl: XService` | `DIContainer.shared.xService` |
 | Repository | `protocol XRepository` | `class XRepositoryImpl: XRepository` | `DIContainer.shared.xRepository` |
-| ViewModel | - | `@MainActor final class XViewmodel: ObservableObject` | Created in RootView |
-| View | - | `struct XView: View` | Injected via @EnvironmentObject |
-| Entity | - | `@Model class X` or `struct X` or `enum X` | - |
+| ViewModel | — | `@MainActor final class XViewmodel: ObservableObject` | Created as `@StateObject` in RootView |
+| View | — | `struct XView: View` | Injected via `@EnvironmentObject` |
+| Entity | — | `@Model class X` or `struct X: Codable` | — |
 
 ---
 
-## BUILD SYSTEM & PROJECT SETUP
+## BUILD SYSTEM
 
-For project initialization, Tuist configuration, Makefile, and environment setup, see [PROJECT_SETUP.md](./PROJECT_SETUP.md).
+See `PROJECT_SETUP.md` for Tuist configuration, Makefile, and environment setup.
 
-### Build Verification
-
-**Use this command to verify builds:**
 ```bash
-xcodebuild -workspace DeenFirst.xcworkspace -scheme DeenFirst -destination 'generic/platform=iOS Simulator' build 2>&1 | grep -E "(BUILD|error:)" | tail -10
+# Verify build
+xcodebuild -workspace deenfirst.xcworkspace \
+  -scheme deenfirst \
+  -destination 'generic/platform=iOS Simulator' \
+  build 2>&1 | grep -E "(BUILD|error:)" | tail -10
 ```
 
-**Build Rules:**
-- Build ONCE at end of work to verify, fix all issues at once
-- Don't build too frequently - only at end for verification
+Build once at end of work session to verify. Fix all errors at once.
 
 ---
 
-## DEVELOPMENT WORKFLOW
+## PLANNING DOCUMENTS REFERENCE
 
-**ALWAYS REFERENCE PLANNING DOCS:**
-- DEEN_FIRST_PRD.md - feature requirements & user stories
-- DEEN_FIRST_SYSTEM_DESIGN.md - architecture & service specs
-- DEEN_FIRST_MILESTONES.md - timeline & phase tasks
-- PROJECT_SETUP.md - build system & environment
-- MINDCORE_MIGRATION_GUIDE.md - Screen Time code reference
-
-**CONFIRMATION OVER HYPOTHESIS:**
-- Never assume - confirm anything uncertain with user
-- Ask questions before making architectural decisions
-- Request human input for UI/UX, complex logic, edge cases
-
-**UNIT TESTING:**
-- Create unit tests for all new code
-- Test services, repositories, ViewModels
-- Use XCTest framework
-- Place tests in `Tests/` directory
-
-**PLAN VALIDATION:**
-- Always validate plan phases before execution
-- Cross-reference with milestones
-- Check dependencies between tasks
-
-**DECISION MAKING:**
-- Ultra think before decisions
-- Consider trade-offs explicitly
-- Document rationale in plan
+- `DEEN_FIRST_PRD.md` — feature requirements & user stories (no code)
+- `DEEN_FIRST_SYSTEM_DESIGN.md` — architecture, flows, data models
+- `PROJECT_RULES.md` — code patterns & conventions (this file)
+- `PROJECT_SETUP.md` — build system & Tuist config
+- `SCREEN_TIME_API_GUIDE.md` — Screen Time API reference implementation
+- `REVENUECAT_SETUP.md` — RevenueCat setup & configuration
 
 ---
 
