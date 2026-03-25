@@ -10,10 +10,12 @@ GREEN := \033[0;32m
 RED := \033[0;31m
 YELLOW := \033[0;33m
 NC := \033[0m # No Color
+WORKSPACE := Deen First.xcworkspace
+SCHEME := DeenFirst
 
 # Default target
 .PHONY: all
-all: clean install env build generate
+all: clean install env generate build
 
 # Check and source .env file
 .PHONY: env
@@ -40,7 +42,14 @@ env:
 .PHONY: generate
 generate:
 	@echo "$(BLUE)Generating Tuist project...$(NC)"
-	@tuist generate
+	@if [ ! -f .env ]; then \
+		echo "$(RED)Error: .env file not found$(NC)"; \
+		exit 1; \
+	fi
+	@set -a; \
+	. ./.env; \
+	set +a; \
+	tuist generate
 	@echo "$(GREEN)✓ Project generated successfully$(NC)"
 
 # Clean Tuist project
@@ -67,21 +76,35 @@ edit:
 .PHONY: build
 build:
 	@echo "$(BLUE)Building the app...$(NC)"
-	@xcodebuild -workspace DeenFirst.xcworkspace -scheme DeenFirst -sdk iphoneos -destination 'id=00008120-001A025C1EC00032' build 2>&1 | grep "error:" | head -10
+	@if [ ! -f .env ]; then \
+		echo "$(RED)Error: .env file not found$(NC)"; \
+		exit 1; \
+	fi
+	@set -a; \
+	. ./.env; \
+	set +a; \
+	xcodebuild -workspace "$(WORKSPACE)" -scheme "$(SCHEME)" -configuration Release -destination 'generic/platform=iOS' build
 	@echo "$(GREEN)✓ App built successfully$(NC)"
 
 # Run unit tests
 .PHONY: test
 test:
 	@echo "$(BLUE)Running unit tests...$(NC)"
-	@xcodebuild -scheme DeenFirst -destination 'platform=iOS Simulator' test | xcpretty
+	@if [ ! -f .env ]; then \
+		echo "$(RED)Error: .env file not found$(NC)"; \
+		exit 1; \
+	fi
+	@set -a; \
+	. ./.env; \
+	set +a; \
+	xcodebuild -workspace "$(WORKSPACE)" -scheme "$(SCHEME)" -destination 'platform=iOS Simulator' test
 	@echo "$(GREEN)✓ Unit tests completed successfully$(NC)"
 
 # Show help
 .PHONY: help
 help:
 	@echo "$(BLUE)Available commands:$(NC)"
-	@echo "  make           - Load environment, generate project, build and run tests"
+	@echo "  make           - Clean, install, load env, generate project, build app"
 	@echo "  make env       - Load environment variables"
 	@echo "  make generate  - Generate Xcode project"
 	@echo "  make build     - Build the app"

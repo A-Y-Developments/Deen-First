@@ -7,6 +7,12 @@ let revenueCatApiKeyDebug = Environment.revenuecatApiKey.getString(default: "")
 let revenueCatApiKeyProd = Environment.revenuecatProdKey.getString(default: "")
 let openAIApiKey = Environment.openaiApiKey.getString(default: "")
 let bypassPaywall = Environment.bypassPaywall.getString(default: "false")
+let distributionCodeSignIdentity = "Apple Distribution"
+let appDistributionProfile = "Deen First Distribution"
+let screenTimeMonitorDistributionProfile = "Deen First ScreenTimeMonitor Distribution"
+let shieldDistributionProfile = "Deen First Shield Distribution"
+let appVersion: Plist.Value = .string("1.0.0")
+let appBuild: Plist.Value = .string("1")
 
 let project = Project(
     name: "Deen First",
@@ -20,9 +26,9 @@ let project = Project(
             bundleId: baseBundleId,
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
-                "CFBundleShortVersionString": "1.0.0",
+                "CFBundleShortVersionString": appVersion,
                 "CFBundleDisplayName": "Deen First",
-                "CFBundleVersion": "1",
+                "CFBundleVersion": appBuild,
                 "UISupportedInterfaceOrientations": [
                     "UIInterfaceOrientationPortrait"
                 ],
@@ -73,10 +79,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string(distributionCodeSignIdentity),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(appDistributionProfile),
                             "REVENUECAT_API_KEY": .string(revenueCatApiKeyProd),
                             "OPENAI_API_KEY": .string(openAIApiKey),
                             "BYPASS_PAYWALL": .string(bypassPaywall),
@@ -94,6 +101,8 @@ let project = Project(
             bundleId: "\(baseBundleId).ScreenTimeMonitor",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleShortVersionString": appVersion,
+                "CFBundleVersion": appBuild,
                 "CFBundleDisplayName": "ScreenTimeMonitor",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.deviceactivity.monitor-extension",
@@ -125,10 +134,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string(distributionCodeSignIdentity),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(screenTimeMonitorDistributionProfile),
                         ]),
                 ]
             )
@@ -142,6 +152,8 @@ let project = Project(
             bundleId: "\(baseBundleId).Shield",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleShortVersionString": appVersion,
+                "CFBundleVersion": appBuild,
                 "CFBundleDisplayName": "Shield",
                 "NSExtension": [
                     "NSExtensionPointIdentifier":
@@ -170,10 +182,11 @@ let project = Project(
                     .release(
                         name: "Release",
                         settings: [
-                            "CODE_SIGN_IDENTITY": .string("Apple Distribution"),
-                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "CODE_SIGN_IDENTITY": .string(distributionCodeSignIdentity),
+                            "CODE_SIGN_STYLE": .string("Manual"),
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(shieldDistributionProfile),
                         ]),
                 ]
             )

@@ -1,6 +1,7 @@
 # iOS PROJECT SETUP - Build System & Tooling
+# Deen First
 
-> Standalone guide for setting up new iOS projects with Tuist, Clean Architecture + MVVM
+> Standalone guide for setting up the Deen First iOS project with Tuist, Clean Architecture + MVVM
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
@@ -10,6 +11,7 @@
 - [Makefile](#makefile)
 - [Project Structure](#project-structure)
 - [Dependencies](#dependencies)
+- [Extension Targets](#extension-targets)
 - [Quick Start](#quick-start)
 
 ---
@@ -26,7 +28,7 @@
    gem install xcpretty
    ```
 
-3. **Xcode** - Latest version from App Store
+3. **Xcode** — Latest version from App Store
 
 4. **iOS Deployment Target**: 17.0+
 
@@ -37,21 +39,24 @@
 ### Step 1: Create Project Directory
 
 ```bash
-mkdir MyApp
-cd MyApp
+mkdir deenfirst
+cd deenfirst
 ```
 
 ### Step 2: Create Folder Structure
 
 ```bash
 # Source folders
-mkdir -p Sources/{Core/{DataDepency,SceneNavigation,ImageCaching,Networking},Data/{DataSource,Repositories},Domain/{Entities,Services},Presentation/Components,Helper,Utils}
+mkdir -p Sources/{Core/{DataDependency,SceneNavigation,Networking},Data/{DataSource/API,Repositories},Domain/{Entities,Services},Presentation/{Auth,Paywall,Survey,Summary,Setup,MainTabs/{HomeTab,QuranTab,BlockingTab,SettingsTab/EmergencyUnblock},ReciteToUnblock,QuranReading,FocusSession,Components/{BlockingTabComps,HomeTabComps,FocusSessionComps,SettingsTabComps}},Shared,Utils}
 
 # Resources
-mkdir -p Resources/{Assets.xcassets,Rive,CSV}
+mkdir -p Resources/Assets.xcassets
 
 # Tuist
 mkdir -p Tuist
+
+# Screen Time Extensions
+mkdir -p ScreenTimeMonitor Shield
 ```
 
 ### Step 3: Create Required Files
@@ -73,37 +78,77 @@ touch Makefile
 import ProjectDescription
 
 let project = Project(
-    name: "MyApp",
+    name: "deenfirst",
     options: .options(
         automaticSchemesOptions: .enabled(
-            targetForVariableName: .myApp
+            targetForVariableName: .deenfirst
         )
     ),
     targets: [
+        // Main App Target
         .target(
-            name: "MyApp",
+            name: "deenfirst",
             destinations: [.iPhone],
             product: .app,
-            bundleId: Env.baseBundleId,
+            bundleId: "com.aydev.deenfirst",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": "1.0.0",
                 "CFBundleVersion": "1",
-                "UILaunchScreen": [:]
+                "UILaunchScreen": [:],
+                "NSFamilyControlsUsageDescription": "Deen First needs permission to block distracting apps during your Quran focus sessions.",
+                "UIBackgroundModes": ["audio"],
+                "NSSpeechRecognitionUsageDescription": "Used to verify your Quran recitation.",
+                "NSMicrophoneUsageDescription": "Record your Quran recitation to unlock apps.",
+                "NSUserTrackingUsageDescription": "We use analytics to improve your experience."
             ]),
             sources: ["Sources/**"],
             resources: ["Resources/**"],
             dependencies: [
-                .external(name: "Alamofire"),
-                .external(name: "Kingfisher"),
+                .external(name: "RevenueCat"),
+                .external(name: "Alamofire")
             ],
             settings: .settings(
                 base: [
-                    "DEVELOPMENT_TEAM": Env.teamId,
+                    "DEVELOPMENT_TEAM": "YOUR_TEAM_ID",
                     "CODE_SIGN_STYLE": "Automatic",
                     "ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS": "YES"
                 ]
             )
+        ),
+
+        // DeviceActivityMonitor Extension
+        .target(
+            name: "ScreenTimeMonitor",
+            destinations: [.iPhone],
+            product: .appExtension,
+            bundleId: "com.aydev.deenfirst.ScreenTimeMonitor",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(with: [
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.device-activity.monitor",
+                    "NSExtensionPrincipalClass": "DeviceActivityMonitorExtension"
+                ]
+            ]),
+            sources: ["ScreenTimeMonitor/**"],
+            dependencies: []
+        ),
+
+        // ShieldConfiguration Extension
+        .target(
+            name: "Shield",
+            destinations: [.iPhone],
+            product: .appExtension,
+            bundleId: "com.aydev.deenfirst.Shield",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(with: [
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.shield-configuration",
+                    "NSExtensionPrincipalClass": "ShieldConfigurationExtension"
+                ]
+            ]),
+            sources: ["Shield/**"],
+            dependencies: []
         )
     ]
 )
@@ -115,12 +160,16 @@ let project = Project(
 import ProjectDescription
 
 let dependencies = Dependencies(
-    swiftPackageManager: .init(
-        [
-            .remote(url: "https://github.com/Alamofire/Alamofire.git", requirement: .upToNextMajor(from: "5.10.2")),
-            .remote(url: "https://github.com/onevcat/Kingfisher.git", requirement: .upToNextMajor(from: "8.0.0")),
-        ]
-    )
+    swiftPackageManager: .init([
+        .remote(
+            url: "https://github.com/RevenueCat/purchases-ios.git",
+            requirement: .upToNextMajor(from: "5.57.0")
+        ),
+        .remote(
+            url: "https://github.com/Alamofire/Alamofire.git",
+            requirement: .upToNextMajor(from: "5.10.0")
+        )
+    ])
 )
 ```
 
@@ -131,28 +180,10 @@ let dependencies = Dependencies(
 ### .env
 
 ```bash
-TUIST_COMPANY_ID=com.company
-TUIST_TEAM_ID=XXXXXXXXXX
-TUIST_BASE_BUNDLE_ID=com.company.myapp
-```
-
-### Add These to Project.swift
-
-```swift
-// Add at top of Project.swift
-public extension Env {
-    static var companyId: String {
-        EnvironmentVariable.shared.string("TUIST_COMPANY_ID") ?? "com.company"
-    }
-
-    static var teamId: String {
-        EnvironmentVariable.shared.string("TUIST_TEAM_ID") ?? "XXXXXXXXXX"
-    }
-
-    static var baseBundleId: String {
-        EnvironmentVariable.shared.string("TUIST_BASE_BUNDLE_ID") ?? "\(companyId).MyApp"
-    }
-}
+TUIST_COMPANY_ID=com.aydev
+TUIST_TEAM_ID=YOUR_TEAM_ID_HERE
+TUIST_BASE_BUNDLE_ID=com.aydev.deenfirst
+REVENUECAT_API_KEY=your_revenuecat_api_key_here
 ```
 
 ---
@@ -173,8 +204,8 @@ generate:
 
 build:
 	@echo "✓ Building app..."
-	@xcodebuild -workspace MyApp.xcworkspace \
-		-scheme MyApp \
+	@xcodebuild -workspace deenfirst.xcworkspace \
+		-scheme deenfirst \
 		-destination 'platform=iOS Simulator,name=iPhone 15' \
 		build | xcpretty
 
@@ -192,19 +223,19 @@ edit:
 
 test:
 	@xcodebuild test \
-		-workspace MyApp.xcworkspace \
-		-scheme MyApp \
+		-workspace deenfirst.xcworkspace \
+		-scheme deenfirst \
 		-destination 'platform=iOS Simulator,name=iPhone 15'
 ```
 
 **Usage:**
 ```bash
 make           # Full clean build
-make generate   # Generate Xcode project
-make build      # Build the app
-make clean      # Clean build artifacts
-make install    # Fetch dependencies
-make edit       # Open in Xcode
+make generate  # Regenerate Xcode project (after adding files)
+make build     # Build the app
+make clean     # Clean build artifacts
+make install   # Fetch/update dependencies
+make edit      # Open in Xcode
 ```
 
 ---
@@ -212,155 +243,217 @@ make edit       # Open in Xcode
 ## Project Structure
 
 ```
-Sources/
-├── MyAppApp.swift              # App entry point (@main)
-├── RootView.swift              # Main NavigationStack setup
+deenfirst/
+├── Project.swift
+├── Tuist/
+│   └── Package.swift
+├── .env
+├── Makefile
 │
-├── Core/                       # Infrastructure layer
-│   ├── DataDepency/
-│   │   └── DIContainer.swift
-│   ├── SceneNavigation/
-│   │   └── Router.swift
-│   ├── ImageCaching/
-│   │   └── ImageManager.swift
-│   └── Networking/
-│       └── APIManager.swift
+├── Sources/                        # Main app source
+│   ├── DeenFirstApp.swift          # @main entry point
+│   ├── RootView.swift              # NavigationStack + state gating
+│   ├── Core/
+│   │   ├── DataDependency/DIContainer.swift
+│   │   ├── Networking/HTTPClient.swift
+│   │   └── SceneNavigation/Router.swift
+│   ├── Domain/
+│   │   ├── Entities/               # snake_case files
+│   │   └── Services/               # PascalCase files
+│   ├── Data/
+│   │   ├── DataSource/
+│   │   │   ├── API/
+│   │   │   └── LocalDataSource.swift
+│   │   └── Repositories/
+│   ├── Presentation/
+│   │   ├── Auth/
+│   │   ├── Paywall/
+│   │   ├── Survey/
+│   │   ├── Summary/
+│   │   ├── Setup/
+│   │   ├── MainTabs/
+│   │   │   ├── HomeTab/
+│   │   │   ├── QuranTab/
+│   │   │   ├── BlockingTab/
+│   │   │   └── SettingsTab/
+│   │   ├── ReciteToUnblock/
+│   │   ├── QuranReading/
+│   │   ├── FocusSession/
+│   │   └── Components/
+│   ├── Shared/                     # Shared with extensions
+│   └── Utils/
 │
-├── Domain/                     # Business logic
-│   ├── Entities/
-│   │   └── app_data.swift
-│   ├── Repositories/
-│   │   └── {Name}Repository.swift
-│   └── Services/
-│       └── {Name}Service.swift
+├── Resources/
+│   └── Assets.xcassets
 │
-├── Data/                       # Data access layer
-│   ├── DataSource/
-│   │   └── LocalDataSource.swift
-│   └── Repositories/
-│       └── {Name}RepositoryImpl.swift
+├── ScreenTimeMonitor/              # Extension target
+│   └── DeviceActivityMonitorExtension.swift
 │
-├── Presentation/               # UI layer
-│   ├── Components/
-│   │   └── ReusableComponents.swift
-│   └── {FeatureName}View/
-│       ├── {FeatureName}View.swift
-│       └── {FeatureName}Viewmodel.swift
-│
-├── Helper/                     # Domain-specific utilities
-│   └── SpecificHelper.swift
-│
-└── Utils/                      # Generic extensions
-    └── Extensions.swift
-
-Resources/
-├── Assets.xcassets
-├── Rive/
-└── CSV/
+└── Shield/                         # Extension target
+    └── ShieldConfigurationExtension.swift
 ```
 
 ---
 
 ## Dependencies
 
-### Core Libraries
+### Swift Package Manager (via Tuist)
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| Alamofire | 5.10.2 | HTTP networking |
-| Kingfisher | 8.0.0 | Image loading & caching |
-| RiveRuntime | 6.11.4 | Animations (optional) |
+| RevenueCat | 5.57.0+ | Subscription management |
+| Alamofire | 5.10.0+ | HTTP networking |
 
 ### Native Frameworks
 
-```swift
-import SwiftUI        // UI framework
-import SwiftData      // Persistence
-import AVFoundation   // Camera/Media (if needed)
-import Vision         # Computer Vision (if needed)
+| Framework | Purpose |
+|-----------|---------|
+| SwiftUI | UI framework |
+| SwiftData | Local persistence |
+| FamilyControls | Screen Time authorization + app picker |
+| ManagedSettings | Shield application |
+| DeviceActivity | Usage monitoring |
+| AVFoundation | Audio playback + recording |
+| MediaPlayer | Now Playing info (Control Center) |
+| AuthenticationServices | Sign in with Apple |
+| UserNotifications | Push notifications |
+
+### External Services
+
+| Service | Purpose |
+|---------|---------|
+| RevenueCat | Subscription management |
+| OpenAI Whisper API | Recitation transcription (Recite to Unblock) |
+| QuranAPI.pages.dev | Quran text + audio URLs (primary) |
+| AlQuranAPI | Quran data (secondary source) |
+
+---
+
+## Extension Targets
+
+### DeviceActivityMonitor Extension
+
+**Purpose**: Background process that monitors app usage and applies shields.
+
+**Bundle ID**: `com.aydev.deenfirst.ScreenTimeMonitor`
+
+**Required Entitlements** (`ScreenTimeMonitor.entitlements`):
+```xml
+<key>com.apple.developer.family-controls</key>
+<true/>
+<key>com.apple.security.application-groups</key>
+<array>
+    <string>group.com.aydev.deenfirst</string>
+</array>
 ```
+
+**Key implementations**:
+- `intervalDidStart` — resets App Limit shields at midnight
+- `intervalDidEnd` — clears shields when interval ends
+- `eventDidReachThreshold` — applies shield when usage limit reached
+- Reads token mappings from `UserDefaults(suiteName: "group.com.aydev.deenfirst")`
+
+### ShieldConfiguration Extension
+
+**Purpose**: Custom UI shown when an app is blocked.
+
+**Bundle ID**: `com.aydev.deenfirst.Shield`
+
+**What it shows**:
+- Deen First icon + branding
+- "Time to read Quran instead 🌙"
+- Close button (branded color)
+
+### App Group
+
+**Identifier**: `group.com.aydev.deenfirst`
+
+All three targets (main app + both extensions) must share this app group. This allows:
+- Main app to write rule configs and token mappings
+- Extensions to read them and apply shields
 
 ---
 
 ## Quick Start
 
-### 1. Initialize New Project
+### 1. Setup project
 
 ```bash
-mkdir MyApp && cd MyApp
+# Create .env with your Team ID
+echo "TUIST_TEAM_ID=YOUR_TEAM_ID" >> .env
 
-# Create structure
-mkdir -p Sources/{Core/{DataDepency,SceneNavigation},Data/DataSource,Domain/{Entities,Services},Presentation/Components}
-mkdir -p Resources/Assets.xcassets Tuist
-
-# Create config files
-touch Project.swift Tuist/Package.swift .env Makefile
-```
-
-### 2. Configure Tuist
-
-Copy the [Project.swift](#projectswift) and [Tuist/Package.swift](#tuistpackageswift) templates above.
-
-### 3. Setup Environment
-
-Create `.env` with your values:
-```bash
-TUIST_COMPANY_ID=com.mycompany
-TUIST_TEAM_ID=YOUR_TEAM_ID
-TUIST_BASE_BUNDLE_ID=com.mycompany.myapp
-```
-
-### 4. Generate & Build
-
-```bash
+# Generate project
 make
 ```
 
-### 5. Open in Xcode
+### 2. Open in Xcode
 
 ```bash
 make edit
-# Or
-open MyApp.xcworkspace
+# or
+open deenfirst.xcworkspace
 ```
+
+### 3. Configure Xcode capabilities
+
+In Xcode for the main app target:
+- Enable **Family Controls** capability
+- Enable **App Groups** → add `group.com.aydev.deenfirst`
+
+For ScreenTimeMonitor extension target:
+- Enable **Family Controls**
+- Enable **App Groups** → add `group.com.aydev.deenfirst`
+
+### 4. Set RevenueCat API Key
+
+In `DeenFirstApp.swift`, update:
+```swift
+#if DEBUG
+Purchases.configure(withAPIKey: "your_test_api_key")
+#else
+Purchases.configure(withAPIKey: "your_production_api_key")
+#endif
+```
+
+### 5. Set OpenAI API Key
+
+In the appropriate service/constants file, set your OpenAI API key for Whisper transcription (used in Recite to Unblock).
 
 ---
 
 ## Common Tuist Commands
 
 ```bash
-tuist init              # Initialize new project
 tuist generate          # Generate Xcode project
 tuist install           # Fetch dependencies
 tuist clean             # Clean generated files
 tuist edit              # Open in Xcode
-tuist cache            # Cache dependencies
-tuist cache clean      # Clean cache
+tuist cache             # Cache dependencies (faster subsequent installs)
 ```
 
 ---
 
-## Info.plist Permissions
+## Common Issues
 
-Add to `infoPlist` in Project.swift as needed:
-
-```swift
-infoPlist: .extendingDefault(with: [
-    "NSCameraUsageDescription": "App needs camera access",
-    "NSPhotoLibraryUsageDescription": "App needs photo library access",
-    "NSPhotoLibraryAddUsageDescription": "App needs to save photos",
-])
-```
+| Issue | Solution |
+|-------|---------|
+| Xcode project out of sync | Run `make generate` |
+| Dependencies not found | Run `make install` then `make generate` |
+| Build errors after merging | `make clean` then `make` |
+| Screen Time features don't work | Must test on physical device (iOS 17+), not simulator |
+| Shield doesn't appear | Verify App Group identifier matches across all targets |
+| Extension crashes | Check `com.apple.developer.family-controls` entitlement on monitor extension |
 
 ---
 
 ## Architecture Reference
 
-For detailed architecture patterns (MVVM, DI, Navigation, etc.), see the main [PROJECT_RULES.md](./PROJECT_RULES.md) document.
+For detailed code patterns (MVVM, DI, Navigation, etc.), see `PROJECT_RULES.md`.
 
 **Quick Summary:**
 - Clean Architecture + MVVM
 - Singleton DIContainer for dependency injection
-- Router with NavigationStack
+- Router with NavigationStack (all ViewModels as @StateObject in RootView)
 - Protocol-oriented services and repositories
-- SwiftData for persistence
+- SwiftData for local persistence
+- App Groups for Screen Time extension communication

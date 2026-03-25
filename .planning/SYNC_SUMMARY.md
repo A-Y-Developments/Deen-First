@@ -1,131 +1,156 @@
-# SYNCHRONIZATION SUMMARY
-# All Documentation Files Corrected & Aligned
+# DOCUMENTATION SYNC SUMMARY
+# Deen First — Current State of All Planning Docs
 
-**Date:** February 3, 2026  
-**Project:** Muslim Lock - Deen First  
-**Status:** ✅ ALL FILES SYNCHRONIZED
-
----
-
-## CHANGES MADE
-
-### 1. PROJECT_RULES.md ✅
-
-**Fixed:**
-- ❌ `lumi/Sources/` → ✅ `DeenFirst/Sources/`
-- ❌ `struct lumiApp` → ✅ `struct DeenFirstApp`
-- ❌ `Helper/` folder → ✅ `Utils/ScreenTime/` folder
-- Updated naming conventions to reference `Utils` instead of `Helpers`
-- Updated organization pattern to show `Utils/ScreenTime/` for Screen Time utilities
-
-**Folder Structure (Final):**
-```
-DeenFirst/Sources/
-├── Core/
-│   ├── DataDepency/DIContainer.swift
-│   ├── Networking/
-│   └── SceneNavigation/Router.swift
-├── Data/
-│   ├── DataSource/
-│   └── Repositories/
-├── Domain/
-│   ├── Entities/
-│   └── Services/
-├── Presentation/
-│   ├── Components/
-│   ├── Auth/
-│   ├── Onboarding/
-│   ├── Paywall/
-│   ├── MainTabs/
-│   └── ListenSession/
-├── Utils/
-│   ├── Extensions.swift
-│   └── ScreenTime/
-│       └── {ScreenTimeHelper}.swift
-├── RootView.swift
-└── DeenFirstApp.swift
-```
+**Last Updated:** March 19, 2026
+**Version:** v4.0 (Post-Implementation Audit)
+**Status:** ✅ ALL DOCUMENTS SYNCHRONIZED WITH IMPLEMENTATION
 
 ---
 
-### 2. DEEN_FIRST_PRD.md ✅
+## What Changed in This Sync (v3 → v4)
 
-**Fixed:**
-- ❌ Product ID: `com.deenfirst.monthly`
-  - ✅ Product ID: `com.aydev.deenfirst.monthly`
-- ❌ Product ID: `com.deenfirst.yearly`
-  - ✅ Product ID: `com.aydev.deenfirst.yearly`
+All documents were audited against the actual codebase and updated to reflect what was actually built. The previous docs (v3) were written pre-implementation and had significant drift.
 
-**RevenueCat Configuration (Correct):**
-- Monthly Product ID: `com.aydev.deenfirst.monthly` ($4.99/month, 3-day trial)
-- Yearly Product ID: `com.aydev.deenfirst.yearly` ($29.99/year, 7-day trial)
-- Entitlement ID: `premium`
+### Major Gaps Fixed
 
----
-
-### 3. DEEN_FIRST_SYSTEM_DESIGN.md ✅
-
-**Fixed:**
-- ❌ Bundle ID: `com.deenfirst.app`
-  - ✅ Bundle ID: `com.aydev.deenfirst`
-- ❌ App Group: `group.com.deenfirst.screentime`
-  - ✅ App Group: `group.com.aydev.deenfirst`
-- ❌ Extension: `com.deenfirst.app.ScreenTimeMonitor`
-  - ✅ Extension: `com.aydev.deenfirst.ScreenTimeMonitor`
-- ❌ Extension: `com.deenfirst.app.Shield`
-  - ✅ Extension: `com.aydev.deenfirst.Shield`
-- ❌ TUIST_COMPANY_ID: `com.deenfirst`
-  - ✅ TUIST_COMPANY_ID: `com.aydev`
-- ❌ TUIST_BASE_BUNDLE_ID: `com.deenfirst.app`
-  - ✅ TUIST_BASE_BUNDLE_ID: `com.aydev.deenfirst`
+| Area | Was (PRD v3) | Now (v4) |
+|------|-------------|---------|
+| Tab count | 3 tabs (Quran, Blocking, Settings) | **4 tabs** (Home, Quran, Blocking, Settings) |
+| Home tab | Not documented | Full spec added |
+| Emergency Unblock | Not documented | Full spec + implementation guide |
+| Recite to Unblock | Listed as **out of scope** | Full spec, implementation, Whisper API integration |
+| Speech recognition | Out of scope | In scope — OpenAI Whisper |
+| Onboarding length | 4 survey screens → paywall | 4 survey → calculate → 3 summary → 3 how-app-works → final summary → paywall → permission → 3-step setup |
+| Blocking rule types | Single `AppTimeLimit` entity | App Limits (usage) + Time Limits (schedule) + All Day — with day selection |
+| Quran APIs | Single: QuranAPI.pages.dev | Dual: QuranAPI.pages.dev + AlQuranAPI |
+| ViewModels | ~8 documented | 23 documented |
+| Router routes | ~8 routes | 24 routes |
+| Data entities | BlockedApp + AppTimeLimit | ScreenTimeRule, AppLimitConfig, TimeLimitConfig, SurahWithRange, etc. |
+| Notification system | Not documented | NotificationPermissionService + NotificationSchedulingService |
+| Code in PRD | Heavy (Swift code blocks) | **Removed** — requirements only |
 
 ---
 
-### 4. DEEN_FIRST_MILESTONES.md ✅
+## Document Status
 
-**Status:** Already correct! Created with proper bundle IDs from the start.
+### DEEN_FIRST_PRD.md ✅ v4.0
 
-**Bundle IDs (Verified):**
-- Main App: `com.aydev.deenfirst`
-- App Group: `group.com.aydev.deenfirst`
-- Screen Time Monitor: `com.aydev.deenfirst.ScreenTimeMonitor`
-- Shield Extension: `com.aydev.deenfirst.Shield`
-- Monthly Product: `com.aydev.deenfirst.monthly`
-- Yearly Product: `com.aydev.deenfirst.yearly`
+**Requirements-only document. No code.**
+
+Changes:
+- 4-tab navigation (was 3)
+- Home tab feature spec added
+- Emergency Unblock spec added
+- Recite to Unblock spec added (removed from "out of scope")
+- Full onboarding sequence documented (was abbreviated)
+- Two blocking rule types (App Limit + Time Limit) documented
+- OpenAI Whisper added to tech stack
+- All code blocks removed
+- Data models updated to match actual entities
+- 24 Router routes listed
+- Updated navigation flows
+- App Store description updated with new features
 
 ---
 
-### 5. Other Files ✅
+### DEEN_FIRST_SYSTEM_DESIGN.md ✅ v4.0
 
-**PROJECT_SETUP.md** - No changes needed (generic template)  
-**SCREEN_TIME_API_GUIDE.md** - No changes needed (references mindcore as example)  
-**DEEN_FIRST_UI_UX_DESIGN.md** - No changes needed (UI/UX specs)
+Changes:
+- Tech stack updated (OpenAI Whisper, AlQuranAPI, AVAudioRecorder, UserNotifications)
+- App structure updated to 4-tab
+- App state machine documented (RootView gating logic)
+- Full onboarding flow diagram added
+- Focus session flow detailed (with ayah range selection)
+- Recite to Unblock flow added (full scoring algorithm)
+- Emergency Unblock flow added
+- Blocking mechanics section updated (includes Time Limit and All Day — previously said "NOT implementing")
+- Services catalog updated (15 services)
+- Data models updated (ScreenTimeRule replaces BlockedApp + AppTimeLimit)
+- Navigation routes updated (24 routes)
+- Navigation flows updated (full onboarding sequence)
+- Bundle IDs and configuration table added
+- Old pre-implementation code examples removed; architecture diagrams kept
 
 ---
 
-## FINAL BUNDLE ID CONFIGURATION
+### PROJECT_RULES.md ✅ v4.0
 
-### Main App
-```
-Bundle ID: com.aydev.deenfirst
-Team ID: [YOUR_TEAM_ID]
-App Group: group.com.aydev.deenfirst
-```
+Changes:
+- Folder structure updated to match actual 23-ViewModel implementation
+- Added: Survey/, Summary/, Setup/, HomeTab/, ReciteToUnblock/, QuranReading/, FocusSession/ folders
+- Added: EmergencyUnblock/ subfolder under SettingsTab/
+- Added: BlockingTabComps/, HomeTabComps/, FocusSessionComps/, SettingsTabComps/ component folders
+- Added: Shared/ folder (AppGroupConstants, DayHelper, ScreenTimeEvents)
+- Added: Screen Time Extension Pattern section
+- Updated Router examples to reflect actual routes
+- Updated ViewModel examples to use actual types (HomeTabViewModel etc.)
+- Removed outdated ListenSession references
+- Added App Groups section
 
-### Extensions
-```
-ScreenTimeMonitor: com.aydev.deenfirst.ScreenTimeMonitor
-Shield: com.aydev.deenfirst.Shield
-```
+---
+
+### PROJECT_SETUP.md ✅ v4.0
+
+Changes:
+- Dependencies updated: RevenueCat + Alamofire only (removed Kingfisher — not used)
+- Project.swift updated to include:
+  - All required Info.plist keys (microphone, speech recognition, background audio, family controls)
+  - DeviceActivityMonitor extension target
+  - ShieldConfiguration extension target
+- Folder creation commands updated (all new folders included)
+- Extension Targets section added (entitlements, purpose, shared app group)
+- External Services table added (RevenueCat, OpenAI Whisper, both Quran APIs)
+- Quick Start updated with RevenueCat and OpenAI API key setup steps
+
+---
+
+### REVENUECAT_SETUP.md ✅ v4.0
+
+Changes:
+- API key reference updated (test key should not be committed — use env vars)
+- Edge cases table added
+- Updated subscription monitoring description (SubscriptionMonitor + customerInfoStream)
+- Shield removal on expiry clearly documented
+- Mid-session expiry behavior documented
+- Removed pre-implementation code examples
+
+---
+
+### SCREEN_TIME_API_GUIDE.md ✅ v4.0
+
+Changes:
+- Temporary Unblock section added (Section 4) — used by Recite to Unblock feature
+- Emergency Unblock section added (Section 5) — weekly quota, midnight expiry
+- Focus Session Blocking section added (Section 6) — direct ManagedSettingsStore, no DeviceActivity
+- Key differences table updated to include all 6 mechanisms
+- `reapplyActiveShields()` best practice updated (now checks emergency unblock before reapplying)
+- Subscription expiry shield removal updated (`store.clearAllSettings()` + stop all monitoring)
+- File structure updated to match actual Utils/ and Shared/ layout
+- Troubleshooting table updated with emergency/temporary unblock issues
+
+---
+
+## Bundle IDs & Configuration (Canonical Reference)
+
+### App Targets
+
+| Target | Bundle ID |
+|--------|-----------|
+| Main App | `com.aydev.deenfirst` |
+| DeviceActivityMonitor | `com.aydev.deenfirst.ScreenTimeMonitor` |
+| ShieldConfiguration | `com.aydev.deenfirst.Shield` |
+| App Group | `group.com.aydev.deenfirst` |
 
 ### RevenueCat Products
-```
-Monthly: com.aydev.deenfirst.monthly ($4.99, 3-day trial)
-Yearly: com.aydev.deenfirst.yearly ($29.99, 7-day trial)
-Entitlement: premium
-```
+
+| Product | ID | Price | Trial |
+|---------|-----|-------|-------|
+| Monthly | `com.aydev.deenfirst.monthly` | $4.99/mo | 3 days |
+| Yearly | `com.aydev.deenfirst.yearly` | $29.99/yr | 7 days |
+| Entitlement | `premium` | — | — |
 
 ### Environment Variables (.env)
+
 ```bash
 TUIST_COMPANY_ID=com.aydev
 TUIST_TEAM_ID=YOUR_TEAM_ID_HERE
@@ -135,42 +160,50 @@ REVENUECAT_API_KEY=your_api_key_here
 
 ---
 
-## FOLDER STRUCTURE DECISION
+## Features Implemented (Not in Original PRD)
 
-**Helper Folder: REMOVED ❌**
-- Per PRD Section 2.2: "Helper layer removed. Only add helper utilities if absolutely necessary"
+These features exist in the codebase but were missing from v3 documentation. All are now documented in v4:
 
-**Utils/ScreenTime/: ADDED ✅**
-- Screen Time utilities go in `Utils/ScreenTime/`
-- Examples: `ScreenTimeHelper.swift`, `TimeLimit.swift`, `ScreenTimeEvents.swift`
-- Generic extensions remain in `Utils/Extensions.swift`
-
-**Rationale:**
-- Cleaner separation: Utils for utilities, no separate Helper layer
-- Screen Time helpers are utilities, not business logic
-- Follows PRD scope (Helper out, Utils sufficient)
-
----
-
-## MINDCORE REFERENCE
-
-**Location:** `/Users/adithyafp_/Projects/mindcore` (on your local machine)
-
-**Files to Reference from Mindcore:**
-1. `ScreenTimeMonitor/DeviceActivityMonitorExtension.swift` - Copy & adapt
-2. `Shield/ShieldConfigurationExtension.swift` - Copy & adapt
-3. `Data/Repositories/ScreenTimeRepository.swift` - Reference for implementation
-4. `Helper/TimeLimit.swift` → Goes to `Utils/ScreenTime/TimeLimit.swift`
-5. `Helper/ScreenTimeEvents.swift` → Goes to `Utils/ScreenTime/ScreenTimeEvents.swift`
-6. `Helper/TimeLimitHelper.swift` → Goes to `Utils/ScreenTime/TimeLimitHelper.swift`
-
-**Note:** You'll manually copy these from mindcore since the path isn't accessible in this container.
+| Feature | Where Documented |
+|---------|-----------------|
+| Home Tab (4th tab) | PRD §6.4, System Design §2.2 |
+| Emergency Unblock | PRD §6.9, System Design §3.5, Screen Time Guide §5 |
+| Recite to Unblock | PRD §6.8, System Design §3.4, Screen Time Guide §4 |
+| OpenAI Whisper integration | PRD §4.3, System Design §7.2 |
+| Summary + Education onboarding | PRD §6.2, System Design §3.1 |
+| All Day blocking rule type | PRD §6.6, Screen Time Guide §3 |
+| Day selection per rule | PRD §6.6 |
+| Category blocking | PRD §6.6 |
+| Focus session with ayah ranges | PRD §6.5.2, System Design §3.3 |
+| Session Finish screen | PRD §6.5.2 |
+| Notification system | PRD §2.1, System Design §10 |
+| AlQuranAPI (secondary source) | PRD §4.1, System Design §7.1 |
+| QuranPreferencesService | System Design §4.1 |
+| Multiple translation languages | PRD §6.7 |
+| SubscriptionPlansView | PRD §5.3 |
+| Separate Preferences/Support/Subscription views | PRD §6.7 |
 
 ---
 
-## VALIDATION CHECKLIST
+## Features Explicitly Out of Scope (Not Implemented)
 
-Before starting development, verify:
+| Feature | Status |
+|---------|--------|
+| Google Sign In | V1.1 |
+| Cloud sync / Supabase | V2 |
+| Full offline audio download | V2 |
+| Verse-by-verse audio while reading | V2 |
+| Prayer time blocking (entity exists) | V2 |
+| Social features / leaderboards | V2 |
+| Tafsir | V2 |
+| Bookmarking ayahs | V2 |
+| Advanced analytics | V2 |
+
+---
+
+## Validation Checklist
+
+Before starting any new development, verify:
 
 ### Bundle IDs
 - [ ] Main app: `com.aydev.deenfirst`
@@ -182,90 +215,14 @@ Before starting development, verify:
 - [ ] Monthly product: `com.aydev.deenfirst.monthly`
 - [ ] Yearly product: `com.aydev.deenfirst.yearly`
 - [ ] Entitlement: `premium`
-
-### Folder Structure
-- [ ] No `Helper/` folder exists
-- [ ] `Utils/ScreenTime/` folder created for Screen Time utilities
-- [ ] All entity files in `Domain/Entities/` (snake_case)
-- [ ] All services in `Domain/Services/` (PascalCase)
+- [ ] API keys NOT hardcoded in source
 
 ### Documentation Sync
-- [ ] All files reference `com.aydev.deenfirst`
-- [ ] No references to `lumi` or other projects
-- [ ] App group consistent: `group.com.aydev.deenfirst`
-- [ ] All extension bundle IDs match pattern
+- [ ] All docs reference v4.0
+- [ ] No references to outdated 3-tab navigation
+- [ ] No references to `BlockedApp` or `AppTimeLimit` entities (replaced by `ScreenTimeRule`)
+- [ ] Emergency Unblock and Recite to Unblock documented everywhere
 
 ---
 
-## PROJECT SETUP COMMANDS
-
-```bash
-# 1. Create .env file
-cat > .env << EOF
-TUIST_COMPANY_ID=com.aydev
-TUIST_TEAM_ID=YOUR_TEAM_ID
-TUIST_BASE_BUNDLE_ID=com.aydev.deenfirst
-REVENUECAT_API_KEY=your_key_here
-EOF
-
-# 2. Generate project
-make
-
-# 3. Verify bundle IDs in Xcode
-# Main Target: com.aydev.deenfirst
-# ScreenTimeMonitor Target: com.aydev.deenfirst.ScreenTimeMonitor
-# Shield Target: com.aydev.deenfirst.Shield
-
-# 4. Verify entitlements
-# - Main app: group.com.aydev.deenfirst
-# - Extensions: group.com.aydev.deenfirst + family-controls
-```
-
----
-
-## NEXT STEPS
-
-1. **Update .env file** with your Team ID
-2. **Run `make`** to generate Xcode project
-3. **Verify all bundle IDs** in Xcode project settings
-4. **Create RevenueCat account** and configure products with correct IDs
-5. **Copy Screen Time files** from mindcore to appropriate locations
-6. **Start Phase 1** of DEEN_FIRST_MILESTONES.md
-
----
-
-## QUESTIONS ANSWERED
-
-**Q: What about Helper folder?**  
-A: Removed. Use `Utils/ScreenTime/` for Screen Time utilities.
-
-**Q: Where do Screen Time helpers go?**  
-A: `DeenFirst/Sources/Utils/ScreenTime/`
-
-**Q: What about mindcore references?**  
-A: Keep them in SCREEN_TIME_API_GUIDE.md as examples. You'll manually adapt the code.
-
-**Q: Are all bundle IDs consistent?**  
-A: Yes! All docs now use `com.aydev.deenfirst` base.
-
-**Q: Can I start development now?**  
-A: Yes! All documentation is synchronized. Follow DEEN_FIRST_MILESTONES.md starting from Phase 1.
-
----
-
-**🎯 ALL DOCUMENTATION IS NOW SYNCHRONIZED AND READY FOR DEVELOPMENT**
-
-**Files Updated:**
-1. ✅ PROJECT_RULES.md (removed lumi, updated structure)
-2. ✅ DEEN_FIRST_PRD.md (fixed product IDs)
-3. ✅ DEEN_FIRST_SYSTEM_DESIGN.md (fixed all bundle IDs & app groups)
-4. ✅ DEEN_FIRST_MILESTONES.md (already correct)
-
-**Files Unchanged (but copied for completeness):**
-5. ✅ PROJECT_SETUP.md (generic template)
-6. ✅ SCREEN_TIME_API_GUIDE.md (mindcore reference)
-7. ✅ DEEN_FIRST_UI_UX_DESIGN.md (UI specs)
-
----
-
-**Ready to start Phase 1: Foundation + Project Setup!** 🚀
+**✅ ALL DOCUMENTATION SYNCHRONIZED WITH IMPLEMENTATION AS OF MARCH 19, 2026**
