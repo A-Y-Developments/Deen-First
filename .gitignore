@@ -72,3 +72,6 @@ Derived/
 
 ### Tuist managed dependencies ###
 Tuist/.build
+
+### Claude Code ###
+.claude/settings.local.json
