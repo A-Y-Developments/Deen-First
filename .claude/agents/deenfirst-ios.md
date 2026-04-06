@@ -166,3 +166,5 @@ final class MyService {
 let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
 defaults?.set(value, forKey: AppGroupConstants.myKey)
 ```
+
+- Implementation is done when code is written and verified. Do NOT commit, push, open PRs, or ask about PRs. Return immediately after implementation — the calling skill handles everything after.

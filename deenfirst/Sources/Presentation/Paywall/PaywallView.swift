@@ -176,10 +176,19 @@ struct PaywallView: View {
             } label: {
                 Text("Restore purchase")
                     .font(.callout)
-                    .foregroundColor(Color(hex: "8E8E93"))
+                    .foregroundColor(.white)
             }
             .padding(.top, 16)
-            .padding(.bottom, 48)
+
+            HStack(spacing: 4) {
+                Link("Terms of Use", destination: URL(string: "https://deenfirst.co/terms-and-conditions")!)
+                Text("·")
+                Link("Privacy Policy", destination: URL(string: "https://deenfirst.co/privacy-policy")!)
+            }
+            .font(.caption)
+            .foregroundColor(.white)
+            .padding(.top, 8)
+            .padding(.bottom, 20)
         }
         .padding(.horizontal, 20)
         .mainBackground()

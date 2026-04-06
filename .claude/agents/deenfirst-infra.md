@@ -122,3 +122,5 @@ Never manually edit `.xcodeproj`. Tuist owns the project file.
 - `.env` must be in `.gitignore` — never commit secrets
 - All extension targets follow no-SwiftData, no-network rules
 - DeenFirstActivityReport physical-device-only rule is hard — flag immediately if QA tries simulator
+
+- Implementation is done when code is written and verified. Do NOT commit, push, open PRs, or ask about PRs. Return immediately after implementation — the calling skill handles everything after.

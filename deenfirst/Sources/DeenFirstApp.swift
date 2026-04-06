@@ -22,9 +22,7 @@ struct DeenFirstApp: App {
     }
 
     private func configureRevenueCat() {
-        #if DEBUG
-            Purchases.logLevel = .debug
-        #endif
+        Purchases.logLevel = .verbose
 
         guard let apiKey = Bundle.main.object(forInfoDictionaryKey: "RevenueCatAPIKey") as? String,
             !apiKey.isEmpty

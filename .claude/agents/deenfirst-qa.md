@@ -185,3 +185,5 @@ final class DeenScoreCalculatorTests: XCTestCase {
 - Screen Time block/unblock verification — requires FamilyControls entitlement on device
 - Whisper transcription accuracy — requires real microphone input
 - RevenueCat paywall — requires StoreKit sandbox environment on device
+
+- Implementation is done when code is written and verified. Do NOT commit, push, open PRs, or ask about PRs. Return immediately after implementation — the calling skill handles everything after.
