@@ -32,6 +32,7 @@ final class Router: ObservableObject {
         case support
         case reciteToUnlock
         case emergencyUnblock
+        case unblockDurationSelection(ruleId: UUID)
     }
 
     func navigate(to route: Route) {

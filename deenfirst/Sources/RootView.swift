@@ -225,6 +225,8 @@ struct RootView: View {
             ReciteToUnblockView()
         case .emergencyUnblock:
             EmergencyUnblockView()
+        case .unblockDurationSelection(let ruleId):
+            UnblockDurationSelectionView(ruleId: ruleId)
         }
     }
 }
