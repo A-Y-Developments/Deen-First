@@ -76,12 +76,20 @@ Run `make generate` after any `Project.swift` change before coding.
 
 ---
 
+## Branching Strategy
+
+- **`main`** = production / App Store. Only V1 hotfixes land here directly.
+- **`develop/v2`** = integration branch for all V2 MVP work. Branch all V2 feature/fix branches from here and PR back into it.
+- When V2 ships → merge `develop/v2` → `main`, tag `v2.0.0`.
+- After any V1 hotfix on `main` → merge `main` → `develop/v2` to keep it current.
+- Default base branch for new V2 work: **`develop/v2`** (not `main`).
+
 ## Linear Workflow
 
 - All work starts from a Linear ticket (`/linear-start`)
-- Branches: `feature/df-{number}-{slug}` (e.g. `feature/df-12-hard-mode-toggle`)
+- Branches: `feature/df-{number}-{slug}` (e.g. `feature/df-12-hard-mode-toggle`), cut from `develop/v2`
 - Commit format: `feat(scope): message` / `fix(scope): message`
-- PRs linked to Linear ticket before merge
+- PRs target `develop/v2` and are linked to Linear ticket before merge
 - Milestone runner: `/run-milestone`
 
 ---
