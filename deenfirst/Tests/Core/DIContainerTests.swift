@@ -24,7 +24,7 @@ final class DIContainerTests: XCTestCase {
         XCTAssertNotNil(container.userRepository)
         XCTAssertNotNil(container.sessionRepository)
         XCTAssertNotNil(container.quranRepository)
-        XCTAssertNotNil(container.screenTimeRepository)
+        XCTAssertNotNil(container.screenTimeRulesRepository)
     }
 
     func testDIContainerCreatesServices() {
@@ -34,7 +34,6 @@ final class DIContainerTests: XCTestCase {
         XCTAssertNotNil(container.subscriptionService)
         XCTAssertNotNil(container.quranService)
         XCTAssertNotNil(container.sessionService)
-        XCTAssertNotNil(container.screenTimeService)
     }
 
     @MainActor

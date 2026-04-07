@@ -42,7 +42,7 @@ final class AppLimitConfigTests: XCTestCase {
         XCTAssertEqual(TimeLimit.fromMinutes(30), .thirtyMin)
         XCTAssertEqual(TimeLimit.fromMinutes(45), .fortyFiveMin)
         XCTAssertEqual(TimeLimit.fromMinutes(60), .oneHour)
-        XCTAssertEqual(TimeLimit.fromMinutes(90), .custom(5400))
+        XCTAssertEqual(TimeLimit.fromMinutes(90), .custom(90))
         XCTAssertEqual(TimeLimit.fromMinutes(120), .twoHours)
         XCTAssertEqual(TimeLimit.fromMinutes(180), .threeHours)
         XCTAssertEqual(TimeLimit.fromMinutes(240), .fourHours)
@@ -50,7 +50,7 @@ final class AppLimitConfigTests: XCTestCase {
 
     func testTimeLimitAllCases() {
         let allCases = TimeLimit.allCases
-        XCTAssertEqual(allCases.count, 7)
+        XCTAssertEqual(allCases.count, 8)
         XCTAssertTrue(allCases.contains(.fifteenMin))
         XCTAssertTrue(allCases.contains(.thirtyMin))
     }

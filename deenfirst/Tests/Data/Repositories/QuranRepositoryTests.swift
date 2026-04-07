@@ -5,16 +5,22 @@ import XCTest
 final class QuranRepositoryTests: XCTestCase {
     var repository: QuranRepositoryImpl!
     var mockAPIDataSource: MockQuranAPIDataSource!
+    var mockAlQuranDataSource: MockAlQuranAPIDataSource!
 
     override func setUp() async throws {
         try await super.setUp()
         mockAPIDataSource = MockQuranAPIDataSource()
-        repository = QuranRepositoryImpl(apiDataSource: mockAPIDataSource)
+        mockAlQuranDataSource = MockAlQuranAPIDataSource()
+        repository = QuranRepositoryImpl(
+            apiDataSource: mockAPIDataSource,
+            alQuranDataSource: mockAlQuranDataSource
+        )
     }
 
     override func tearDown() async throws {
         repository = nil
         mockAPIDataSource = nil
+        mockAlQuranDataSource = nil
         try await super.tearDown()
     }
 
@@ -52,5 +58,15 @@ class MockQuranAPIDataSource: QuranAPIDataSource {
 
     func getReciters() -> [Reciter] {
         []
+    }
+}
+
+class MockAlQuranAPIDataSource: AlQuranAPIDataSource {
+    func fetchSurahTransliteration(surahNo: Int) async throws -> [Int: String] {
+        return [:]
+    }
+
+    func fetchVerseTransliteration(surahNo: Int, ayahNo: Int) async throws -> String {
+        return ""
     }
 }

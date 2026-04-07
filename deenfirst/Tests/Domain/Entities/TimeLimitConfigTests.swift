@@ -73,7 +73,7 @@ final class timeLimitConfigTests: XCTestCase {
         let endHour = min(23, currentHour + 1)
 
         let start = DateComponents(hour: startHour, minute: 0)
-        let end = DateComponents(hour: endHour, minute: 0)
+        let end = DateComponents(hour: endHour, minute: 59)
 
         let config = TimeLimitConfig(
             name: "Current Time",
@@ -104,77 +104,4 @@ final class timeLimitConfigTests: XCTestCase {
         XCTAssertNotNil(result)
     }
 
-    // MARK: - AllDayConfig Tests
-
-    func testAllDayConfigInitialization() {
-        let id = UUID()
-        let days: Set<String> = ["Saturday", "Sunday"]
-
-        let config = AllDayConfig(
-            id: id,
-            name: "Weekend Block",
-            daysActive: days,
-            unblockAllowedAfterLimit: 20,
-            durationOptions: [10, 20, 30]
-        )
-
-        XCTAssertEqual(config.id, id)
-        XCTAssertEqual(config.name, "Weekend Block")
-        XCTAssertEqual(config.daysActive.count, 2)
-        XCTAssertEqual(config.unblockAllowedAfterLimit, 20)
-        XCTAssertEqual(config.durationOptions, [10, 20, 30])
-    }
-
-    func testAllDayConfigDefaults() {
-        let config = AllDayConfig(
-            name: "All Day Test"
-        )
-
-        XCTAssertNil(config.id)
-        XCTAssertEqual(config.name, "All Day Test")
-        XCTAssertEqual(config.daysActive, Set(DayHelper.allDayNames))
-        XCTAssertEqual(config.unblockAllowedAfterLimit, 0)
-        XCTAssertEqual(config.durationOptions, [5, 10, 15])
-    }
-
-    func testAllDayConfigEmptyDaysMeansAllDays() {
-        let config = AllDayConfig(
-            name: "Test",
-            daysActive: []
-        )
-
-        XCTAssertEqual(config.daysActive, Set(DayHelper.allDayNames))
-    }
-
-    func testAllDayConfigShouldBlockToday() {
-        let todayName = DayHelper.getCurrentDayName()
-
-        let config = AllDayConfig(
-            name: "Today",
-            daysActive: [todayName]
-        )
-
-        XCTAssertTrue(config.shouldBlockToday)
-    }
-
-    func testAllDayConfigShouldNotBlockToday() {
-        let allDays = Set(DayHelper.allDayNames)
-        let notToday = allDays.filter { $0 != DayHelper.getCurrentDayName() }
-
-        let config = AllDayConfig(
-            name: "Not Today",
-            daysActive: notToday
-        )
-
-        XCTAssertFalse(config.shouldBlockToday)
-    }
-
-    func testAllDayConfigShouldBlockEveryday() {
-        let config = AllDayConfig(
-            name: "Everyday",
-            daysActive: []
-        )
-
-        XCTAssertTrue(config.shouldBlockToday)
-    }
 }

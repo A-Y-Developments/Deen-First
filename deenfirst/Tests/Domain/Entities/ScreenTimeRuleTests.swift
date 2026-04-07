@@ -55,12 +55,12 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Week Day Block",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: daysActive
         )
 
         XCTAssertEqual(rule.name, "Week Day Block")
-        XCTAssertEqual(rule.type, .allDay)
+        XCTAssertEqual(rule.type, .appLimit)
         XCTAssertEqual(rule.daysActive, daysActive)
     }
 
@@ -71,7 +71,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule = ScreenTimeRule(
             name: "Weekend",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: days
         )
 
@@ -87,7 +87,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule1 = ScreenTimeRule(
             name: "Everyday",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: []
         )
         XCTAssertTrue(rule1.isTodayActive)
@@ -97,7 +97,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule2 = ScreenTimeRule(
             name: "Today",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: [todayName]
         )
         XCTAssertTrue(rule2.isTodayActive)
@@ -112,7 +112,7 @@ final class ScreenTimeRuleTests: XCTestCase {
             type: .timeLimit,
             limitSeconds: 3600
         )
-        XCTAssertEqual(rule1.limitDisplayName, "1 hour/day")
+        XCTAssertEqual(rule1.limitDisplayName, "1h/day")
 
         let rule2 = ScreenTimeRule(
             name: "30 Min",
@@ -120,7 +120,7 @@ final class ScreenTimeRuleTests: XCTestCase {
             type: .timeLimit,
             limitSeconds: 1800
         )
-        XCTAssertEqual(rule2.limitDisplayName, "30 min/day")
+        XCTAssertEqual(rule2.limitDisplayName, "30m/day")
 
         let rule3 = ScreenTimeRule(
             name: "1h 30m",
@@ -147,7 +147,7 @@ final class ScreenTimeRuleTests: XCTestCase {
         let display = rule.timeRangeDisplay
         XCTAssertNotNil(display)
         XCTAssertTrue(display!.contains("9"))
-        XCTAssertTrue(display!.contains("17"))
+        XCTAssertTrue(display!.contains("5"))
     }
 
     func testScreenTimeRuleDaysDisplayText() {
@@ -157,16 +157,16 @@ final class ScreenTimeRuleTests: XCTestCase {
         let rule1 = ScreenTimeRule(
             name: "All",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: []
         )
-        XCTAssertEqual(rule1.daysDisplayText, "Every day")
+        XCTAssertEqual(rule1.daysDisplayText, "Everyday")
 
         // Specific days
         let rule2 = ScreenTimeRule(
             name: "Weekdays",
             selection: selection,
-            type: .allDay,
+            type: .appLimit,
             daysActive: ["Monday", "Tuesday", "Wednesday"]
         )
         XCTAssertTrue(rule2.daysDisplayText.contains("Mon"))
