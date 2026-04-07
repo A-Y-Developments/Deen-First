@@ -9,7 +9,7 @@ final class SubscriptionServiceTests: XCTestCase {
 
     override func setUp() {
         mockUserRepository = MockUserRepositoryForSubscription()
-        subscriptionService = SubscriptionServiceImpl(userRepository: mockUserRepository)
+        subscriptionService = SubscriptionServiceImpl()
     }
 
     override func tearDown() {
@@ -24,13 +24,13 @@ final class SubscriptionServiceTests: XCTestCase {
         let packageError = SubscriptionError.packageNotFound("monthly")
         XCTAssertEqual(
             packageError.errorDescription,
-            "Subscription package 'monthly' not found"
+            "Package 'monthly' not found."
         )
 
         let offeringsError = SubscriptionError.noOfferingsAvailable
         XCTAssertEqual(
             offeringsError.errorDescription,
-            "No subscription offerings available"
+            "No offerings available."
         )
     }
 }

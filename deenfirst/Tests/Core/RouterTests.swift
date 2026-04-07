@@ -19,22 +19,22 @@ final class RouterTests: XCTestCase {
     }
 
     func testNavigateAddsRoute() {
-        router.navigate(to: .onboarding)
+        router.navigate(to: .auth)
 
         XCTAssertEqual(router.navigationPath.count, 1)
     }
 
     func testNavigateMultipleRoutes() {
-        router.navigate(to: .onboarding)
-        router.navigate(to: .paywall)
+        router.navigate(to: .auth)
+        router.navigate(to: .paywall())
         router.navigate(to: .mainTabs)
 
         XCTAssertEqual(router.navigationPath.count, 3)
     }
 
     func testNavigateBackRemovesLastRoute() {
-        router.navigate(to: .onboarding)
-        router.navigate(to: .paywall)
+        router.navigate(to: .auth)
+        router.navigate(to: .paywall())
 
         router.navigateBack()
 
@@ -48,8 +48,8 @@ final class RouterTests: XCTestCase {
     }
 
     func testReplaceWithClearsPathAndAddsNewRoute() {
-        router.navigate(to: .onboarding)
-        router.navigate(to: .paywall)
+        router.navigate(to: .auth)
+        router.navigate(to: .paywall())
 
         router.replaceWith(.mainTabs)
 
@@ -57,8 +57,8 @@ final class RouterTests: XCTestCase {
     }
 
     func testResetClearsAllRoutes() {
-        router.navigate(to: .onboarding)
-        router.navigate(to: .paywall)
+        router.navigate(to: .auth)
+        router.navigate(to: .paywall())
         router.navigate(to: .mainTabs)
 
         router.reset()

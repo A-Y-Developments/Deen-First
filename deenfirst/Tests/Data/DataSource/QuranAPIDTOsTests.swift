@@ -28,6 +28,8 @@ final class QuranAPIDTOsTests: XCTestCase {
                     }
                 },
                 "english": "In the name of Allah, the Entirely Merciful, the Especially Merciful",
+                "bengali": "",
+                "urdu": "",
                 "arabic1": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
                 "arabic2": "بسم الله الرحمن الرحيم"
             }
@@ -77,6 +79,8 @@ final class QuranAPIDTOsTests: XCTestCase {
                     }
                 },
                 "english": "In the name of Allah",
+                "bengali": "",
+                "urdu": "",
                 "arabic1": "بسم الله",
                 "arabic2": "بسم الله"
             }
@@ -144,6 +148,8 @@ final class QuranAPIDTOsTests: XCTestCase {
                     reciter: "Abu Bakr Al Shatri", url: "url2", originalUrl: "orig2"),
             ],
             english: "In the name of Allah",
+            bengali: "",
+            urdu: "",
             arabic1: "بِسْمِ اللَّهِ",
             arabic2: "بسم الله"
         )
@@ -174,6 +180,8 @@ final class QuranAPIDTOsTests: XCTestCase {
             ayahNo: 1,
             audio: [:],
             english: "In the name of Allah",
+            bengali: "",
+            urdu: "",
             arabic1: "بسم الله",
             arabic2: "بسم الله"
         )
@@ -258,6 +266,8 @@ final class QuranAPIDTOsTests: XCTestCase {
             ayahNo: 1,
             audio: audioDict,
             english: "In the name of Allah",
+            bengali: "",
+            urdu: "",
             arabic1: "بسم الله",
             arabic2: "بسم الله"
         )

@@ -84,27 +84,21 @@ final class SettingsTabViewModelTests: XCTestCase {
     }
 
     func testSubscriptionStatusText_ReturnsPremium() async throws {
-        let user = User(appleUserId: "test")
-        user.isPremium = true
-        mockUserRepository.userToReturn = user
+        mockSubscriptionService.shouldReturnPremium = true
         await viewModel.loadUserData()
 
         XCTAssertEqual(viewModel.subscriptionStatusText, "Premium")
     }
 
     func testSubscriptionStatusText_ReturnsFree() async throws {
-        let user = User(appleUserId: "test")
-        user.isPremium = false
-        mockUserRepository.userToReturn = user
+        mockSubscriptionService.shouldReturnPremium = false
         await viewModel.loadUserData()
 
         XCTAssertEqual(viewModel.subscriptionStatusText, "Free")
     }
 
     func testIsSubscribed_ReturnsTrue_WhenPremium() async throws {
-        let user = User(appleUserId: "test")
-        user.isPremium = true
-        mockUserRepository.userToReturn = user
+        mockSubscriptionService.shouldReturnPremium = true
         await viewModel.loadUserData()
 
         XCTAssertTrue(viewModel.isSubscribed)
@@ -116,25 +110,10 @@ final class SettingsTabViewModelTests: XCTestCase {
         XCTAssertTrue(mockAuthService.didCallSignOut)
     }
 
-    func testDeleteAccount_DeletesUserAndSignsOut() async throws {
-        let user = User(appleUserId: "test")
-        mockUserRepository.userToReturn = user
-
-        // First load the user data
-        await viewModel.loadUserData()
-
+    func testDeleteAccount_CallsAuthService() async {
         await viewModel.deleteAccount()
 
-        XCTAssertTrue(mockUserRepository.didCallDelete)
-        XCTAssertTrue(mockAuthService.didCallSignOut)
-    }
-
-    func testDeleteAccount_SetsError_WhenNoUser() async {
-        mockUserRepository.userToReturn = nil
-
-        await viewModel.deleteAccount()
-
-        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertTrue(mockAuthService.didCallDeleteAccount)
     }
 }
 
@@ -169,6 +148,7 @@ class MockUserRepositoryForSettings: UserRepository {
 
 class MockAuthServiceForSettings: AuthService {
     var didCallSignOut = false
+    var didCallDeleteAccount = false
 
     func getCurrentUser() async throws -> User? {
         return nil
@@ -181,11 +161,17 @@ class MockAuthServiceForSettings: AuthService {
     func signOut() async throws {
         didCallSignOut = true
     }
+
+    func deleteAccount() async throws {
+        didCallDeleteAccount = true
+    }
 }
 
 class MockSubscriptionServiceForSettings: SubscriptionService {
+    var shouldReturnPremium = false
+
     func checkSubscriptionStatus() async throws -> Bool {
-        return false
+        return shouldReturnPremium
     }
 
     func fetchOfferings() async throws -> Offerings {
