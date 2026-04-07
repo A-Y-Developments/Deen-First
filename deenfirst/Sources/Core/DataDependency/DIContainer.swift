@@ -70,6 +70,7 @@ final class DIContainer {
             let schema = Schema([
                 User.self,
                 Session.self,
+                PendingRuleChange.self,
             ])
             let config = ModelConfiguration(
                 schema: schema,
@@ -86,6 +87,7 @@ final class DIContainer {
                 let schema = Schema([
                     User.self,
                     Session.self,
+                    PendingRuleChange.self,
                 ])
                 let config = ModelConfiguration(
                     schema: schema,
@@ -106,6 +108,7 @@ final class DIContainer {
         let schema = Schema([
             User.self,
             Session.self,
+            PendingRuleChange.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
