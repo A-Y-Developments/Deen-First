@@ -24,9 +24,13 @@ struct MainTabView: View {
                 .tabItem { Label("Blocking", systemImage: "nosign") }
                 .tag(2)
 
+            DashboardTabView()
+                .tabItem { Label("Dashboard", systemImage: "chart.bar.fill") }
+                .tag(3)
+
             SettingsTabView()
                 .tabItem { Label("Settings", systemImage: "gear") }
-                .tag(3)
+                .tag(4)
         }
         .accentColor(Color(hex: "ADA666"))
     }

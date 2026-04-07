@@ -32,6 +32,8 @@ final class Router: ObservableObject {
         case support
         case reciteToUnlock
         case emergencyUnblock
+        case dashboard
+        case ayahPool
         case unblockDurationSelection(ruleId: UUID)
     }
 
