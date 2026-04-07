@@ -55,4 +55,21 @@ enum AppGroupConstants {
     }
 
     static let motivationalNotificationPrefix = "motivational_"
+
+    // MARK: - Dashboard V2 Keys
+
+    /// Date-keyed (format: yyyy-MM-dd)
+    static func quranSecondsKey(_ date: String) -> String { "deen.\(date).quranSeconds" }
+    static func focusSessionsKey(_ date: String) -> String { "deen.\(date).focusSessions" }
+    static func recitationsPassedKey(_ date: String) -> String { "deen.\(date).recitations.passed" }
+    static func recitationsAttemptsKey(_ date: String) -> String { "deen.\(date).recitations.attempts" }
+
+    /// Week-keyed (format: yyyy-Www, e.g. "2026-W14")
+    static func emergencyUnblocksKey(_ week: String) -> String { "deen.\(week).emergencyUnblocks" }
+
+    /// Global dashboard keys
+    static let streakCurrentKey = "deen.streak.current"
+    static let streakLongestKey = "deen.streak.longest"
+    static let dataLastUpdatedAtKey = "deen.data.lastUpdatedAt"
+    static let lastKnownDateKey = "lastKnownDate"
 }
