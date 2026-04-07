@@ -53,6 +53,9 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
     var unblockAllowedAfterLimit: Int?
     var durationOptions: [Int]?
 
+    var isHardMode: Bool = false
+    var isLockEditingEnabled: Bool = false
+
     var createdAt: Date
 
     var daysActive: Set<String>? {
@@ -71,6 +74,8 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
         daysActive: Set<String>? = nil,
         unblockAllowedAfterLimit: Int? = nil,
         durationOptions: [Int]? = nil,
+        isHardMode: Bool = false,
+        isLockEditingEnabled: Bool = false,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -88,7 +93,30 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
         self.daysActiveArray = daysActive.map { Array($0) }
         self.unblockAllowedAfterLimit = unblockAllowedAfterLimit
         self.durationOptions = durationOptions
+        self.isHardMode = isHardMode
+        self.isLockEditingEnabled = isLockEditingEnabled
         self.createdAt = createdAt
+    }
+
+    // Custom Decodable init: tolerates rules persisted before isHardMode /
+    // isLockEditingEnabled were added by defaulting both to false. Encodable
+    // synthesis is preserved.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.applicationTokenData = try container.decode([Data].self, forKey: .applicationTokenData)
+        self.categoryTokenData = try container.decode([Data].self, forKey: .categoryTokenData)
+        self.type = try container.decode(RuleType.self, forKey: .type)
+        self.limitSeconds = try container.decodeIfPresent(Int.self, forKey: .limitSeconds)
+        self.startTime = try container.decodeIfPresent(CodableDateComponents.self, forKey: .startTime)
+        self.endTime = try container.decodeIfPresent(CodableDateComponents.self, forKey: .endTime)
+        self.daysActiveArray = try container.decodeIfPresent([String].self, forKey: .daysActiveArray)
+        self.unblockAllowedAfterLimit = try container.decodeIfPresent(Int.self, forKey: .unblockAllowedAfterLimit)
+        self.durationOptions = try container.decodeIfPresent([Int].self, forKey: .durationOptions)
+        self.isHardMode = try container.decodeIfPresent(Bool.self, forKey: .isHardMode) ?? false
+        self.isLockEditingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isLockEditingEnabled) ?? false
+        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
 
     func getFamilyActivitySelection() -> FamilyActivitySelection {
