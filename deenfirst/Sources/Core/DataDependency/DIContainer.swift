@@ -71,6 +71,7 @@ final class DIContainer {
                 User.self,
                 Session.self,
                 PendingRuleChange.self,
+                AyahPoolItem.self,
             ])
             let config = ModelConfiguration(
                 schema: schema,
@@ -88,6 +89,7 @@ final class DIContainer {
                     User.self,
                     Session.self,
                     PendingRuleChange.self,
+                    AyahPoolItem.self,
                 ])
                 let config = ModelConfiguration(
                     schema: schema,
@@ -109,6 +111,7 @@ final class DIContainer {
             User.self,
             Session.self,
             PendingRuleChange.self,
+            AyahPoolItem.self,
         ])
         let config = ModelConfiguration(
             schema: schema,
