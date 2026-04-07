@@ -1,5 +1,7 @@
 {
-  "setup": [],
+  "setup": [
+    "mkdir -p .claude .vscode\ncp \"$SUPERSET_ROOT_PATH/.env\" .env\ncp \"$SUPERSET_ROOT_PATH/.claude/settings.local.json\" .claude/settings.local.json\ncp \"$SUPERSET_ROOT_PATH/.vscode/settings.json\" .vscode/settings.json\nmake clean\nmake instal\nmake env"
+  ],
   "teardown": [],
   "run": []
 }
