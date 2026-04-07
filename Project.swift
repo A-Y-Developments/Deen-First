@@ -11,6 +11,7 @@ let distributionCodeSignIdentity = "Apple Distribution"
 let appDistributionProfile = "Deen First Distribution"
 let screenTimeMonitorDistributionProfile = "Deen First ScreenTimeMonitor Distribution"
 let shieldDistributionProfile = "Deen First Shield Distribution"
+let activityReportDistributionProfile = "Deen First ActivityReport Distribution"
 let appVersion: Plist.Value = .string("1.0.0")
 let appBuild: Plist.Value = .string("1")
 
@@ -187,6 +188,55 @@ let project = Project(
                             "DEVELOPMENT_TEAM": .string(teamId),
                             "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
                             "PROVISIONING_PROFILE_SPECIFIER": .string(shieldDistributionProfile),
+                        ]),
+                ]
+            )
+        ),
+
+        // MARK: - DeenFirstActivityReport Extension
+        .target(
+            name: "DeenFirstActivityReport",
+            destinations: [.iPhone],
+            product: .appExtension,
+            bundleId: "\(baseBundleId).ActivityReport",
+            deploymentTargets: .iOS("17.0"),
+            infoPlist: .extendingDefault(with: [
+                "CFBundleShortVersionString": appVersion,
+                "CFBundleVersion": appBuild,
+                "CFBundleDisplayName": "DeenFirstActivityReport",
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.deviceactivity.report",
+                    "NSExtensionPrincipalClass":
+                        "$(PRODUCT_MODULE_NAME).DeenFirstActivityReportExtension",
+                ],
+            ]),
+            sources: [
+                "DeenFirstActivityReport/**",
+                "deenfirst/Sources/Shared/**",
+            ],
+            entitlements: .file(path: "DeenFirstActivityReport/DeenFirstActivityReport.entitlements"),
+            dependencies: [
+                .sdk(name: "DeviceActivity", type: .framework),
+            ],
+            settings: .settings(
+                base: ["PRODUCT_MODULE_NAME": .string("DeenFirstActivityReport")],
+                configurations: [
+                    .debug(
+                        name: "Debug",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string("Apple Development"),
+                            "CODE_SIGN_STYLE": .string("Automatic"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                        ]),
+                    .release(
+                        name: "Release",
+                        settings: [
+                            "CODE_SIGN_IDENTITY": .string(distributionCodeSignIdentity),
+                            "CODE_SIGN_STYLE": .string("Manual"),
+                            "DEVELOPMENT_TEAM": .string(teamId),
+                            "IPHONEOS_DEPLOYMENT_TARGET": .string("17.0"),
+                            "PROVISIONING_PROFILE_SPECIFIER": .string(activityReportDistributionProfile),
                         ]),
                 ]
             )
