@@ -75,6 +75,7 @@ struct RootView: View {
         .environmentObject(timeLimitViewModel)
         .environmentObject(supportViewModel)
         .task {
+            DIContainer.shared.dashboardDataWriter.flush()
             await DIContainer.shared.pendingChangeService.applyExpiredChanges()
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
@@ -106,6 +107,7 @@ struct RootView: View {
         .onReceive(
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
+            DIContainer.shared.dashboardDataWriter.flush()
             Task {
                 await DIContainer.shared.pendingChangeService.applyExpiredChanges()
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()

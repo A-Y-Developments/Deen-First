@@ -100,6 +100,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private let quranPreferences: QuranPreferencesService
     private let screenTimeService: ScreenTimeRulesService
     private let ayahPoolService: AyahPoolService
+    private let dashboardDataWriter: DashboardDataWriter?
     private var quranService: QuranService {
         DIContainer.shared.quranService
     }
@@ -141,13 +142,15 @@ final class ReciteToUnblockViewModel: ObservableObject {
         screenTimeService: ScreenTimeRulesService = MainActor.assumeIsolated { DIContainer.shared.screenTimeRulesService },
         sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName),
         ayahPoolService: AyahPoolService = MainActor.assumeIsolated { DIContainer.shared.ayahPoolService },
-        nudgeDefaults: UserDefaults = .standard
+        nudgeDefaults: UserDefaults = .standard,
+        dashboardDataWriter: DashboardDataWriter? = DIContainer.shared.dashboardDataWriter
     ) {
         self.quranPreferences = quranPreferences
         self.screenTimeService = screenTimeService
         self.sharedDefaults = sharedDefaults
         self.ayahPoolService = ayahPoolService
         self.nudgeDefaults = nudgeDefaults
+        self.dashboardDataWriter = dashboardDataWriter
     }
 
     // MARK: - Load Ayah(s)
@@ -353,6 +356,9 @@ final class ReciteToUnblockViewModel: ObservableObject {
             return
         }
 
+        // Dashboard: every submission counts as an attempt, regardless of outcome.
+        dashboardDataWriter?.recordRecitationAttempt()
+
         do {
             let transcribed = try await callWhisperAPI(audioURL: audioURL, apiKey: apiKey)
             self.transcript = transcribed
@@ -381,6 +387,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
             let passed = score >= Int((similarityThreshold * 100).rounded())
 
             if passed {
+                // Dashboard: count every successful ayah recitation.
+                dashboardDataWriter?.recordRecitationPassed()
                 let total = ayahCount
                 if currentAyahIndex < total - 1 {
                     // Not done yet — advance to next ayah

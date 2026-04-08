@@ -77,15 +77,18 @@ final class SessionServiceImpl: SessionService {
     let sessionRepository: SessionRepository
     let userRepository: UserRepository
     let screenTimeRulesService: ScreenTimeRulesService
+    let dashboardDataWriter: DashboardDataWriter?
 
     init(
         sessionRepository: SessionRepository,
         userRepository: UserRepository,
-        screenTimeRulesService: ScreenTimeRulesService
+        screenTimeRulesService: ScreenTimeRulesService,
+        dashboardDataWriter: DashboardDataWriter? = nil
     ) {
         self.sessionRepository = sessionRepository
         self.userRepository = userRepository
         self.screenTimeRulesService = screenTimeRulesService
+        self.dashboardDataWriter = dashboardDataWriter
     }
 
     // MARK: - Start Session
@@ -134,6 +137,11 @@ final class SessionServiceImpl: SessionService {
         }
 
         try await sessionRepository.updateSession(session)
+
+        // Dashboard: record only completed listening (focus) sessions.
+        if session.type == .listening, durationSeconds > 0 {
+            dashboardDataWriter?.recordFocusSession(duration: TimeInterval(durationSeconds))
+        }
     }
 
     // MARK: - Queries
@@ -183,6 +191,10 @@ final class SessionServiceImpl: SessionService {
             userId: user.appleUserId
         )
         UserPersistenceHelper.saveLastActiveDate(user.lastActiveDate!, userId: user.appleUserId)
+        dashboardDataWriter?.updateStreak(
+            current: user.currentStreak,
+            longest: user.longestStreak
+        )
         print("✅ updateStreak: Completed. Streak updated to \(user.currentStreak)")
     }
 
