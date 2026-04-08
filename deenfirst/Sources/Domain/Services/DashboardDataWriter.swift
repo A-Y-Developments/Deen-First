@@ -92,33 +92,14 @@ final class DashboardDataWriterImpl: DashboardDataWriter {
     }
 
     private func currentDateString() -> String {
-        Self.dayFormatter.string(from: now())
+        DashboardDateKeys.dayKey(for: now())
     }
 
     private func currentWeekString() -> String {
-        Self.weekFormatter.string(from: now())
+        DashboardDateKeys.weekKey(for: now())
     }
 
     // MARK: - Formatters (reused; DateFormatter is expensive to construct)
-
-    private static let dayFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .iso8601)
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone.current
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    private static let weekFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .iso8601)
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone.current
-        // Capital YYYY = ISO week-numbering year (pairs with ww)
-        f.dateFormat = "YYYY-'W'ww"
-        return f
-    }()
 
     private static let iso8601Formatter: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
