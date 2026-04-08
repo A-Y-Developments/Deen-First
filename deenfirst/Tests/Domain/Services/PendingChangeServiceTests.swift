@@ -10,6 +10,7 @@ final class PendingChangeServiceTests: XCTestCase {
     var localDataSource: LocalDataSource!
     var mockRulesService: MockScreenTimeRulesServiceForPending!
     var mockRulesRepository: MockScreenTimeRulesRepositoryForPending!
+    var mockNotificationService: MockNotificationSchedulingService!
     var service: PendingChangeServiceImpl!
 
     override func setUp() async throws {
@@ -19,10 +20,12 @@ final class PendingChangeServiceTests: XCTestCase {
         localDataSource = LocalDataSource(container: container)
         mockRulesService = MockScreenTimeRulesServiceForPending()
         mockRulesRepository = MockScreenTimeRulesRepositoryForPending()
+        mockNotificationService = MockNotificationSchedulingService()
         service = PendingChangeServiceImpl(
             localDataSource: localDataSource,
             screenTimeRulesService: mockRulesService,
-            screenTimeRulesRepository: mockRulesRepository
+            screenTimeRulesRepository: mockRulesRepository,
+            notificationSchedulingService: mockNotificationService
         )
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
     }
@@ -33,6 +36,7 @@ final class PendingChangeServiceTests: XCTestCase {
         localDataSource = nil
         mockRulesService = nil
         mockRulesRepository = nil
+        mockNotificationService = nil
         service = nil
     }
 
@@ -247,6 +251,67 @@ final class PendingChangeServiceTests: XCTestCase {
         XCTAssertGreaterThan(stored, 0, "lastKnownDate should be updated after applyExpiredChanges")
     }
 
+    // MARK: - Notifications
+
+    func testCreatePendingChange_schedulesNotification() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+
+        XCTAssertEqual(mockNotificationService.scheduledChangeIds.count, 1)
+        XCTAssertEqual(mockNotificationService.scheduledRuleNames.first, rule.name)
+    }
+
+    func testCreatePendingChange_replacesExisting_cancelsOldNotification() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+        guard let firstChange = service.pendingChange(for: rule.id) else {
+            XCTFail("Expected first pending change")
+            return
+        }
+
+        await service.createPendingChange(for: rule, changeType: "disableHardMode", pendingData: nil)
+
+        XCTAssertTrue(mockNotificationService.cancelledChangeIds.contains(firstChange.id))
+        XCTAssertEqual(mockNotificationService.scheduledChangeIds.count, 2)
+    }
+
+    func testCreatePendingChange_unknownType_doesNotScheduleNotification() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "unknownType", pendingData: nil)
+
+        XCTAssertTrue(mockNotificationService.scheduledChangeIds.isEmpty)
+    }
+
+    func testCancelPendingChange_cancelsNotification() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+
+        guard let change = service.pendingChange(for: rule.id) else {
+            XCTFail("Expected pending change")
+            return
+        }
+
+        await service.cancelPendingChange(for: rule.id)
+
+        XCTAssertTrue(mockNotificationService.cancelledChangeIds.contains(change.id))
+    }
+
+    func testApplyExpiredChanges_cancelsScheduledNotification() async {
+        let ruleId = UUID()
+        var rule = makeRule(id: ruleId)
+        rule.isLockEditingEnabled = true
+        mockRulesRepository.rules[ruleId] = rule
+
+        let pastDate = Date().addingTimeInterval(-90_000)
+        let expiredChange = PendingRuleChange(
+            ruleId: ruleId, changeType: .disableLockEditing, requestedAt: pastDate)
+        try? localDataSource.insertPendingChange(expiredChange)
+
+        await service.applyExpiredChanges()
+
+        XCTAssertTrue(mockNotificationService.cancelledChangeIds.contains(expiredChange.id))
+    }
+
     // MARK: - Helpers
 
     private func makeRule(id: UUID = UUID(), type: RuleType = .appLimit) -> ScreenTimeRule {
@@ -296,6 +361,26 @@ final class MockScreenTimeRulesServiceForPending: ScreenTimeRulesService {
     func disableRule(id: UUID) async throws {}
     func disableHardMode(for ruleId: UUID) async {}
     func disableLockEditing(for ruleId: UUID) async {}
+}
+
+final class MockNotificationSchedulingService: NotificationSchedulingService {
+    var scheduledChangeIds: [UUID] = []
+    var scheduledRuleNames: [String] = []
+    var cancelledChangeIds: [UUID] = []
+
+    func scheduleTimeLimitWarning(for rule: ScreenTimeRule) {}
+    func cancelTimeLimitWarning(for ruleId: UUID) {}
+    func scheduleMotivationalNotifications() async {}
+    func cancelMotivationalNotifications() async {}
+
+    func schedulePendingChangeNotification(for change: PendingRuleChange, ruleName: String) {
+        scheduledChangeIds.append(change.id)
+        scheduledRuleNames.append(ruleName)
+    }
+
+    func cancelPendingChangeNotification(for changeId: UUID) {
+        cancelledChangeIds.append(changeId)
+    }
 }
 
 final class MockScreenTimeRulesRepositoryForPending: ScreenTimeRulesRepository {

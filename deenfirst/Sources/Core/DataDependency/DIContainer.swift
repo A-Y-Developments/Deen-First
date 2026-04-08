@@ -58,7 +58,8 @@ final class DIContainer {
         let svc = PendingChangeServiceImpl(
             localDataSource: localDataSource,
             screenTimeRulesService: screenTimeRulesService,
-            screenTimeRulesRepository: screenTimeRulesRepository
+            screenTimeRulesRepository: screenTimeRulesRepository,
+            notificationSchedulingService: notificationSchedulingService
         )
         // Break the circular dependency: inject PendingChangeService back into ScreenTimeRulesService
         // so gated operations (editAppLimitRule, deleteRule, etc.) can queue pending changes.

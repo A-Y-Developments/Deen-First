@@ -6,6 +6,8 @@ protocol NotificationSchedulingService {
     func cancelTimeLimitWarning(for ruleId: UUID)
     func scheduleMotivationalNotifications() async
     func cancelMotivationalNotifications() async
+    func schedulePendingChangeNotification(for change: PendingRuleChange, ruleName: String)
+    func cancelPendingChangeNotification(for changeId: UUID)
 }
 
 final class NotificationSchedulingServiceImpl: NotificationSchedulingService {
@@ -187,5 +189,35 @@ final class NotificationSchedulingServiceImpl: NotificationSchedulingService {
 
     private func previousWeekday(from weekday: Int) -> Int {
         weekday == 1 ? 7 : weekday - 1
+    }
+
+    func schedulePendingChangeNotification(for change: PendingRuleChange, ruleName: String) {
+        guard change.appliesAt > Date() else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Rule Change Applied"
+        content.body = "Your rule change for \(ruleName) has been applied."
+        content.sound = .default
+
+        let components = calendar.dateComponents(
+            [.year, .month, .day, .hour, .minute, .second],
+            from: change.appliesAt
+        )
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        let identifier = AppGroupConstants.pendingChangeScheduledNotificationId(for: change.id)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+
+        notificationCenter.add(request) { error in
+            if let error {
+                print("⚠️ [NotificationScheduling] Failed pending change notification for \(change.id): \(error)")
+            } else {
+                print("✅ [NotificationScheduling] Pending change notification scheduled for \(change.id) at \(change.appliesAt)")
+            }
+        }
+    }
+
+    func cancelPendingChangeNotification(for changeId: UUID) {
+        let identifier = AppGroupConstants.pendingChangeScheduledNotificationId(for: changeId)
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
     }
 }

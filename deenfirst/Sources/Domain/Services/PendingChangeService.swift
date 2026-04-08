@@ -1,5 +1,4 @@
 import Foundation
-import UserNotifications
 import os
 
 // MARK: - Protocol
@@ -19,6 +18,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
     private let localDataSource: LocalDataSource
     private let screenTimeRulesService: ScreenTimeRulesService
     private let screenTimeRulesRepository: ScreenTimeRulesRepository
+    private let notificationSchedulingService: NotificationSchedulingService
 
     private static let clockJumpThreshold: TimeInterval = 7_200
     private let logger = Logger(subsystem: "com.aydev.deenfirst", category: "PendingChangeService")
@@ -26,17 +26,20 @@ final class PendingChangeServiceImpl: PendingChangeService {
     init(
         localDataSource: LocalDataSource,
         screenTimeRulesService: ScreenTimeRulesService,
-        screenTimeRulesRepository: ScreenTimeRulesRepository
+        screenTimeRulesRepository: ScreenTimeRulesRepository,
+        notificationSchedulingService: NotificationSchedulingService
     ) {
         self.localDataSource = localDataSource
         self.screenTimeRulesService = screenTimeRulesService
         self.screenTimeRulesRepository = screenTimeRulesRepository
+        self.notificationSchedulingService = notificationSchedulingService
     }
 
     // MARK: - Create
 
     func createPendingChange(for rule: ScreenTimeRule, changeType: String, pendingData: Data?) async {
         if let existing = pendingChange(for: rule.id) {
+            notificationSchedulingService.cancelPendingChangeNotification(for: existing.id)
             try? localDataSource.deletePendingChange(existing)
         }
 
@@ -50,13 +53,19 @@ final class PendingChangeServiceImpl: PendingChangeService {
             changeType: parsedType,
             pendingData: pendingData
         )
-        try? localDataSource.insertPendingChange(change)
+        do {
+            try localDataSource.insertPendingChange(change)
+            notificationSchedulingService.schedulePendingChangeNotification(for: change, ruleName: rule.name)
+        } catch {
+            print("⚠️ [PendingChangeService] Failed to insert change for rule \(rule.id): \(error)")
+        }
     }
 
     // MARK: - Cancel
 
     func cancelPendingChange(for ruleId: UUID) async {
         guard let change = pendingChange(for: ruleId) else { return }
+        notificationSchedulingService.cancelPendingChangeNotification(for: change.id)
         change.isCancelled = true
         try? localDataSource.savePendingChanges()
     }
@@ -90,7 +99,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
                 try await applyChange(change)
                 change.isApplied = true
                 try? localDataSource.savePendingChanges()
-                schedulePendingChangeAppliedNotification(for: change.ruleId)
+                notificationSchedulingService.cancelPendingChangeNotification(for: change.id)
             } catch {
                 print("⚠️ [PendingChangeService] Failed to apply change \(change.id) for rule \(change.ruleId): \(error)")
             }
@@ -187,24 +196,4 @@ final class PendingChangeServiceImpl: PendingChangeService {
         }
     }
 
-    // MARK: - Private: Notification
-
-    private func schedulePendingChangeAppliedNotification(for ruleId: UUID) {
-        let content = UNMutableNotificationContent()
-        content.title = "Deen First"
-        content.body = "A scheduled rule change has been applied"
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: AppGroupConstants.pendingChangeAppliedNotificationId(for: ruleId),
-            content: content,
-            trigger: nil
-        )
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error {
-                print("⚠️ [PendingChangeService] Failed to schedule applied notification for rule \(ruleId): \(error)")
-            }
-        }
-    }
 }
