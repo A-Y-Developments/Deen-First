@@ -4,7 +4,13 @@ import FamilyControls
 struct FocusSectionView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject private var viewModel: FocusSectionViewModel
-    
+
+    let unlockRuleId: UUID?
+
+    init(unlockRuleId: UUID? = nil) {
+        self.unlockRuleId = unlockRuleId
+    }
+
     var body: some View {
         VStack(spacing: 24) {
             if viewModel.isLoading {
@@ -115,7 +121,12 @@ struct FocusSectionView: View {
                                 Task {
                                     do {
                                         let (surahs, ayahs) = try await viewModel.prepareForSession()
-                                        router.navigate(to: .activeSession(surahs: surahs, ayahs: ayahs))
+                                        router.navigate(to: .activeSession(
+                                            surahs: surahs,
+                                            ayahs: ayahs,
+                                            isUnblockSession: unlockRuleId != nil,
+                                            unlockRuleId: unlockRuleId
+                                        ))
                                     } catch {
                                         viewModel.errorMessage = error.localizedDescription
                                     }

@@ -89,7 +89,7 @@ struct UnblockDurationSelectionView: View {
             reciteToUnblockViewModel.unblockDurationMinutes = 10
             router.navigate(to: .reciteToUnlock)
         case .tier3:
-            router.navigate(to: .selectSurah(surahs: []))
+            router.navigate(to: .focusSection(unlockRuleId: ruleId))
         }
     }
 }
