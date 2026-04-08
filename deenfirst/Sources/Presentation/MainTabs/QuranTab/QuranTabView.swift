@@ -16,6 +16,15 @@ struct QuranTabView: View {
             .padding(.top, 16)
             .padding(.bottom, 8)
 
+            AyahPoolEntryCard(
+                count: viewModel.ayahPoolCount,
+                maxCount: viewModel.ayahPoolMaxSize
+            ) {
+                router.navigate(to: .ayahPool)
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 12)
+
             SearchBar(text: $viewModel.searchQuery, placeholder: "Search surahs...")
                 .padding(.horizontal, 16)
                 .padding(.bottom, 12)
@@ -64,6 +73,9 @@ struct QuranTabView: View {
                 await viewModel.loadSurahs()
             }
             await viewModel.requestNotificationPermission()
+        }
+        .onAppear {
+            Task { await viewModel.loadAyahPoolCount() }
         }
         .onChange(of: viewModel.searchQuery) { _, _ in
             viewModel.searchSurahs()
