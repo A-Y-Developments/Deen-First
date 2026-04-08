@@ -26,30 +26,39 @@ final class AppLimitViewModel: ObservableObject {
     @Published var hasSetupCompleted: Bool = false
     @Published var showDeleteConfirmation: Bool = false
     @Published var isHardMode: Bool = false
+    @Published var isLockEditingEnabled: Bool = false
     @Published var showLockEditingEnabledConfirmation: Bool = false
+    @Published var showPendingChangeSheet: Bool = false
 
     // MARK: - Edit Mode
 
     var isEditMode: Bool { editingRuleId != nil }
     private(set) var editingRuleId: UUID?
+    private var originalLockEditingEnabled: Bool = false
 
     // MARK: - Dependencies
 
     private let screenTimeRulesService: ScreenTimeRulesService
+    private let pendingChangeService: PendingChangeService
     private let authCenter: AuthorizationCenter
 
     // MARK: - Init
 
     init(
         screenTimeRulesService: ScreenTimeRulesService,
+        pendingChangeService: PendingChangeService,
         authCenter: AuthorizationCenter = .shared
     ) {
         self.screenTimeRulesService = screenTimeRulesService
+        self.pendingChangeService = pendingChangeService
         self.authCenter = authCenter
     }
 
     convenience init() {
-        self.init(screenTimeRulesService: DIContainer.shared.screenTimeRulesService)
+        self.init(
+            screenTimeRulesService: DIContainer.shared.screenTimeRulesService,
+            pendingChangeService: DIContainer.shared.pendingChangeService
+        )
     }
 
     // MARK: - Computed Properties
@@ -120,6 +129,8 @@ final class AppLimitViewModel: ObservableObject {
         }
 
         isHardMode = rule.isHardMode
+        isLockEditingEnabled = rule.isLockEditingEnabled
+        originalLockEditingEnabled = rule.isLockEditingEnabled
         isLoading = false
     }
 
@@ -137,6 +148,29 @@ final class AppLimitViewModel: ObservableObject {
     func toggleAllDay() {
         isAllDay.toggle()
         activeDays = isAllDay ? Set(0...6) : []
+    }
+
+    // MARK: - Lock Editing
+
+    func handleLockEditingToggle(to newValue: Bool) {
+        if newValue || !isEditMode || !originalLockEditingEnabled {
+            isLockEditingEnabled = newValue
+        } else {
+            showPendingChangeSheet = true
+        }
+    }
+
+    func scheduleLockEditingDisable() {
+        guard let ruleId = editingRuleId,
+              let rule = screenTimeRulesService.getRule(id: ruleId) else { return }
+        Task {
+            await pendingChangeService.createPendingChange(
+                for: rule,
+                changeType: PendingChangeType.disableLockEditing.rawValue,
+                pendingData: nil
+            )
+            showPendingChangeSheet = false
+        }
     }
 
     // MARK: - App Selection
@@ -195,7 +229,8 @@ final class AppLimitViewModel: ObservableObject {
                     ? "App Limit" : settingsName,
                 timeLimit: .custom(dailyLimitMinutes * 60),
                 daysActive: daysActive,
-                isHardMode: isHardMode
+                isHardMode: isHardMode,
+                isLockEditingEnabled: isLockEditingEnabled
             )
 
             if let id = editingRuleId {

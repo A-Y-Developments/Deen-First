@@ -31,6 +31,7 @@ struct AppLimitView: View {
                             timeSettingsSection
                             activeTimeSection
                             unblockDifficultySection
+                            editingProtectionSection
                         }
 
                         actionButtons
@@ -84,6 +85,12 @@ struct AppLimitView: View {
         )
         .onChange(of: viewModel.appSelection) { _, newValue in
             Task { await viewModel.handleAppPickerSelection(newValue) }
+        }
+        .sheet(isPresented: $viewModel.showPendingChangeSheet) {
+            PendingChangeSheet(
+                onConfirm: { viewModel.scheduleLockEditingDisable() },
+                onCancel: { viewModel.showPendingChangeSheet = false }
+            )
         }
     }
 
@@ -269,6 +276,35 @@ struct AppLimitView: View {
             .padding()
             .background(Color.primary500.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+    }
+
+    // MARK: - Editing Protection
+
+    private var editingProtectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Editing Protection")
+                .foregroundColor(Color.secondary400)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                difficultyOption(label: "Off", isSelected: !viewModel.isLockEditingEnabled) {
+                    viewModel.handleLockEditingToggle(to: false)
+                }
+                .disabled(viewModel.isHardMode)
+
+                difficultyOption(label: "Lock Editing", isSelected: viewModel.isLockEditingEnabled) {
+                    viewModel.handleLockEditingToggle(to: true)
+                }
+                .disabled(viewModel.isHardMode)
+            }
+
+            if viewModel.isHardMode {
+                Text("Lock Editing is enforced while Hard Mode is active.")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.horizontal, 4)
+            }
         }
     }
 

@@ -23,7 +23,9 @@ final class TimeLimitViewModel: ObservableObject {
     @Published var showDeleteConfirmation: Bool = false
     @Published var expandedPicker: PickerType? = nil
     @Published var isHardMode: Bool = false
+    @Published var isLockEditingEnabled: Bool = false
     @Published var showLockEditingEnabledConfirmation: Bool = false
+    @Published var showPendingChangeSheet: Bool = false
 
     enum PickerType { case start, end }
 
@@ -31,26 +33,33 @@ final class TimeLimitViewModel: ObservableObject {
 
     var isEditMode: Bool { editingRuleId != nil }
     private(set) var editingRuleId: UUID?
+    private var originalLockEditingEnabled: Bool = false
 
     // MARK: - Dependencies
 
     private let screenTimeRulesService: ScreenTimeRulesService
+    private let pendingChangeService: PendingChangeService
     private let authCenter: AuthorizationCenter
 
     // MARK: - Init
 
     init(
         screenTimeRulesService: ScreenTimeRulesService,
+        pendingChangeService: PendingChangeService,
         authCenter: AuthorizationCenter = .shared
     ) {
         self.screenTimeRulesService = screenTimeRulesService
+        self.pendingChangeService = pendingChangeService
         self.authCenter = authCenter
         self.startTime = Self.defaultStartTime()
         self.endTime = Self.defaultEndTime()
     }
 
     convenience init() {
-        self.init(screenTimeRulesService: DIContainer.shared.screenTimeRulesService)
+        self.init(
+            screenTimeRulesService: DIContainer.shared.screenTimeRulesService,
+            pendingChangeService: DIContainer.shared.pendingChangeService
+        )
     }
 
     // MARK: - Default Time Helpers
@@ -153,6 +162,8 @@ final class TimeLimitViewModel: ObservableObject {
         }
 
         isHardMode = rule.isHardMode
+        isLockEditingEnabled = rule.isLockEditingEnabled
+        originalLockEditingEnabled = rule.isLockEditingEnabled
         isLoading = false
     }
 
@@ -189,6 +200,29 @@ final class TimeLimitViewModel: ObservableObject {
                 if let e = formatter.date(from: range.end) { endTime = e }
                 expandedPicker = nil
             }
+        }
+    }
+
+    // MARK: - Lock Editing
+
+    func handleLockEditingToggle(to newValue: Bool) {
+        if newValue || !isEditMode || !originalLockEditingEnabled {
+            isLockEditingEnabled = newValue
+        } else {
+            showPendingChangeSheet = true
+        }
+    }
+
+    func scheduleLockEditingDisable() {
+        guard let ruleId = editingRuleId,
+              let rule = screenTimeRulesService.getRule(id: ruleId) else { return }
+        Task {
+            await pendingChangeService.createPendingChange(
+                for: rule,
+                changeType: PendingChangeType.disableLockEditing.rawValue,
+                pendingData: nil
+            )
+            showPendingChangeSheet = false
         }
     }
 
@@ -258,7 +292,8 @@ final class TimeLimitViewModel: ObservableObject {
                 startTime: startComponents,
                 endTime: endComponents,
                 daysActive: daysActive,
-                isHardMode: isHardMode
+                isHardMode: isHardMode,
+                isLockEditingEnabled: isLockEditingEnabled
             )
 
             if let id = editingRuleId {
