@@ -153,8 +153,16 @@ final class AyahPoolViewModelTests: XCTestCase {
 
 @MainActor
 final class MockAyahPoolService: AyahPoolService {
+    struct AddCall {
+        let surah: Int
+        let ayah: Int
+    }
+
     var pool: [AyahPoolItem] = []
     var removedIds: [UUID] = []
+    var addedCalls: [AddCall] = []
+    /// If set to N, the (N+1)th addAyah call throws `AyahPoolError.poolFull`.
+    var throwPoolFullAfter: Int?
 
     func fetchPool() async -> [AyahPoolItem] { pool }
 
@@ -163,7 +171,12 @@ final class MockAyahPoolService: AyahPoolService {
         ayahNumber: Int,
         arabicText: String,
         transliteration: String
-    ) async throws {}
+    ) async throws {
+        if let limit = throwPoolFullAfter, addedCalls.count >= limit {
+            throw AyahPoolError.poolFull
+        }
+        addedCalls.append(AddCall(surah: surahNumber, ayah: ayahNumber))
+    }
 
     func removeAyah(id: UUID) async {
         removedIds.append(id)

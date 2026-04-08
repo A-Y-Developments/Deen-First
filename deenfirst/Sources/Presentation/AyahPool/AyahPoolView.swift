@@ -120,7 +120,7 @@ struct AyahPoolView: View {
 
     private func addTapped() {
         guard viewModel.handleAddAyahsTap() else { return }
-        // TODO(DF-27): navigate to the surah picker route once it exists.
+        router.navigate(to: .ayahPoolSurahPicker)
     }
 }
 

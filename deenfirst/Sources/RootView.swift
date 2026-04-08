@@ -233,6 +233,8 @@ struct RootView: View {
             DashboardTabView()
         case .ayahPool:
             AyahPoolView()
+        case .ayahPoolSurahPicker:
+            AyahPoolSurahPickerView()
         }
     }
 }
