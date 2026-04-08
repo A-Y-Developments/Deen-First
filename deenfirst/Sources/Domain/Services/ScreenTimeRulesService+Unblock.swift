@@ -12,11 +12,22 @@ extension ScreenTimeRulesServiceImpl {
 
     /// Temporarily unblocks only the apps belonging to the specified rule.
     /// Other rules remain fully blocked and unaffected.
+    /// Implements "longer wins": if an active unblock with more time remaining exists, keeps it.
     func temporaryUnblock(minutes: Int, ruleId: UUID) async {
         let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        let now = Date()
+        let newExpiry = now.addingTimeInterval(Double(minutes) * 60)
 
-        let expiry = Date().addingTimeInterval(Double(minutes) * 60)
-        defaults?.set(expiry.timeIntervalSince1970, forKey: AppGroupConstants.unblockExpiryKey(for: ruleId))
+        // Longer-wins guard: do not replace an active unblock that has more time remaining
+        let existingExpiry = defaults?.double(forKey: AppGroupConstants.unblockExpiryKey(for: ruleId)) ?? 0
+        let isActiveUnblock = existingExpiry > now.timeIntervalSince1970
+        if isActiveUnblock && existingExpiry > newExpiry.timeIntervalSince1970 {
+            notifyShorterDurationIgnored(ruleId: ruleId)
+            print("⏭️ [Unblock] Longer-wins: existing expiry has more time remaining — skipping replacement for rule \(ruleId)")
+            return
+        }
+
+        defaults?.set(newExpiry.timeIntervalSince1970, forKey: AppGroupConstants.unblockExpiryKey(for: ruleId))
         defaults?.synchronize()
 
         // Remove shields for THIS rule's tokens only — other rules stay blocked
@@ -26,13 +37,13 @@ extension ScreenTimeRulesServiceImpl {
         }
 
         // PRIMARY: DeviceActivity background re-block (best effort for short windows)
-        await scheduleReblockActivity(expiry: expiry, ruleId: ruleId)
+        await scheduleReblockActivity(expiry: newExpiry, ruleId: ruleId)
 
         // FALLBACK: Local notification fires reliably even if app is killed.
         // User taps → app foregrounds → willEnterForeground → reblockAllExpired() runs.
-        scheduleReblockNotification(expiry: expiry, ruleId: ruleId, minutes: minutes)
+        scheduleReblockNotification(expiry: newExpiry, ruleId: ruleId, minutes: minutes)
 
-        print("✅ [Unblock] Rule \(ruleId) shields removed for \(minutes) minutes, expiry: \(expiry)")
+        print("✅ [Unblock] Rule \(ruleId) shields removed for \(minutes) minutes, expiry: \(newExpiry)")
     }
 
     // MARK: - Global Fallback (Shield flow — no specific rule context)
@@ -187,6 +198,28 @@ extension ScreenTimeRulesServiceImpl {
     }
 
     // MARK: - Private Helpers
+
+    /// Fires an immediate local notification informing the user their current unblock has more time remaining.
+    private func notifyShorterDurationIgnored(ruleId: UUID) {
+        let center = UNUserNotificationCenter.current()
+
+        let content = UNMutableNotificationContent()
+        content.title = "Deen First"
+        content.body = "Your current unblock has more time remaining"
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: AppGroupConstants.shorterDurationIgnoredNotificationId(for: ruleId),
+            content: content,
+            trigger: nil // nil trigger fires immediately
+        )
+
+        center.add(request) { error in
+            if let error {
+                print("⚠️ [Unblock] Failed to notify shorter-duration ignored for rule \(ruleId): \(error)")
+            }
+        }
+    }
 
     private func isRuleCurrentlyBlocking(_ rule: ScreenTimeRule) -> Bool {
         guard DayHelper.isActiveToday(daysActive: rule.daysActive) else { return false }

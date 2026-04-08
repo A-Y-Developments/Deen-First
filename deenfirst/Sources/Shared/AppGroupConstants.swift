@@ -46,6 +46,11 @@ enum AppGroupConstants {
         "reblock_\(ruleId.uuidString)"
     }
 
+    /// Returns the UNNotificationRequest identifier for the "shorter duration ignored" notification.
+    static func shorterDurationIgnoredNotificationId(for ruleId: UUID) -> String {
+        "shorterDurationIgnored_\(ruleId.uuidString)"
+    }
+
     static func timeLimitWarningNotificationId(for ruleId: UUID) -> String {
         "timeLimitWarning_\(ruleId.uuidString)"
     }
