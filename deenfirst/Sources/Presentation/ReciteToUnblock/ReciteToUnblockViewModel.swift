@@ -76,7 +76,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var progressText: String?
     /// True when Hard Mode is active but the ayah pool is empty — shown max once/day.
     @Published var showPoolNudge: Bool = false
-    var unblockDurationMinutes: Int { tier.minutes }
+    var unblockDurationMinutes: Int { tier.minutes(isHardMode: isHardMode) }
 
     // MARK: - Target Rule
 
@@ -125,7 +125,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     var canRefreshAyah: Bool { !isHardMode }
     var minWordCount: Int? { isHardMode ? 5 : nil }
 
-    private var ayahCount: Int { tier == .tier2 ? 2 : 1 }
+    private var ayahCount: Int { tier.ayahCount(isHardMode: isHardMode) }
 
     // MARK: - Init
 
@@ -160,7 +160,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
             }
             ayahSequence = sequence
             ayah = sequence[0]
-            progressText = tier == .tier2 ? "Ayah 1 of 2" : nil
+            let total = ayahCount
+            progressText = total > 1 ? "Ayah 1 of \(total)" : nil
             state = .ready
             print("... \(sequence[0].surahNo):\(sequence[0].numberInSurah)")
             await playAyahAudio()
@@ -377,15 +378,16 @@ final class ReciteToUnblockViewModel: ObservableObject {
             let passed = score >= Int((similarityThreshold * 100).rounded())
 
             if passed {
-                if tier == .tier2 && currentAyahIndex == 0 {
-                    // Ayah 1 passed in Tier 2 — advance to Ayah 2
-                    currentAyahIndex = 1
-                    if ayahSequence.count > 1 { self.ayah = ayahSequence[1] }
+                let total = ayahCount
+                if currentAyahIndex < total - 1 {
+                    // Not done yet — advance to next ayah
+                    currentAyahIndex += 1
+                    if ayahSequence.count > currentAyahIndex { self.ayah = ayahSequence[currentAyahIndex] }
                     failureCountForCurrentAyah = 0
-                    progressText = "Ayah 2 of 2"
+                    progressText = "Ayah \(currentAyahIndex + 1) of \(total)"
                     state = .awaitingNextAyah(score: score)
                 } else {
-                    // Final pass (Tier 1, or Tier 2 Ayah 2)
+                    // Final pass
                     await handlePass()
                     state = .result(passed: true, score: score)
                 }
@@ -560,7 +562,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
         failureCountForCurrentAyah = 0
         progressText = nil
         if currentAyahIndex == 1 {
-            // Ayah 1 already passed — grant 5 min immediately
+            // Leniency: user passed at least one ayah — grant tier1 immediately
+            // even though Hard Mode tier1 normally requires 2 ayahs.
             await handlePass()
             state = .result(passed: true, score: 0)
         } else {

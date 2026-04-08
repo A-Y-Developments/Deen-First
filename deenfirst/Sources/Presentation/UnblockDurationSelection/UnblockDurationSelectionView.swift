@@ -147,18 +147,18 @@ private struct TierCardView: View {
         switch tier {
         case .tier1: return "5 min"
         case .tier2: return "10 min"
-        case .tier3: return "15 min"
+        case .tier3: return isHardMode ? "20 min" : "15 min"
         }
     }
 
     private var requirementLabel: String {
         switch tier {
         case .tier1:
-            return isHardMode ? "Recite 1 ayah (5+ words)" : "Recite 1 ayah"
+            return isHardMode ? "Recite 2 ayahs (5+ words each)" : "Recite 1 ayah"
         case .tier2:
-            return isHardMode ? "Recite 2 ayahs (5+ words each)" : "Recite 2 ayahs"
+            return isHardMode ? "Recite 3 ayahs (5+ words each)" : "Recite 2 ayahs"
         case .tier3:
-            return "Complete a Quran session"
+            return isHardMode ? "Complete a 20-min Quran session" : "Complete a 15-min Quran session"
         }
     }
 }
