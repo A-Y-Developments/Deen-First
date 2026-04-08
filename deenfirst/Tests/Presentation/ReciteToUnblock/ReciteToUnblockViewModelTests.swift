@@ -20,6 +20,47 @@ final class UnblockTierTests: XCTestCase {
     func testTier3_Minutes_Is15() {
         XCTAssertEqual(UnblockTier.tier3.minutes, 15)
     }
+
+    // MARK: - minutes(isHardMode:)
+
+    func testTier3_MinutesHardMode_Is20() {
+        XCTAssertEqual(UnblockTier.tier3.minutes(isHardMode: true), 20)
+    }
+
+    func testTier3_MinutesNormalMode_Is15() {
+        XCTAssertEqual(UnblockTier.tier3.minutes(isHardMode: false), 15)
+    }
+
+    func testTier1_MinutesHardMode_Is5() {
+        XCTAssertEqual(UnblockTier.tier1.minutes(isHardMode: true), 5)
+    }
+
+    func testTier2_MinutesHardMode_Is10() {
+        XCTAssertEqual(UnblockTier.tier2.minutes(isHardMode: true), 10)
+    }
+
+    // MARK: - ayahCount(isHardMode:)
+
+    func testTier1_AyahCount_NormalMode_Is1() {
+        XCTAssertEqual(UnblockTier.tier1.ayahCount(isHardMode: false), 1)
+    }
+
+    func testTier1_AyahCount_HardMode_Is2() {
+        XCTAssertEqual(UnblockTier.tier1.ayahCount(isHardMode: true), 2)
+    }
+
+    func testTier2_AyahCount_NormalMode_Is2() {
+        XCTAssertEqual(UnblockTier.tier2.ayahCount(isHardMode: false), 2)
+    }
+
+    func testTier2_AyahCount_HardMode_Is3() {
+        XCTAssertEqual(UnblockTier.tier2.ayahCount(isHardMode: true), 3)
+    }
+
+    func testTier3_AyahCount_IsZero() {
+        XCTAssertEqual(UnblockTier.tier3.ayahCount(isHardMode: false), 0)
+        XCTAssertEqual(UnblockTier.tier3.ayahCount(isHardMode: true), 0)
+    }
 }
 
 // MARK: - ReciteToUnblockViewModel Tier + Shorter-Wins Tests
@@ -193,6 +234,44 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         // showPoolNudge should remain false since nudge already fired today
         XCTAssertFalse(vm.showPoolNudge)
         nudgeDefaults.removePersistentDomain(forName: nudgeDefaults.suiteName ?? "")
+    }
+
+    // MARK: - Hard Mode tier duration
+
+    func testUnblockDurationMinutes_Tier3_HardMode_Is20() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        vm.tier = .tier3
+        XCTAssertEqual(vm.unblockDurationMinutes, 20)
+    }
+
+    func testUnblockDurationMinutes_Tier3_NormalMode_Is15() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: false)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        vm.tier = .tier3
+        XCTAssertEqual(vm.unblockDurationMinutes, 15)
+    }
+
+    func testUnblockDurationMinutes_Tier1_HardMode_Is5() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        vm.tier = .tier1
+        XCTAssertEqual(vm.unblockDurationMinutes, 5)
+    }
+
+    func testUnblockDurationMinutes_Tier2_HardMode_Is10() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        vm.tier = .tier2
+        XCTAssertEqual(vm.unblockDurationMinutes, 10)
     }
 
     // MARK: - Helpers
