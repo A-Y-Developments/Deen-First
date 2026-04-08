@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import os
 
 // MARK: - Protocol
 
@@ -20,6 +21,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
     private let screenTimeRulesRepository: ScreenTimeRulesRepository
 
     private static let clockJumpThreshold: TimeInterval = 7_200
+    private let logger = Logger(subsystem: "com.aydev.deenfirst", category: "PendingChangeService")
 
     init(
         localDataSource: LocalDataSource,
@@ -70,7 +72,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
             let lastKnownDate = Date(timeIntervalSince1970: lastKnownInterval)
             let elapsed = now.timeIntervalSince(lastKnownDate)
             if elapsed > Self.clockJumpThreshold {
-                print("⚠️ [PendingChangeService] Clock jump detected (\(Int(elapsed))s) — skipping auto-apply")
+                logger.fault("Clock manipulation suspected: jumped \(Int(elapsed))s — skipping auto-apply")
                 defaults?.set(now.timeIntervalSince1970, forKey: AppGroupConstants.lastKnownDateKey)
                 return
             }
