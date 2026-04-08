@@ -214,6 +214,30 @@ final class PendingChangeServiceTests: XCTestCase {
         XCTAssertTrue(mockRulesService.deletedAppLimitIds.contains(ruleId))
     }
 
+    func testApplyExpiredChanges_normalProgressionUnderTwoHoursProceeds() async {
+        let ruleId = UUID()
+        var rule = makeRule(id: ruleId)
+        rule.isLockEditingEnabled = true
+        mockRulesRepository.rules[ruleId] = rule
+
+        let pastDate = Date().addingTimeInterval(-90_000)
+        let expiredChange = PendingRuleChange(
+            ruleId: ruleId, changeType: .disableLockEditing, requestedAt: pastDate)
+        try? localDataSource.insertPendingChange(expiredChange)
+
+        // lastKnownDate 1 hour ago — well within the 2hr threshold
+        let oneHourAgo = Date().addingTimeInterval(-3_600)
+        AppGroupConstants.sharedDefaults?.set(
+            oneHourAgo.timeIntervalSince1970,
+            forKey: AppGroupConstants.lastKnownDateKey
+        )
+
+        await service.applyExpiredChanges()
+
+        let all = try? localDataSource.fetchPendingChanges()
+        XCTAssertTrue(all?.first?.isApplied ?? false, "Normal time progression should allow apply")
+    }
+
     func testApplyExpiredChanges_updatesLastKnownDateAfterRun() async {
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
 
