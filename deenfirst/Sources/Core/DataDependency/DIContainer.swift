@@ -39,16 +39,21 @@ final class DIContainer {
     lazy var notificationSchedulingService: NotificationSchedulingService = NotificationSchedulingServiceImpl()
 
     @MainActor
-    lazy var screenTimeRulesService: ScreenTimeRulesService = ScreenTimeRulesServiceImpl(
-        repository: screenTimeRulesRepository,
-        deviceActivityManager: deviceActivityManager,
-        notificationSchedulingService: notificationSchedulingService
-    )
+    lazy var screenTimeRulesService: ScreenTimeRulesService = {
+        let svc = ScreenTimeRulesServiceImpl(
+            repository: screenTimeRulesRepository,
+            deviceActivityManager: deviceActivityManager,
+            notificationSchedulingService: notificationSchedulingService
+        )
+        svc.dashboardDataWriter = dashboardDataWriter
+        return svc
+    }()
 
     lazy var sessionService: SessionService = SessionServiceImpl(
         sessionRepository: sessionRepository,
         userRepository: userRepository,
-        screenTimeRulesService: MainActor.assumeIsolated { screenTimeRulesService }
+        screenTimeRulesService: MainActor.assumeIsolated { screenTimeRulesService },
+        dashboardDataWriter: dashboardDataWriter
     )
 
     lazy var notificationPermissionService: NotificationPermissionService = NotificationPermissionServiceImpl()

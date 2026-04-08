@@ -72,6 +72,10 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
     /// Set by DIContainer before any gated operations are called.
     var pendingChangeService: (any PendingChangeService)?
 
+    /// Injected after init by DIContainer. Used to record emergency unblock events
+    /// for the dashboard. Optional so unit tests can omit it.
+    var dashboardDataWriter: DashboardDataWriter?
+
     init(
         repository: ScreenTimeRulesRepository,
         deviceActivityManager: DeviceActivityManager,

@@ -27,6 +27,9 @@ extension ScreenTimeRulesServiceImpl {
         // Schedule notification at midnight
         scheduleEmergencyReblockNotification(at: midnight)
 
+        // Dashboard: weekly emergency unblock counter.
+        dashboardDataWriter?.recordEmergencyUnblock()
+
         print("✅ [EmergencyUnblock] Activated — all shields removed until \(midnight)")
     }
 

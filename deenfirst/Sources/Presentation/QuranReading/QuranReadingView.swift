@@ -26,6 +26,7 @@ struct QuranReadingView: View {
         .errorAlert(isError: $viewModel.showError, errorMessage: $viewModel.errorMessage)
         .onDisappear {
             viewModel.stopAudio()
+            viewModel.recordReadingSession()
         }
         .task {
             await viewModel.setup(with: surahId)
