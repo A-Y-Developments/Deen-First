@@ -74,9 +74,8 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
 
     override func setUp() async throws {
         mockService = MockScreenTimeRulesServiceForRecite()
-        let suiteName = "com.test.recite-\(UUID().uuidString)"
-        testDefaultsSuiteName = suiteName
-        testDefaults = UserDefaults(suiteName: suiteName)
+        testDefaultsSuiteName = "com.test.recite-\(UUID().uuidString)"
+        testDefaults = UserDefaults(suiteName: testDefaultsSuiteName)
     }
 
     override func tearDown() async throws {
