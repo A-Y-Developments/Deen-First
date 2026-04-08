@@ -55,7 +55,7 @@ struct UnblockDurationSheet: View {
             
             Button {
                     reciteToUnblockViewModel.targetRuleId = ruleId
-                    reciteToUnblockViewModel.tier = selectedMinutes <= 7 ? .tier1 : selectedMinutes <= 12 ? .tier2 : .tier3
+                    reciteToUnblockViewModel.tier = UnblockTier.closest(to: selectedMinutes)
                     dismiss()
                     router.navigate(to: .reciteToUnlock)
             } label: {

@@ -28,17 +28,17 @@ final class ActiveSessionViewModel: ObservableObject {
     var ayahs: [Ayah] = []
 
     init(
-        ayahAudioPlayer: AyahAudioPlayerServiceImpl? = nil,
+        ayahAudioPlayer: AyahAudioPlayerServiceImpl = MainActor.assumeIsolated { DIContainer.shared.ayahAudioPlayerService },
         sessionService: SessionService = DIContainer.shared.sessionService,
         subscriptionService: SubscriptionService = DIContainer.shared.subscriptionService,
         quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService,
-        screenTimeRulesService: ScreenTimeRulesService? = nil
+        screenTimeRulesService: ScreenTimeRulesService = MainActor.assumeIsolated { DIContainer.shared.screenTimeRulesService }
     ) {
-        self.ayahAudioPlayer = ayahAudioPlayer ?? DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl
+        self.ayahAudioPlayer = ayahAudioPlayer
         self.sessionService = sessionService
         self.subscriptionService = subscriptionService
         self.quranPreferences = quranPreferences
-        self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
+        self.screenTimeRulesService = screenTimeRulesService
 
         setupBindings()
     }

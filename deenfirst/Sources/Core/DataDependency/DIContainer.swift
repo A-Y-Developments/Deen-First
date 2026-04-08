@@ -67,7 +67,7 @@ final class DIContainer {
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
 
     @MainActor
-    lazy var ayahAudioPlayerService: AyahAudioPlayerService = AyahAudioPlayerServiceImpl(
+    lazy var ayahAudioPlayerService: AyahAudioPlayerServiceImpl = AyahAudioPlayerServiceImpl(
         audioPlayer: audioPlayerService)
 
     @MainActor
