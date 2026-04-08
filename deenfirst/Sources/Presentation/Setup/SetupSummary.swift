@@ -37,6 +37,7 @@ struct SetupSummary: View {
                                     categoriesCount: rule.categoryTokenData.count,
                                     timeInfo: rule.limitDisplayName ?? "N/A",
                                     daysText: rule.daysDisplayText,
+                                    isHardMode: rule.isHardMode,
                                     showUnblockButton: false   // preview only, no unblock action
                                 )
                             }
@@ -58,6 +59,7 @@ struct SetupSummary: View {
                                     categoriesCount: rule.categoryTokenData.count,
                                     timeInfo: rule.timeRangeDisplay ?? "N/A",
                                     daysText: rule.daysDisplayText,
+                                    isHardMode: rule.isHardMode,
                                     showUnblockButton: false   // preview only, no unblock action
                                 )
                             }

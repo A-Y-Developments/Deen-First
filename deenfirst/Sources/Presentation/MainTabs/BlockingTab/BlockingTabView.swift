@@ -138,6 +138,7 @@ struct BlockingTabView: View {
                     categoriesCount: limit.categoryTokenData.count,
                     timeInfo: limit.limitDisplayName ?? "N/A",
                     daysText: limit.daysDisplayText,
+                    isHardMode: limit.isHardMode,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
                         pendingUnblockRuleId = limit.id
@@ -157,6 +158,7 @@ struct BlockingTabView: View {
                     categoriesCount: limit.categoryTokenData.count,
                     timeInfo: limit.timeRangeDisplay ?? "N/A",
                     daysText: limit.daysDisplayText,
+                    isHardMode: limit.isHardMode,
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
                         pendingUnblockRuleId = limit.id
