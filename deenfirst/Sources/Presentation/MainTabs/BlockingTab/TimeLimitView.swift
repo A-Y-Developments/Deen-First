@@ -32,6 +32,7 @@ struct TimeLimitView: View {
                             timeSettingsSection
                             prayerTimeSection
                             activeTimeSection
+                            unblockDifficultySection
                         }
 
                         actionButtons
@@ -291,6 +292,48 @@ struct TimeLimitView: View {
                         .onTapGesture { viewModel.toggleDay(index) }
                 }
             }
+        }
+    }
+
+    // MARK: - Unblock Difficulty
+
+    private var unblockDifficultySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Unblock Difficulty")
+                .foregroundColor(Color.secondary400)
+                .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+                difficultyOption(label: "Normal", isSelected: !viewModel.isHardMode) {
+                    viewModel.isHardMode = false
+                }
+                difficultyOption(label: "Hard Mode", isSelected: viewModel.isHardMode) {
+                    viewModel.isHardMode = true
+                }
+            }
+
+            if viewModel.isHardMode {
+                Text("You won't be able to refresh ayahs. A higher recitation score is required. Editing this rule requires a 24-hour delay.")
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.horizontal, 4)
+            }
+        }
+    }
+
+    private func difficultyOption(label: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: isSelected ? "circle.fill" : "circle")
+                    .foregroundColor(isSelected ? Color.secondary400 : .white.opacity(0.4))
+                    .font(.system(size: 16))
+                Text(label)
+                    .foregroundColor(.white)
+                Spacer()
+            }
+            .padding()
+            .background(Color.primary500.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
     }
 

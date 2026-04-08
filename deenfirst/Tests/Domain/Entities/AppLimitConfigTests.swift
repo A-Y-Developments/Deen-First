@@ -108,4 +108,27 @@ final class AppLimitConfigTests: XCTestCase {
 
         XCTAssertEqual(config.daysActive, Set(DayHelper.allDayNames))
     }
+
+    func testAppLimitConfigHardModeDefaultsFalse() {
+        let config = AppLimitConfig(name: "Test", timeLimit: .oneHour)
+        XCTAssertFalse(config.isHardMode)
+        XCTAssertFalse(config.isLockEditingEnabled)
+    }
+
+    func testAppLimitConfigHardModeAutoEnablesLockEditing() {
+        let config = AppLimitConfig(name: "Test", timeLimit: .oneHour, isHardMode: true)
+        XCTAssertTrue(config.isHardMode)
+        XCTAssertTrue(config.isLockEditingEnabled)
+    }
+
+    func testAppLimitConfigNormalModePreservesLockEditing() {
+        let config = AppLimitConfig(
+            name: "Test",
+            timeLimit: .oneHour,
+            isHardMode: false,
+            isLockEditingEnabled: true
+        )
+        XCTAssertFalse(config.isHardMode)
+        XCTAssertTrue(config.isLockEditingEnabled)
+    }
 }
