@@ -131,15 +131,15 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     init(
         quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService,
-        screenTimeService: ScreenTimeRulesService = DIContainer.shared.screenTimeRulesService,
+        screenTimeService: ScreenTimeRulesService? = nil,
         sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName),
-        ayahPoolService: AyahPoolService = DIContainer.shared.ayahPoolService,
+        ayahPoolService: AyahPoolService? = nil,
         nudgeDefaults: UserDefaults = .standard
     ) {
         self.quranPreferences = quranPreferences
-        self.screenTimeService = screenTimeService
+        self.screenTimeService = screenTimeService ?? DIContainer.shared.screenTimeRulesService
         self.sharedDefaults = sharedDefaults
-        self.ayahPoolService = ayahPoolService
+        self.ayahPoolService = ayahPoolService ?? DIContainer.shared.ayahPoolService
         self.nudgeDefaults = nudgeDefaults
     }
 

@@ -70,18 +70,19 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
 
     var mockService: MockScreenTimeRulesServiceForRecite!
     var testDefaults: UserDefaults!
+    var testDefaultsSuiteName: String!
 
     override func setUp() async throws {
         mockService = MockScreenTimeRulesServiceForRecite()
         let suiteName = "com.test.recite-\(UUID().uuidString)"
+        testDefaultsSuiteName = suiteName
         testDefaults = UserDefaults(suiteName: suiteName)
     }
 
     override func tearDown() async throws {
-        if let suiteName = testDefaults.suiteName {
-            testDefaults.removePersistentDomain(forName: suiteName)
-        }
+        testDefaults.removePersistentDomain(forName: testDefaultsSuiteName)
         testDefaults = nil
+        testDefaultsSuiteName = nil
         mockService = nil
     }
 
@@ -222,7 +223,8 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
     }
 
     func testPoolNudge_ShownOncePerDay_NotRepeated() {
-        let nudgeDefaults = UserDefaults(suiteName: "com.test.nudge-\(UUID().uuidString)")!
+        let nudgeSuiteName = "com.test.nudge-\(UUID().uuidString)"
+        let nudgeDefaults = UserDefaults(suiteName: nudgeSuiteName)!
         let vm = ReciteToUnblockViewModel(
             quranPreferences: MockQuranPreferencesServiceForRecite(),
             screenTimeService: mockService,
@@ -233,7 +235,7 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
         // showPoolNudge should remain false since nudge already fired today
         XCTAssertFalse(vm.showPoolNudge)
-        nudgeDefaults.removePersistentDomain(forName: nudgeDefaults.suiteName ?? "")
+        nudgeDefaults.removePersistentDomain(forName: nudgeSuiteName)
     }
 
     // MARK: - Hard Mode tier duration
