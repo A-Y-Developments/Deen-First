@@ -5,5 +5,6 @@ import SwiftUI
 struct DeenFirstActivityReportExtension: DeviceActivityReportExtension {
     var body: some DeviceActivityReportScene {
         DeenScoreReportScene()
+        ScreenTimeOverviewReportScene()
     }
 }
