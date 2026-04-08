@@ -29,6 +29,14 @@ enum UnblockTier {
         default: return 0
         }
     }
+
+    static func closest(to minutes: Int) -> UnblockTier {
+        switch minutes {
+        case ..<8: return .tier1
+        case 8..<13: return .tier2
+        default: return .tier3
+        }
+    }
 }
 
 @MainActor final class UnblockDurationSelectionViewModel: ObservableObject {
@@ -37,8 +45,8 @@ enum UnblockTier {
 
     private let screenTimeRulesService: ScreenTimeRulesService
 
-    init(screenTimeRulesService: ScreenTimeRulesService? = nil) {
-        self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
+    init(screenTimeRulesService: ScreenTimeRulesService = MainActor.assumeIsolated { DIContainer.shared.screenTimeRulesService }) {
+        self.screenTimeRulesService = screenTimeRulesService
     }
 
     func loadRule(ruleId: UUID) {

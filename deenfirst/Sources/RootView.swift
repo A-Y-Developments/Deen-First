@@ -75,6 +75,7 @@ struct RootView: View {
         .environmentObject(timeLimitViewModel)
         .environmentObject(supportViewModel)
         .task {
+            await DIContainer.shared.pendingChangeService.applyExpiredChanges()
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
             await DIContainer.shared.notificationSchedulingService.scheduleMotivationalNotifications()
@@ -106,6 +107,7 @@ struct RootView: View {
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
             Task {
+                await DIContainer.shared.pendingChangeService.applyExpiredChanges()
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()
                 try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
                 await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
@@ -230,7 +232,10 @@ struct RootView: View {
         case .dashboard:
             DashboardTabView()
         case .ayahPool:
-            EmptyView()
+            Text("Ayah Pool — coming soon")
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.primary900.ignoresSafeArea())
         }
     }
 }
