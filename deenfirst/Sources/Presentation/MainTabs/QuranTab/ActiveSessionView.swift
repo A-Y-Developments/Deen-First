@@ -3,14 +3,19 @@ import SwiftUI
 struct ActiveSessionView: View {
     @EnvironmentObject var router: Router
     @EnvironmentObject private var viewModel: ActiveSessionViewModel
+    @EnvironmentObject private var reciteToUnblockViewModel: ReciteToUnblockViewModel
     @State private var isUserScrolling = false
 
     let surahs: [SurahWithRange]
     let ayahs: [Ayah]
+    let isUnblockSession: Bool
+    let unlockRuleId: UUID?
 
-    init(surahs: [SurahWithRange], ayahs: [Ayah]) {
+    init(surahs: [SurahWithRange], ayahs: [Ayah], isUnblockSession: Bool = false, unlockRuleId: UUID? = nil) {
         self.surahs = surahs
         self.ayahs = ayahs
+        self.isUnblockSession = isUnblockSession
+        self.unlockRuleId = unlockRuleId
     }
 
     var body: some View {
@@ -114,12 +119,17 @@ struct ActiveSessionView: View {
         }
         .onChange(of: viewModel.sessionDidEnd) { _, newValue in
             if newValue {
-                router.navigate(
-                    to: .sessionFinish(
-                        duration: viewModel.sessionDuration,
-                        surahCount: viewModel.surahs.count
+                if isUnblockSession && !viewModel.unblockGranted {
+                    // Early exit from unblock session — no access granted
+                    router.navigateBack()
+                } else {
+                    router.navigate(
+                        to: .sessionFinish(
+                            duration: viewModel.sessionDuration,
+                            surahCount: viewModel.surahs.count
+                        )
                     )
-                )
+                }
             }
         }
         .alert(
@@ -131,8 +141,25 @@ struct ActiveSessionView: View {
         ) {
             Button("OK") { viewModel.errorMessage = nil }
         }
+        .alert("Audio Unavailable", isPresented: $viewModel.showUnblockFallback) {
+            Button("Recite 1 Ayah (5 min)") {
+                reciteToUnblockViewModel.targetRuleId = unlockRuleId
+                reciteToUnblockViewModel.unblockDurationMinutes = 5
+                router.navigate(to: .reciteToUnlock)
+            }
+            Button("Recite 2 Ayahs (10 min)") {
+                reciteToUnblockViewModel.targetRuleId = unlockRuleId
+                reciteToUnblockViewModel.unblockDurationMinutes = 10
+                router.navigate(to: .reciteToUnlock)
+            }
+            Button("Cancel", role: .cancel) {
+                router.navigateBack()
+            }
+        } message: {
+            Text("Could not load audio. You can still unblock by reciting instead.")
+        }
         .task {
-            viewModel.configure(surahs: surahs, ayahs: ayahs)
+            viewModel.configure(surahs: surahs, ayahs: ayahs, isUnblockSession: isUnblockSession, unlockRuleId: unlockRuleId)
             await viewModel.startSession()
         }
     }
@@ -206,5 +233,6 @@ struct ActiveAyahCard: View {
         ActiveSessionView(surahs: [], ayahs: [])
             .environmentObject(ActiveSessionViewModel())
             .environmentObject(Router())
+            .environmentObject(ReciteToUnblockViewModel())
     }
 }

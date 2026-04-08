@@ -11,12 +11,17 @@ final class ActiveSessionViewModel: ObservableObject {
     @Published var showEndConfirmation = false
     @Published var sessionDidEnd = false
     @Published var errorMessage: String?
+    @Published var unblockGranted = false
+    @Published var showUnblockFallback = false
 
     private let ayahAudioPlayer: AyahAudioPlayerServiceImpl
     private let sessionService: SessionService
     private let subscriptionService: SubscriptionService
     private let quranPreferences: QuranPreferencesService
+    private let screenTimeRulesService: ScreenTimeRulesService
     private var session: Session?
+    private var isUnblockSession = false
+    private var unlockRuleId: UUID?
     private var cancellables = Set<AnyCancellable>()
 
     var surahs: [SurahWithRange] = []
@@ -26,19 +31,24 @@ final class ActiveSessionViewModel: ObservableObject {
         ayahAudioPlayer: AyahAudioPlayerServiceImpl? = nil,
         sessionService: SessionService = DIContainer.shared.sessionService,
         subscriptionService: SubscriptionService = DIContainer.shared.subscriptionService,
-        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService
+        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService,
+        screenTimeRulesService: ScreenTimeRulesService = DIContainer.shared.screenTimeRulesService
     ) {
         self.ayahAudioPlayer = ayahAudioPlayer ?? DIContainer.shared.ayahAudioPlayerService as! AyahAudioPlayerServiceImpl
         self.sessionService = sessionService
         self.subscriptionService = subscriptionService
         self.quranPreferences = quranPreferences
+        self.screenTimeRulesService = screenTimeRulesService
 
         setupBindings()
     }
 
-    func configure(surahs: [SurahWithRange], ayahs: [Ayah]) {
+    func configure(surahs: [SurahWithRange], ayahs: [Ayah], isUnblockSession: Bool = false, unlockRuleId: UUID? = nil) {
         self.surahs = surahs
         self.ayahs = ayahs
+        self.isUnblockSession = isUnblockSession
+        self.unlockRuleId = unlockRuleId
+        self.unblockGranted = false
     }
 
     private func setupBindings() {
@@ -66,8 +76,17 @@ final class ActiveSessionViewModel: ObservableObject {
         if let session {
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
         }
-        // Shields are automatically removed by SessionService
+        if isUnblockSession, let ruleId = unlockRuleId {
+            let minutes = unblockMinutes(for: ruleId)
+            await screenTimeRulesService.temporaryUnblock(minutes: minutes, ruleId: ruleId)
+            unblockGranted = true
+        }
         sessionDidEnd = true
+    }
+
+    private func unblockMinutes(for ruleId: UUID) -> Int {
+        guard let rule = screenTimeRulesService.getRule(id: ruleId) else { return 15 }
+        return rule.isHardMode ? 20 : 15
     }
 
     func startSession() async {
@@ -82,14 +101,25 @@ final class ActiveSessionViewModel: ObservableObject {
             let reciterId = quranPreferences.selectedReciterId
 
             // SessionService handles shield application
-            session = try await sessionService.startSession(
+            let newSession = try await sessionService.startSession(
                 type: .listening,
                 surahNumbers: surahs.map { $0.surah.number },
                 reciterId: reciterId
             )
+            newSession.isUnblockSession = isUnblockSession
+            newSession.unlockRuleId = unlockRuleId
+            session = newSession
 
-            try await ayahAudioPlayer.loadQueue(ayahs, reciterId: reciterId)
-            ayahAudioPlayer.play()
+            do {
+                try await ayahAudioPlayer.loadQueue(ayahs, reciterId: reciterId)
+                ayahAudioPlayer.play()
+            } catch {
+                if isUnblockSession {
+                    showUnblockFallback = true
+                } else {
+                    errorMessage = error.localizedDescription
+                }
+            }
 
         } catch {
             errorMessage = error.localizedDescription

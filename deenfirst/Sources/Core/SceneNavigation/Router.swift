@@ -17,10 +17,10 @@ final class Router: ObservableObject {
         case timeLimit
         case editAppLimit(id: UUID)
         case editTimeLimit(id: UUID)
-        case focusSection
+        case focusSection(unlockRuleId: UUID? = nil)
         case selectSurah(surahs: [SurahWithRange])
         case ayahRange(surah: Surah)
-        case activeSession(surahs: [SurahWithRange], ayahs: [Ayah])
+        case activeSession(surahs: [SurahWithRange], ayahs: [Ayah], isUnblockSession: Bool, unlockRuleId: UUID?)
         case sessionFinish(duration: TimeInterval, surahCount: Int)
         case survey(step: Int, answers: SurveyAnswers)
         case calculateSurvey(answers: SurveyAnswers)

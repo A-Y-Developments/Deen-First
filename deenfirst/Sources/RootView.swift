@@ -176,14 +176,14 @@ struct RootView: View {
             AppLimitView(limitId: id)
         case .editTimeLimit(let id):
             TimeLimitView(limitId: id)
-        case .focusSection:
-            FocusSectionView()
+        case .focusSection(let unlockRuleId):
+            FocusSectionView(unlockRuleId: unlockRuleId)
         case .selectSurah(let surahs):
             SelectSurahView(existingSurahs: surahs)
         case .ayahRange(let surah):
             AyahRangeSelectionView(surah: surah)
-        case .activeSession(let surahs, let ayahs):
-            ActiveSessionView(surahs: surahs, ayahs: ayahs)
+        case .activeSession(let surahs, let ayahs, let isUnblockSession, let unlockRuleId):
+            ActiveSessionView(surahs: surahs, ayahs: ayahs, isUnblockSession: isUnblockSession, unlockRuleId: unlockRuleId)
         case .sessionFinish(let duration, let surahCount):
             SessionFinishView(duration: duration, surahCount: surahCount)
         case .survey, .calculateSurvey, .summary, .howAppWork, .finalSummary:

@@ -98,7 +98,7 @@ struct HomeTabView: View {
             }
 
             Button {
-                router.navigate(to: .focusSection)
+                router.navigate(to: .focusSection(unlockRuleId: nil))
             } label: {
                 Text("Start Focus Session")
                     .padding(.vertical, 14)

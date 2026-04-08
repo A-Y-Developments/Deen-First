@@ -12,6 +12,8 @@ final class Session {
     var endTime: Date?
     var durationSeconds: Int
     var isCompleted: Bool
+    var isUnblockSession: Bool
+    var unlockRuleId: UUID?
 
     enum SessionType: String, Codable {
         case reading
@@ -22,7 +24,9 @@ final class Session {
         userId: UUID,
         type: SessionType,
         surahNumbers: [Int],
-        reciterId: Int? = nil
+        reciterId: Int? = nil,
+        isUnblockSession: Bool = false,
+        unlockRuleId: UUID? = nil
     ) {
         self.id = UUID()
         self.userId = userId
@@ -33,6 +37,8 @@ final class Session {
         self.endTime = nil
         self.durationSeconds = 0
         self.isCompleted = false
+        self.isUnblockSession = isUnblockSession
+        self.unlockRuleId = unlockRuleId
     }
 
     // Helper computed property
