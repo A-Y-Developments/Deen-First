@@ -103,6 +103,18 @@ final class LocalDataSource {
         return try context.fetch(descriptor)
     }
 
+    @MainActor
+    func insertAyahPoolItem(_ item: AyahPoolItem) throws {
+        context.insert(item)
+        try context.save()
+    }
+
+    @MainActor
+    func deleteAyahPoolItem(_ item: AyahPoolItem) throws {
+        context.delete(item)
+        try context.save()
+    }
+
     // MARK: - PendingRuleChange Operations
 
     @MainActor

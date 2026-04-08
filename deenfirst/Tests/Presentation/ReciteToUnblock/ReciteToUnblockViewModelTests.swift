@@ -348,7 +348,13 @@ final class MockQuranPreferencesServiceForRecite: QuranPreferencesService {
     func getReciterAudio(for ayah: Ayah) -> ReciterAudio? { nil }
 }
 
+@MainActor
 final class MockAyahPoolServiceForRecite: AyahPoolService {
     var poolToReturn: [AyahPoolItem] = []
-    func fetchPool() async throws -> [AyahPoolItem] { poolToReturn }
+    func fetchPool() async -> [AyahPoolItem] { poolToReturn }
+    func addAyah(surahNumber: Int, ayahNumber: Int, arabicText: String, transliteration: String) async throws {}
+    func removeAyah(id: UUID) async {}
+    func poolCount() async -> Int { poolToReturn.count }
+    func nextAyah(excludeShort: Bool) -> AyahPoolItem? { poolToReturn.first }
+    func isEmpty() async -> Bool { poolToReturn.isEmpty }
 }
