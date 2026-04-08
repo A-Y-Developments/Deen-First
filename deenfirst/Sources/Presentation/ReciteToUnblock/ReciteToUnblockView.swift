@@ -38,6 +38,10 @@ struct ReciteToUnblockView: View {
                         reciteContent
                     case .result(let passed, let score):
                         resultContent(passed: passed, score: score)
+                    case .awaitingNextAyah(let score):
+                        awaitingNextAyahContent(score: score)
+                    case .downgradeOffered:
+                        downgradeOfferedContent
                     }
                 }
 
@@ -113,6 +117,13 @@ struct ReciteToUnblockView: View {
 
     private var reciteContent: some View {
         VStack(spacing: 0) {
+            if let progressText = viewModel.progressText {
+                Text(progressText)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.bottom, 4)
+            }
+
             Text("Recite this ayah")
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(.white)
@@ -265,6 +276,82 @@ struct ReciteToUnblockView: View {
         }
     }
 
+    // MARK: - Awaiting Next Ayah (Tier 2)
+
+    private func awaitingNextAyahContent(score: Int) -> some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "#4ADE80").opacity(0.15))
+                    .frame(width: 100, height: 100)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 40, weight: .bold))
+                    .foregroundColor(Color(hex: "#4ADE80"))
+            }
+            .padding(.bottom, 24)
+
+            Text("Ayah 1 Complete!")
+                .font(.system(size: 26, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.bottom, 8)
+
+            Text("Now recite the second ayah")
+                .font(.system(size: 16))
+                .foregroundColor(.white.opacity(0.55))
+                .padding(.bottom, 32)
+
+            VStack(spacing: 8) {
+                HStack {
+                    Text("Similarity")
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.45))
+                    Spacer()
+                    Text("\(score)%")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(Color(hex: "#4ADE80"))
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.1)).frame(height: 6)
+                        Capsule()
+                            .fill(Color(hex: "#4ADE80"))
+                            .frame(width: geo.size.width * CGFloat(score) / 100, height: 6)
+                            .animation(.spring(duration: 0.8), value: score)
+                    }
+                }
+                .frame(height: 6)
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+
+    // MARK: - Downgrade Offered (Hard Mode)
+
+    private var downgradeOfferedContent: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 100, height: 100)
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 40, weight: .bold))
+                    .foregroundColor(.orange)
+            }
+            .padding(.bottom, 24)
+
+            Text("Hard Mode")
+                .font(.system(size: 26, weight: .bold))
+                .foregroundColor(.white)
+                .padding(.bottom, 8)
+
+            Text("3 attempts on this ayah.\nTake 5 min instead?")
+                .font(.system(size: 16))
+                .foregroundColor(.white.opacity(0.55))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+        }
+    }
+
     // MARK: - Bottom Action Area
 
     @ViewBuilder
@@ -295,6 +382,21 @@ struct ReciteToUnblockView: View {
                             .font(.system(size: 16))
                             .foregroundColor(.white.opacity(0.35))
                     }
+                }
+            }
+
+        case .awaitingNextAyah:
+            primaryButton(title: "Next Ayah") { viewModel.proceedToNextAyah() }
+
+        case .downgradeOffered:
+            VStack(spacing: 12) {
+                primaryButton(title: "Take 5 min (Tier 1)") {
+                    Task { await viewModel.acceptTier1Downgrade() }
+                }
+                Button { viewModel.declineTier1Downgrade() } label: {
+                    Text("Keep Trying")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white.opacity(0.35))
                 }
             }
 
