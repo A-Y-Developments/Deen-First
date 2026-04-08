@@ -22,6 +22,7 @@ final class TimeLimitViewModel: ObservableObject {
     @Published var hasSetupCompleted: Bool = false
     @Published var showDeleteConfirmation: Bool = false
     @Published var expandedPicker: PickerType? = nil
+    @Published var isHardMode: Bool = false
 
     enum PickerType { case start, end }
 
@@ -150,6 +151,7 @@ final class TimeLimitViewModel: ObservableObject {
             }
         }
 
+        isHardMode = rule.isHardMode
         isLoading = false
     }
 
@@ -254,7 +256,8 @@ final class TimeLimitViewModel: ObservableObject {
                     ? "Time Limit" : settingsName,
                 startTime: startComponents,
                 endTime: endComponents,
-                daysActive: daysActive
+                daysActive: daysActive,
+                isHardMode: isHardMode
             )
 
             if let id = editingRuleId {

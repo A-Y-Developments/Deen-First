@@ -85,7 +85,9 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
             limitSeconds: config.limitSeconds,
             daysActive: config.daysActive,
             unblockAllowedAfterLimit: config.unblockAllowedAfterLimit,
-            durationOptions: config.durationOptions
+            durationOptions: config.durationOptions,
+            isHardMode: config.isHardMode,
+            isLockEditingEnabled: config.isLockEditingEnabled
         )
 
         var appLimits: [ActivityToken] = []
@@ -130,7 +132,9 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
             endTime: config.endTime,
             daysActive: config.daysActive,
             unblockAllowedAfterLimit: config.unblockAllowedAfterLimit,
-            durationOptions: config.durationOptions
+            durationOptions: config.durationOptions,
+            isHardMode: config.isHardMode,
+            isLockEditingEnabled: config.isLockEditingEnabled
         )
 
         var appLimits: [ActivityToken] = []

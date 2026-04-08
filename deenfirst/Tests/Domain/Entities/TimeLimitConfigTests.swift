@@ -104,4 +104,39 @@ final class timeLimitConfigTests: XCTestCase {
         XCTAssertNotNil(result)
     }
 
+    func testtimeLimitConfigHardModeDefaultsFalse() {
+        let start = DateComponents(hour: 9, minute: 0)
+        let end = DateComponents(hour: 17, minute: 0)
+        let config = TimeLimitConfig(name: "Test", startTime: start, endTime: end)
+        XCTAssertFalse(config.isHardMode)
+        XCTAssertFalse(config.isLockEditingEnabled)
+    }
+
+    func testtimeLimitConfigHardModeAutoEnablesLockEditing() {
+        let start = DateComponents(hour: 9, minute: 0)
+        let end = DateComponents(hour: 17, minute: 0)
+        let config = TimeLimitConfig(
+            name: "Test",
+            startTime: start,
+            endTime: end,
+            isHardMode: true
+        )
+        XCTAssertTrue(config.isHardMode)
+        XCTAssertTrue(config.isLockEditingEnabled)
+    }
+
+    func testtimeLimitConfigNormalModePreservesLockEditing() {
+        let start = DateComponents(hour: 9, minute: 0)
+        let end = DateComponents(hour: 17, minute: 0)
+        let config = TimeLimitConfig(
+            name: "Test",
+            startTime: start,
+            endTime: end,
+            isHardMode: false,
+            isLockEditingEnabled: true
+        )
+        XCTAssertFalse(config.isHardMode)
+        XCTAssertTrue(config.isLockEditingEnabled)
+    }
+
 }

@@ -25,6 +25,7 @@ final class AppLimitViewModel: ObservableObject {
     @Published var appSelection = FamilyActivitySelection()
     @Published var hasSetupCompleted: Bool = false
     @Published var showDeleteConfirmation: Bool = false
+    @Published var isHardMode: Bool = false
 
     // MARK: - Edit Mode
 
@@ -117,6 +118,7 @@ final class AppLimitViewModel: ObservableObject {
             }
         }
 
+        isHardMode = rule.isHardMode
         isLoading = false
     }
 
@@ -191,7 +193,8 @@ final class AppLimitViewModel: ObservableObject {
                 name: settingsName.trimmingCharacters(in: .whitespaces).isEmpty
                     ? "App Limit" : settingsName,
                 timeLimit: .custom(dailyLimitMinutes * 60),
-                daysActive: daysActive
+                daysActive: daysActive,
+                isHardMode: isHardMode
             )
 
             if let id = editingRuleId {

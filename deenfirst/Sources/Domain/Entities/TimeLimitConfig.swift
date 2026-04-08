@@ -9,6 +9,8 @@ struct TimeLimitConfig: Codable {
     let daysActive: Set<String>
     let unblockAllowedAfterLimit: Int
     let durationOptions: [Int]
+    let isHardMode: Bool
+    let isLockEditingEnabled: Bool
 
     var isCurrentlyInBlockingPeriod: Bool {
         let todayName = DayHelper.getCurrentDayName()
@@ -38,7 +40,9 @@ struct TimeLimitConfig: Codable {
         endTime: DateComponents,
         daysActive: Set<String> = [],
         unblockAllowedAfterLimit: Int = 0,
-        durationOptions: [Int] = []
+        durationOptions: [Int] = [],
+        isHardMode: Bool = false,
+        isLockEditingEnabled: Bool = false
     ) {
         self.id = id
         self.name = name
@@ -47,5 +51,7 @@ struct TimeLimitConfig: Codable {
         self.daysActive = daysActive.isEmpty ? Set(DayHelper.allDayNames) : daysActive
         self.unblockAllowedAfterLimit = unblockAllowedAfterLimit
         self.durationOptions = durationOptions.isEmpty ? [5, 10, 15] : durationOptions
+        self.isHardMode = isHardMode
+        self.isLockEditingEnabled = isHardMode ? true : isLockEditingEnabled
     }
 }
