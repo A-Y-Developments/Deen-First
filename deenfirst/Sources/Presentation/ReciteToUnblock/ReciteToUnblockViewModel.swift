@@ -76,7 +76,14 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var progressText: String?
     /// True when Hard Mode is active but the ayah pool is empty — shown max once/day.
     @Published var showPoolNudge: Bool = false
-    var unblockDurationMinutes: Int { tier.minutes(isHardMode: isHardMode) }
+    var unblockDurationMinutes: Int {
+        get { tier.minutes(isHardMode: isHardMode) }
+        set {
+            if newValue <= 5 { tier = .tier1 }
+            else if newValue <= 10 { tier = .tier2 }
+            else { tier = .tier3 }
+        }
+    }
 
     // MARK: - Target Rule
 

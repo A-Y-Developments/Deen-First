@@ -19,18 +19,26 @@ final class BlockingTabViewModel: ObservableObject {
     // MARK: - Dependencies
 
     private let screenTimeRulesService: ScreenTimeRulesService
+    private let pendingChangeService: PendingChangeService
 
     /// One timer subscription per rule — so rules tick down independently.
     private var countdownTimers: [UUID: AnyCancellable] = [:]
 
     // MARK: - Init
 
-    init(screenTimeRulesService: ScreenTimeRulesService) {
+    init(
+        screenTimeRulesService: ScreenTimeRulesService,
+        pendingChangeService: PendingChangeService
+    ) {
         self.screenTimeRulesService = screenTimeRulesService
+        self.pendingChangeService = pendingChangeService
     }
 
     convenience init() {
-        self.init(screenTimeRulesService: DIContainer.shared.screenTimeRulesService)
+        self.init(
+            screenTimeRulesService: DIContainer.shared.screenTimeRulesService,
+            pendingChangeService: DIContainer.shared.pendingChangeService
+        )
     }
 
     // MARK: - Load Data
@@ -149,5 +157,9 @@ final class BlockingTabViewModel: ObservableObject {
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%d:%02d", m, s)
+    }
+
+    func hasPendingChange(for ruleId: UUID) -> Bool {
+        pendingChangeService.hasPendingChange(for: ruleId)
     }
 }

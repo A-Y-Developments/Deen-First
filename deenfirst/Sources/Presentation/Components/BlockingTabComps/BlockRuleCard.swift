@@ -8,6 +8,7 @@ struct BlockRuleCard: View {
     let daysText: String
 
     var isHardMode: Bool
+    var hasPendingChange: Bool
     var showUnblockButton: Bool
     var onUnblock: (() -> Void)?
 
@@ -21,6 +22,7 @@ struct BlockRuleCard: View {
         timeInfo: String = "30 mins/day",
         daysText: String = "Every day",
         isHardMode: Bool = false,
+        hasPendingChange: Bool = false,
         showUnblockButton: Bool = true,
         onUnblock: (() -> Void)? = nil,
         countdownDisplay: String? = nil
@@ -31,6 +33,7 @@ struct BlockRuleCard: View {
         self.timeInfo = timeInfo
         self.daysText = daysText
         self.isHardMode = isHardMode
+        self.hasPendingChange = hasPendingChange
         self.showUnblockButton = showUnblockButton
         self.onUnblock = onUnblock
         self.countdownDisplay = countdownDisplay
@@ -63,6 +66,12 @@ struct BlockRuleCard: View {
                     Image(systemName: "flame.fill")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(hex: "FF6B35"))
+                }
+
+                if hasPendingChange {
+                    Image(systemName: "clock.badge")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.6))
                 }
 
                 Spacer()
