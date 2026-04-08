@@ -12,6 +12,17 @@ protocol ScreenTimeRulesService {
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws
     func deleteTimeLimit(id: UUID) async throws
 
+    // MARK: - Lock Editing Gated Operations
+    // These check isLockEditingEnabled and route to PendingChangeService when true.
+    // Use these from ViewModels — not the raw set/delete methods above.
+
+    func editAppLimitRule(for selection: FamilyActivitySelection, config: AppLimitConfig) async throws
+    func editTimeLimitRule(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws
+    func deleteRule(id: UUID) async throws
+    func disableRule(id: UUID) async throws
+    func disableHardMode(for ruleId: UUID) async
+    func disableLockEditing(for ruleId: UUID) async
+
     func getAllRules() -> [ScreenTimeRule]
     func getAppLimitRules() -> [ScreenTimeRule]
     func getTimeLimitRules() -> [ScreenTimeRule]
@@ -56,6 +67,10 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
     let deviceActivityManager: DeviceActivityManager
     let notificationSchedulingService: NotificationSchedulingService
     private let authCenter = AuthorizationCenter.shared
+
+    /// Injected after init to break the circular dependency with PendingChangeService.
+    /// Set by DIContainer before any gated operations are called.
+    var pendingChangeService: (any PendingChangeService)?
 
     init(
         repository: ScreenTimeRulesRepository,

@@ -129,7 +129,7 @@ final class BlockingTabViewModel: ObservableObject {
 
     func deleteAppLimit(_ limit: ScreenTimeRule) async {
         do {
-            try await screenTimeRulesService.deleteAppLimit(id: limit.id)
+            try await screenTimeRulesService.deleteRule(id: limit.id)
             await loadBlockedApps()
         } catch {
             errorMessage = error.localizedDescription
@@ -138,7 +138,7 @@ final class BlockingTabViewModel: ObservableObject {
 
     func deleteTimeLimit(_ limit: ScreenTimeRule) async {
         do {
-            try await screenTimeRulesService.deleteTimeLimit(id: limit.id)
+            try await screenTimeRulesService.deleteRule(id: limit.id)
             await loadBlockedApps()
         } catch {
             errorMessage = error.localizedDescription
