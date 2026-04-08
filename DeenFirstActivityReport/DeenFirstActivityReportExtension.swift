@@ -7,5 +7,7 @@ struct DeenFirstActivityReportExtension: DeviceActivityReportExtension {
         DeenScoreReportScene()
         ScreenTimeOverviewReportScene()
         QuranEngagementReportScene()
+        QuranVsScreenTimeReportScene()
+        WeeklyTrendReportScene()
     }
 }
