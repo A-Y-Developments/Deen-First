@@ -171,17 +171,44 @@ Implement inline in this session using the domain rules loaded in Step 7. You ha
 
 After implementation:
 1. Mark implementation task(s) done via `TaskUpdate`
-2. Write tests inline for affected files (skip if this is a QA ticket) — apply `.claude/agents/deenfirst-qa.md` rules → mark "QA tests" task done
-3. Run `/review` on all uncommitted changes
-4. After review returns, **immediately and automatically** act on every finding — no user prompt needed:
+2. Write tests inline for affected files (skip if this is a QA ticket) — apply `.claude/agents/deenfirst-qa.md` rules
+3. **Run the tests you just wrote** — execute only the affected test target(s), not the full suite:
+   ```bash
+   make test
+   ```
+   If `make test` is unavailable, fall back to:
+   ```bash
+   xcodebuild test -scheme DeenFirst -destination 'platform=iOS Simulator,name=iPhone 16' -only-testing:<TestTargetName>/<TestClassName>
+   ```
+   - If tests **fail** → fix the implementation or the test (whichever is wrong) → re-run until green
+   - If tests **pass** → mark "QA tests" task done
+4. Run `/review` on all uncommitted changes
+5. After review returns, **immediately and automatically** act on every finding — no user prompt needed:
    - **Must Fix** (bugs, crashes, rule violations) → fix inline
    - **Should Fix / Can Simplify** (quality, redundancy, over-engineering) → run `/simplify` on the affected files
    - Re-run `/review` after all fixes/simplifications until it returns clean
-5. Only after a clean review → mark "Review" task done → proceed to Step 10
+6. Only after a clean review → mark "Review" task done → proceed to Step 10
 
 ---
 
-## Step 10 — Commit, push, and open PR
+## Step 10 — Build verification
+
+Before opening the PR, verify the code actually compiles. Only errors matter — suppress everything else:
+
+```bash
+set -a && . ./.env && set +a && \
+xcodebuild -workspace "Deen First.xcworkspace" -scheme "DeenFirst" \
+  -configuration Release -destination 'generic/platform=iOS' build \
+  2>&1 | grep -E "^.*error:.*$"
+```
+
+- No output = build passed → proceed to Step 11
+- Any `error:` lines = build failed → read each error, fix the offending code, re-run until silent
+- **Never open a PR with a broken build** — this is the final gate before shipping
+
+---
+
+## Step 11 — Commit, push, and open PR
 
 Run `/pr-finish`. Do NOT ask for confirmation — execute immediately.
 
@@ -192,7 +219,7 @@ After PR is created:
 
 ---
 
-## Step 11 — Report
+## Step 12 — Report
 
 ```
 ✅ <ID> — <title>
@@ -217,7 +244,9 @@ Manual steps: <any or "none">
 - Never start while ⛔ blocked tickets exist
 - Never implement Human Touch items
 - Branch name must include ticket number (df-N)
-- Always run `/pr-finish` at Step 10 — never skip
+- Always run `make build` (Step 10) before `/pr-finish` — never skip
+- Never open a PR with a failing build or failing tests
+- Always run `/pr-finish` at Step 11 — never skip
 - Keep ticket status in sync at each major step
 - If ticket has no acceptance criteria — ask before building
 - If Linear MCP is unavailable — STOP. Do not proceed
