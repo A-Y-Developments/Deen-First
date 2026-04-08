@@ -19,9 +19,11 @@ final class ActiveSessionViewModel: ObservableObject {
     private let subscriptionService: SubscriptionService
     private let quranPreferences: QuranPreferencesService
     private let screenTimeRulesService: ScreenTimeRulesService
-    private var session: Session?
-    private var isUnblockSession = false
-    private var unlockRuleId: UUID?
+    // Internal so DF-41 integration tests can drive the queue-finished /
+    // end-early / audio-failure paths without going through startSession.
+    var session: Session?
+    var isUnblockSession = false
+    var unlockRuleId: UUID?
     private var cancellables = Set<AnyCancellable>()
 
     var surahs: [SurahWithRange] = []
@@ -71,7 +73,9 @@ final class ActiveSessionViewModel: ObservableObject {
         }
     }
 
-    private func handleQueueFinished() async {
+    /// Internal so DF-41 integration tests can simulate queue completion
+    /// directly, bypassing the audio player's real playback timer.
+    func handleQueueFinished() async {
         ayahAudioPlayer.stop()
         if let session {
             try? await sessionService.endSession(session, durationSeconds: Int(sessionDuration))
@@ -82,6 +86,17 @@ final class ActiveSessionViewModel: ObservableObject {
             unblockGranted = true
         }
         sessionDidEnd = true
+    }
+
+    /// Routes the audio-load failure path: in unblock sessions we surface the
+    /// Tier 1/Tier 2 fallback prompt; in normal sessions we show an error.
+    /// Internal for DF-41 integration tests.
+    func handleAudioLoadError(_ error: Error) {
+        if isUnblockSession {
+            showUnblockFallback = true
+        } else {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func unblockMinutes(for ruleId: UUID) -> Int {
@@ -114,11 +129,7 @@ final class ActiveSessionViewModel: ObservableObject {
                 try await ayahAudioPlayer.loadQueue(ayahs, reciterId: reciterId)
                 ayahAudioPlayer.play()
             } catch {
-                if isUnblockSession {
-                    showUnblockFallback = true
-                } else {
-                    errorMessage = error.localizedDescription
-                }
+                handleAudioLoadError(error)
             }
 
         } catch {

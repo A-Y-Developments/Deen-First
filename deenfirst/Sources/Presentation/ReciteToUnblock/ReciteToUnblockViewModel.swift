@@ -117,10 +117,10 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private let surahRange = 1...114
     private let maxAyahWordCount = 20
 
-    // Tier 2 sequence state
-    private var ayahSequence: [Ayah] = []
-    private var currentAyahIndex: Int = 0
-    private var failureCountForCurrentAyah: Int = 0
+    // Tier 2 sequence state — internal for test-driven state setup.
+    var ayahSequence: [Ayah] = []
+    var currentAyahIndex: Int = 0
+    var failureCountForCurrentAyah: Int = 0
 
     // MARK: - Computed
 
@@ -385,34 +385,39 @@ final class ReciteToUnblockViewModel: ObservableObject {
             print("  Score: \(score)%")
 
             let passed = score >= Int((similarityThreshold * 100).rounded())
-
-            if passed {
-                // Dashboard: count every successful ayah recitation.
-                dashboardDataWriter?.recordRecitationPassed()
-                let total = ayahCount
-                if currentAyahIndex < total - 1 {
-                    // Not done yet — advance to next ayah
-                    currentAyahIndex += 1
-                    if ayahSequence.count > currentAyahIndex { self.ayah = ayahSequence[currentAyahIndex] }
-                    failureCountForCurrentAyah = 0
-                    progressText = "Ayah \(currentAyahIndex + 1) of \(total)"
-                    state = .awaitingNextAyah(score: score)
-                } else {
-                    // Final pass
-                    await handlePass()
-                    state = .result(passed: true, score: score)
-                }
-            } else {
-                failureCountForCurrentAyah += 1
-                if isHardMode && failureCountForCurrentAyah >= 3 {
-                    state = .downgradeOffered
-                } else {
-                    state = .result(passed: false, score: score)
-                }
-            }
+            await processRecitationOutcome(passed: passed, score: score)
 
         } catch {
             state = .error("Transcription failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Drives the tiered-unblock state machine after a recitation attempt.
+    /// Extracted from `transcribeAndEvaluate` so tests can exercise the full
+    /// Tier 1 / Tier 2 flow without hitting the Whisper API.
+    func processRecitationOutcome(passed: Bool, score: Int) async {
+        if passed {
+            dashboardDataWriter?.recordRecitationPassed()
+            let total = ayahCount
+            if currentAyahIndex < total - 1 {
+                // Not done yet — advance to next ayah
+                currentAyahIndex += 1
+                if ayahSequence.count > currentAyahIndex { self.ayah = ayahSequence[currentAyahIndex] }
+                failureCountForCurrentAyah = 0
+                progressText = "Ayah \(currentAyahIndex + 1) of \(total)"
+                state = .awaitingNextAyah(score: score)
+            } else {
+                // Final pass
+                await handlePass()
+                state = .result(passed: true, score: score)
+            }
+        } else {
+            failureCountForCurrentAyah += 1
+            if isHardMode && failureCountForCurrentAyah >= 3 {
+                state = .downgradeOffered
+            } else {
+                state = .result(passed: false, score: score)
+            }
         }
     }
 
