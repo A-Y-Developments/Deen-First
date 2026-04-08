@@ -89,7 +89,7 @@ struct TimeLimitView: View {
             Task { await viewModel.handleAppPickerSelection(newValue) }
         }
         .sheet(isPresented: $viewModel.showPendingChangeSheet) {
-            PendingChangeSheet(
+            DisableLockEditingSheet(
                 onConfirm: { viewModel.scheduleLockEditingDisable() },
                 onCancel: { viewModel.showPendingChangeSheet = false }
             )
