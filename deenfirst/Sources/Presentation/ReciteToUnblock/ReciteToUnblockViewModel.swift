@@ -67,12 +67,16 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var state: ReciteState = .idle
     @Published var ayah: Ayah?
     @Published var transcript: String = ""
-    @Published var unblockDurationMinutes: Int = 5
     @Published var isPlayingAudio: Bool = false
 
+    var unblockDurationMinutes: Int { tier.minutes }
+
     // MARK: - Target Rule
-    
-    /// Set by BlockingTabView before navigating here — identifies which rule's apps to unblock.
+
+    /// Set by UnblockDurationSelectionView before navigating here.
+    var tier: UnblockTier = .tier1
+
+    /// Set by UnblockDurationSelectionView before navigating here — identifies which rule's apps to unblock.
     /// nil means the flow was triggered from the Shield screen (no specific rule context),
     /// in which case handlePass falls back to unblocking ALL currently blocking rules.
     var targetRuleId: UUID?
@@ -80,11 +84,9 @@ final class ReciteToUnblockViewModel: ObservableObject {
     // MARK: - Dependencies
 
     private let quranPreferences: QuranPreferencesService
+    private let screenTimeService: ScreenTimeRulesService
     private var quranService: QuranService {
         DIContainer.shared.quranService
-    }
-    private var screenTimeService: ScreenTimeRulesService {
-        DIContainer.shared.screenTimeRulesService
     }
 
     // MARK: - Private
@@ -92,9 +94,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private var audioPlayer = AudioPlayerServiceImpl()
     private var audioRecorder: AVAudioRecorder?
     private var audioFileURL: URL?
-    private var sharedDefaults: UserDefaults? {
-        UserDefaults(suiteName: AppGroupConstants.suiteName)
-    }
+    private let sharedDefaults: UserDefaults?
 
     private let surahRange = 1...114
     private let maxAyahWordCount = 20
@@ -102,9 +102,13 @@ final class ReciteToUnblockViewModel: ObservableObject {
     // MARK: - Init
 
     init(
-        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService
+        quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService,
+        screenTimeService: ScreenTimeRulesService = DIContainer.shared.screenTimeRulesService,
+        sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName)
     ) {
         self.quranPreferences = quranPreferences
+        self.screenTimeService = screenTimeService
+        self.sharedDefaults = sharedDefaults
     }
 
     // MARK: - Load Random Ayah
@@ -383,7 +387,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     // MARK: - Unblock on Pass
 
-    private func handlePass() async {
+    func handlePass() async {
         sharedDefaults?.removeObject(forKey: AppGroupConstants.reciteRequested)
         sharedDefaults?.synchronize()
 
@@ -394,10 +398,20 @@ final class ReciteToUnblockViewModel: ObservableObject {
                 print("⏭️ [Recite] Rule \(ruleId) no longer blocking at recitation completion — skipping unblock")
                 return
             }
-            await screenTimeService.temporaryUnblock(minutes: unblockDurationMinutes, ruleId: ruleId)
+
+            // Shorter-wins: don't replace an existing unblock that has more time remaining
+            let expiryKey = AppGroupConstants.unblockExpiryKey(for: ruleId)
+            let existingExpiry = sharedDefaults?.double(forKey: expiryKey) ?? 0
+            let remainingSeconds = existingExpiry - Date().timeIntervalSince1970
+            if existingExpiry > 0 && remainingSeconds > Double(tier.minutes * 60) {
+                print("⏭️ [Recite] Shorter-wins: \(tier.minutes) min grant < \(Int(remainingSeconds))s remaining — not replacing")
+                return
+            }
+
+            await screenTimeService.temporaryUnblock(minutes: tier.minutes, ruleId: ruleId)
         } else {
             // Shield path — temporaryUnblockAll already filters by currently blocking
-            await screenTimeService.temporaryUnblockAll(minutes: unblockDurationMinutes)
+            await screenTimeService.temporaryUnblockAll(minutes: tier.minutes)
         }
     }
 
