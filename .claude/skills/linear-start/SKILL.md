@@ -85,6 +85,13 @@ If description is ambiguous or missing acceptance criteria — list questions an
 
 ---
 
+## Step 3b — Mark In Progress
+
+Set ticket status to **In Progress** via Linear MCP **now**, before any code exploration.
+This keeps Linear in sync from the moment work begins.
+
+---
+
 ## Step 4 — Load project context
 
 Read `.claude/CLAUDE.md`. This is mandatory.
@@ -138,7 +145,12 @@ Use the ticket's **labels** field (from Step 1 MCP response — not title text):
 
 Fallback: if no agent label, check title prefix `[iOS]` / `[Infra]` / `[QA]`. If still unclear — ask.
 
-**Read the identified rules file now.** Internalize its constraints before implementing. Tell the user which domain role applies and why.
+**Read the identified rules file now using the `Read` tool on the exact path** — do not rely on memory or prior context:
+- `Agent-iOS` → Read `/Users/adithyafp_/Projects/deenfirst/.claude/agents/deenfirst-ios.md`
+- `Agent-Infra` → Read `/Users/adithyafp_/Projects/deenfirst/.claude/agents/deenfirst-infra.md`
+- `Agent-QA` → Read `/Users/adithyafp_/Projects/deenfirst/.claude/agents/deenfirst-qa.md`
+
+Internalize its constraints before writing any code. Tell the user which domain role applies and why.
 
 ---
 
@@ -153,25 +165,23 @@ git checkout -b <type>/df-<number>-<short-slug>
 
 ---
 
-## Step 9 — Mark In Progress
-
-Set ticket status to **In Progress** via Linear MCP.
-
----
-
-## Step 10 — Implement
+## Step 9 — Implement
 
 Implement inline in this session using the domain rules loaded in Step 7. You have already read the relevant files and have full project context — no agent spawning needed.
 
 After implementation:
 1. Mark implementation task(s) done via `TaskUpdate`
 2. Write tests inline for affected files (skip if this is a QA ticket) — apply `.claude/agents/deenfirst-qa.md` rules → mark "QA tests" task done
-3. Run `/review` on all uncommitted changes → mark "Review" task done
-4. If review flags Must Fix → fix inline → re-run `/review`
+3. Run `/review` on all uncommitted changes
+4. After review returns, **immediately and automatically** act on every finding — no user prompt needed:
+   - **Must Fix** (bugs, crashes, rule violations) → fix inline
+   - **Should Fix / Can Simplify** (quality, redundancy, over-engineering) → run `/simplify` on the affected files
+   - Re-run `/review` after all fixes/simplifications until it returns clean
+5. Only after a clean review → mark "Review" task done → proceed to Step 10
 
 ---
 
-## Step 11 — Commit, push, and open PR
+## Step 10 — Commit, push, and open PR
 
 Run `/pr-finish`. Do NOT ask for confirmation — execute immediately.
 
@@ -182,7 +192,7 @@ After PR is created:
 
 ---
 
-## Step 12 — Report
+## Step 11 — Report
 
 ```
 ✅ <ID> — <title>
@@ -207,7 +217,7 @@ Manual steps: <any or "none">
 - Never start while ⛔ blocked tickets exist
 - Never implement Human Touch items
 - Branch name must include ticket number (df-N)
-- Always run `/pr-finish` at Step 11 — never skip
+- Always run `/pr-finish` at Step 10 — never skip
 - Keep ticket status in sync at each major step
 - If ticket has no acceptance criteria — ask before building
 - If Linear MCP is unavailable — STOP. Do not proceed
