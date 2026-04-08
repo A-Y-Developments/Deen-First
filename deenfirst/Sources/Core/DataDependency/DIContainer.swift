@@ -70,6 +70,8 @@ final class DIContainer {
     @MainActor
     lazy var ayahPoolService: AyahPoolService = AyahPoolServiceImpl(localDataSource: localDataSource)
 
+    lazy var dashboardDataWriter: DashboardDataWriter = DashboardDataWriterImpl()
+
     @MainActor
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
 
