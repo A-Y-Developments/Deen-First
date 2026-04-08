@@ -54,6 +54,10 @@ enum ReciteState: Equatable {
     case recording
     case transcribing
     case result(passed: Bool, score: Int)
+    /// Tier 2 only: Ayah 1 passed — show score, prompt user to proceed to Ayah 2.
+    case awaitingNextAyah(score: Int)
+    /// Hard Mode only: 3 consecutive failures on the same ayah — offer Tier 1 downgrade.
+    case downgradeOffered
     case error(String)
 }
 
@@ -68,7 +72,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var ayah: Ayah?
     @Published var transcript: String = ""
     @Published var isPlayingAudio: Bool = false
-
+    /// Non-nil for multi-ayah tiers (e.g. "Ayah 1 of 2"). Nil for Tier 1.
+    @Published var progressText: String?
     var unblockDurationMinutes: Int { tier.minutes }
 
     // MARK: - Target Rule
@@ -99,6 +104,22 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private let surahRange = 1...114
     private let maxAyahWordCount = 20
 
+    // Tier 2 sequence state
+    private var ayahSequence: [Ayah] = []
+    private var currentAyahIndex: Int = 0
+    private var failureCountForCurrentAyah: Int = 0
+
+    // MARK: - Computed
+
+    private var isHardMode: Bool {
+        guard let ruleId = targetRuleId else { return false }
+        return screenTimeService.getRule(id: ruleId)?.isHardMode ?? false
+    }
+
+    private var recitationThreshold: Int { isHardMode ? 85 : 70 }
+    private var minAyahWordCount: Int { isHardMode ? 5 : 1 }
+    private var ayahCount: Int { tier == .tier2 ? 2 : 1 }
+
     // MARK: - Init
 
     init(
@@ -111,39 +132,57 @@ final class ReciteToUnblockViewModel: ObservableObject {
         self.sharedDefaults = sharedDefaults
     }
 
-    // MARK: - Load Random Ayah
+    // MARK: - Load Ayah(s)
 
     func loadRandomAyah() async {
         state = .loadingAyah
+        currentAyahIndex = 0
+        failureCountForCurrentAyah = 0
+        ayahSequence = []
+        progressText = nil
 
-        let surahNo = Int.random(in: surahRange)
         do {
-            let (_, ayahs) = try await quranService.loadSurah(number: surahNo)
-            guard !ayahs.isEmpty else {
+            let sequence = try await loadAyahSequence(count: ayahCount)
+            guard !sequence.isEmpty else {
                 state = .error("Could not load ayah. Check your connection.")
                 return
             }
-
-            // Filter ayahs by word count
-            let filteredAyahs = ayahs.filter { ayah in
-                let wordCount = ayah.arabic2.split(separator: " ").count
-                return wordCount <= maxAyahWordCount
-            }
-
-            guard !filteredAyahs.isEmpty else {
-                // Surah has no short ayahs, try another surah
-                await loadRandomAyah()
-                return
-            }
-
-            let picked = filteredAyahs.randomElement()!
-            self.ayah = picked
+            ayahSequence = sequence
+            ayah = sequence[0]
+            progressText = tier == .tier2 ? "Ayah 1 of 2" : nil
             state = .ready
-            print("... \(picked.surahNo):\(picked.numberInSurah)")
+            print("... \(sequence[0].surahNo):\(sequence[0].numberInSurah)")
             await playAyahAudio()
         } catch {
             state = .error("Could not load ayah: \(error.localizedDescription)")
         }
+    }
+
+    private func loadAyahSequence(count: Int) async throws -> [Ayah] {
+        var result: [Ayah] = []
+        var usedSurahs = Set<Int>()
+        var attempts = 0
+        let maxAttempts = 30
+
+        while result.count < count && attempts < maxAttempts {
+            attempts += 1
+            var surahNo: Int
+            var pickAttempts = 0
+            repeat {
+                surahNo = Int.random(in: surahRange)
+                pickAttempts += 1
+            } while usedSurahs.contains(surahNo) && pickAttempts < surahRange.count
+
+            let (_, ayahs) = try await quranService.loadSurah(number: surahNo)
+            let filtered = ayahs.filter { a in
+                let wordCount = a.arabic2.split(separator: " ").count
+                return wordCount >= minAyahWordCount && wordCount <= maxAyahWordCount
+            }
+            guard let picked = filtered.randomElement() else { continue }
+            result.append(picked)
+            usedSurahs.insert(surahNo)
+        }
+        return result
     }
 
     // MARK: - Audio Playback
@@ -270,13 +309,29 @@ final class ReciteToUnblockViewModel: ObservableObject {
             )
             print("  Score: \(score)%")
 
-            let passed = score >= 70
+            let passed = score >= recitationThreshold
 
             if passed {
-                await handlePass()
+                if tier == .tier2 && currentAyahIndex == 0 {
+                    // Ayah 1 passed in Tier 2 — advance to Ayah 2
+                    currentAyahIndex = 1
+                    if ayahSequence.count > 1 { self.ayah = ayahSequence[1] }
+                    failureCountForCurrentAyah = 0
+                    progressText = "Ayah 2 of 2"
+                    state = .awaitingNextAyah(score: score)
+                } else {
+                    // Final pass (Tier 1, or Tier 2 Ayah 2)
+                    await handlePass()
+                    state = .result(passed: true, score: score)
+                }
+            } else {
+                failureCountForCurrentAyah += 1
+                if isHardMode && failureCountForCurrentAyah >= 3 {
+                    state = .downgradeOffered
+                } else {
+                    state = .result(passed: false, score: score)
+                }
             }
-
-            state = .result(passed: passed, score: score)
 
         } catch {
             state = .error("Transcription failed: \(error.localizedDescription)")
@@ -423,6 +478,36 @@ final class ReciteToUnblockViewModel: ObservableObject {
         case .timeLimit:
             return rule.isCurrentlyInBlockingPeriod
         }
+    }
+
+    // MARK: - Tier 2 Actions
+
+    /// Called when user taps "Next Ayah" after Ayah 1 passes in Tier 2.
+    func proceedToNextAyah() {
+        transcript = ""
+        state = .ready
+        Task { await playAyahAudio() }
+    }
+
+    /// Hard Mode downgrade: accept Tier 1 (5 min) instead of continuing Tier 2.
+    func acceptTier1Downgrade() async {
+        tier = .tier1
+        failureCountForCurrentAyah = 0
+        progressText = nil
+        if currentAyahIndex == 1 {
+            // Ayah 1 already passed — grant 5 min immediately
+            await handlePass()
+            state = .result(passed: true, score: 0)
+        } else {
+            // Still on Ayah 1 — retry current ayah for Tier 1 access
+            state = .ready
+        }
+    }
+
+    /// Hard Mode downgrade: decline and retry the same ayah (failure counter resets).
+    func declineTier1Downgrade() {
+        failureCountForCurrentAyah = 0
+        state = .ready
     }
 
     // MARK: - Retry
