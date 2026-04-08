@@ -54,11 +54,17 @@ final class DIContainer {
     lazy var notificationPermissionService: NotificationPermissionService = NotificationPermissionServiceImpl()
 
     @MainActor
-    lazy var pendingChangeService: PendingChangeService = PendingChangeServiceImpl(
-        localDataSource: localDataSource,
-        screenTimeRulesService: screenTimeRulesService,
-        screenTimeRulesRepository: screenTimeRulesRepository
-    )
+    lazy var pendingChangeService: PendingChangeService = {
+        let svc = PendingChangeServiceImpl(
+            localDataSource: localDataSource,
+            screenTimeRulesService: screenTimeRulesService,
+            screenTimeRulesRepository: screenTimeRulesRepository
+        )
+        // Break the circular dependency: inject PendingChangeService back into ScreenTimeRulesService
+        // so gated operations (editAppLimitRule, deleteRule, etc.) can queue pending changes.
+        (screenTimeRulesService as? ScreenTimeRulesServiceImpl)?.pendingChangeService = svc
+        return svc
+    }()
 
     @MainActor
     lazy var ayahPoolService: AyahPoolService = AyahPoolServiceImpl(localDataSource: localDataSource)

@@ -296,11 +296,11 @@ final class TimeLimitViewModel: ObservableObject {
                 isLockEditingEnabled: isLockEditingEnabled
             )
 
-            if let id = editingRuleId {
-                try await screenTimeRulesService.deleteTimeLimit(id: id)
+            if editingRuleId != nil {
+                try await screenTimeRulesService.editTimeLimitRule(for: selection, config: config)
+            } else {
+                try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
             }
-
-            try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
             if isHardMode {
                 showLockEditingEnabledConfirmation = true
             } else {
@@ -318,7 +318,7 @@ final class TimeLimitViewModel: ObservableObject {
         guard let limitId = editingRuleId else { return }
         isLoading = true
         do {
-            try await screenTimeRulesService.deleteTimeLimit(id: limitId)
+            try await screenTimeRulesService.deleteRule(id: limitId)
             hasSetupCompleted = true
         } catch {
             errorMessage = error.localizedDescription

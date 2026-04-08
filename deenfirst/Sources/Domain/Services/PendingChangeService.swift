@@ -122,7 +122,6 @@ final class PendingChangeServiceImpl: PendingChangeService {
         case .delete:
             try await applyDelete(ruleId: change.ruleId)
         case .disable:
-            // Placeholder: treated as delete until DF-18 defines disable semantics
             try await applyDelete(ruleId: change.ruleId)
         case .disableHardMode:
             applyFlagUpdate(ruleId: change.ruleId) { $0.isHardMode = false }

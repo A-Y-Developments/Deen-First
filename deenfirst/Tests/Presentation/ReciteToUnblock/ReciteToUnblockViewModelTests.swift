@@ -333,6 +333,12 @@ final class MockScreenTimeRulesServiceForRecite: ScreenTimeRulesService {
     func reblockEmergencyIfExpired() async {}
     var isEmergencyUnblockActive: Bool { false }
     func emergencyUnblockQuotaRemaining() -> Int { 0 }
+    func editAppLimitRule(for selection: FamilyActivitySelection, config: AppLimitConfig) async throws {}
+    func editTimeLimitRule(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
+    func deleteRule(id: UUID) async throws {}
+    func disableRule(id: UUID) async throws {}
+    func disableHardMode(for ruleId: UUID) async {}
+    func disableLockEditing(for ruleId: UUID) async {}
 }
 
 final class MockQuranPreferencesServiceForRecite: QuranPreferencesService {
