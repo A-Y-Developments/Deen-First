@@ -26,6 +26,7 @@ final class AppLimitViewModel: ObservableObject {
     @Published var hasSetupCompleted: Bool = false
     @Published var showDeleteConfirmation: Bool = false
     @Published var isHardMode: Bool = false
+    @Published var showLockEditingEnabledConfirmation: Bool = false
 
     // MARK: - Edit Mode
 
@@ -202,7 +203,11 @@ final class AppLimitViewModel: ObservableObject {
             }
 
             try await screenTimeRulesService.setAppLimitBlock(for: selection, config: config)
-            hasSetupCompleted = true
+            if isHardMode {
+                showLockEditingEnabledConfirmation = true
+            } else {
+                hasSetupCompleted = true
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
