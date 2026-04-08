@@ -42,6 +42,24 @@ final class PendingChangeServiceTests: XCTestCase {
 
     // MARK: - createPendingChange
 
+    func testCreatePendingChange_setsAppliesAtRequestedAtPlus24Hours() async {
+        let rule = makeRule()
+        let before = Date()
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+        let after = Date()
+
+        guard let change = service.pendingChange(for: rule.id) else {
+            XCTFail("Expected pending change")
+            return
+        }
+
+        XCTAssertGreaterThanOrEqual(change.requestedAt, before)
+        XCTAssertLessThanOrEqual(change.requestedAt, after)
+
+        let delta = change.appliesAt.timeIntervalSince(change.requestedAt)
+        XCTAssertEqual(delta, 86_400, accuracy: 0.001, "appliesAt should equal requestedAt + 86400 seconds")
+    }
+
     func testCreatePendingChange_createsChange() async {
         let rule = makeRule()
         await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
