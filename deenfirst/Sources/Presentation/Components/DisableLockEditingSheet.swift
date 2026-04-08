@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct PendingChangeSheet: View {
+struct DisableLockEditingSheet: View {
     let onConfirm: () -> Void
     let onCancel: () -> Void
 

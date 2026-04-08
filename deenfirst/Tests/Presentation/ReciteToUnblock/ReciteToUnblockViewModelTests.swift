@@ -82,6 +82,10 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         testDefaults.removePersistentDomain(forName: testDefaultsSuiteName)
         testDefaults = nil
         testDefaultsSuiteName = nil
+        for suite in nudgeSuiteNames {
+            UserDefaults().removePersistentDomain(forName: suite)
+        }
+        nudgeSuiteNames = []
         mockService = nil
     }
 
@@ -215,26 +219,92 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
 
     // MARK: - Pool nudge
 
-    func testPoolNudge_NotShownInNormalMode() {
+    func testPoolNudge_NotShownByDefault() {
         let vm = makeViewModel()
-        // showPoolNudge defaults false and is only set via maybeShowPoolNudge() in Hard Mode
         XCTAssertFalse(vm.showPoolNudge)
     }
 
-    func testPoolNudge_ShownOncePerDay_NotRepeated() {
+    func testPoolNudge_ShownOncePerDay_NotRepeated() async {
         let nudgeSuiteName = "com.test.nudge-\(UUID().uuidString)"
         let nudgeDefaults = UserDefaults(suiteName: nudgeSuiteName)!
-        let vm = ReciteToUnblockViewModel(
-            quranPreferences: MockQuranPreferencesServiceForRecite(),
-            screenTimeService: mockService,
-            sharedDefaults: testDefaults,
-            nudgeDefaults: nudgeDefaults
-        )
+        defer { nudgeDefaults.removePersistentDomain(forName: nudgeSuiteName) }
         // Simulate nudge already recorded today
         nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
-        // showPoolNudge should remain false since nudge already fired today
+        let pool = MockAyahPoolServiceForRecite()
+        pool.poolToReturn = []
+        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+
+        _ = await vm.resolveEligiblePool()
+
+        XCTAssertFalse(vm.showPoolNudge, "Nudge must not re-fire on the same day")
+    }
+
+    /// Normal Mode, empty pool → nudge should show. (DF-29 extends DF-13 beyond Hard Mode.)
+    func testPoolNudge_NormalMode_EmptyPool_ShowsNudge() async {
+        let nudgeDefaults = makeFreshNudgeDefaults()
+let pool = MockAyahPoolServiceForRecite()
+        pool.poolToReturn = []
+        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+
+        let eligible = await vm.resolveEligiblePool()
+
+        XCTAssertTrue(eligible.isEmpty)
+        XCTAssertTrue(vm.showPoolNudge)
+    }
+
+    /// Normal Mode, non-empty pool → pool returned, nudge NOT shown.
+    func testResolveEligiblePool_NormalMode_NonEmptyPool_ReturnsPoolNoNudge() async {
+        let nudgeDefaults = makeFreshNudgeDefaults()
+let pool = MockAyahPoolServiceForRecite()
+        pool.poolToReturn = [
+            makePoolItem(surah: 112, ayah: 1, wordCount: 4), // short — still eligible in normal mode
+            makePoolItem(surah: 114, ayah: 1, wordCount: 6),
+        ]
+        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+
+        let eligible = await vm.resolveEligiblePool()
+
+        XCTAssertEqual(eligible.count, 2)
         XCTAssertFalse(vm.showPoolNudge)
-        nudgeDefaults.removePersistentDomain(forName: nudgeSuiteName)
+    }
+
+    /// Hard Mode, non-empty pool but all short → eligible empty, nudge fires.
+    func testResolveEligiblePool_HardMode_OnlyShortAyahs_TriggersNudge() async {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let nudgeDefaults = makeFreshNudgeDefaults()
+let pool = MockAyahPoolServiceForRecite()
+        pool.poolToReturn = [
+            makePoolItem(surah: 112, ayah: 1, wordCount: 4),
+            makePoolItem(surah: 112, ayah: 2, wordCount: 3),
+        ]
+        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+        vm.targetRuleId = ruleId
+
+        let eligible = await vm.resolveEligiblePool()
+
+        XCTAssertTrue(eligible.isEmpty)
+        XCTAssertTrue(vm.showPoolNudge)
+    }
+
+    /// Hard Mode, pool with mixed word counts → only items with wordCount >= 5 kept.
+    func testResolveEligiblePool_HardMode_FiltersShortAyahs() async {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let nudgeDefaults = makeFreshNudgeDefaults()
+let pool = MockAyahPoolServiceForRecite()
+        pool.poolToReturn = [
+            makePoolItem(surah: 112, ayah: 1, wordCount: 4),
+            makePoolItem(surah: 2, ayah: 255, wordCount: 40),
+        ]
+        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+        vm.targetRuleId = ruleId
+
+        let eligible = await vm.resolveEligiblePool()
+
+        XCTAssertEqual(eligible.count, 1)
+        XCTAssertEqual(eligible.first?.surahNumber, 2)
+        XCTAssertFalse(vm.showPoolNudge)
     }
 
     // MARK: - Hard Mode tier duration
@@ -277,11 +347,37 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func makeViewModel() -> ReciteToUnblockViewModel {
+    private func makeViewModel(
+        ayahPoolService: AyahPoolService? = nil,
+        nudgeDefaults: UserDefaults? = nil
+    ) -> ReciteToUnblockViewModel {
         ReciteToUnblockViewModel(
             quranPreferences: MockQuranPreferencesServiceForRecite(),
             screenTimeService: mockService,
-            sharedDefaults: testDefaults
+            sharedDefaults: testDefaults,
+            ayahPoolService: ayahPoolService ?? MockAyahPoolServiceForRecite(),
+            nudgeDefaults: nudgeDefaults ?? makeFreshNudgeDefaults()
+        )
+    }
+
+    private var nudgeSuiteNames: [String] = []
+
+    private func makeFreshNudgeDefaults() -> UserDefaults {
+        let suiteName = "com.test.nudge-\(UUID().uuidString)"
+        nudgeSuiteNames.append(suiteName)
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            return .standard
+        }
+        return defaults
+    }
+
+    private func makePoolItem(surah: Int, ayah: Int, wordCount: Int) -> AyahPoolItem {
+        AyahPoolItem(
+            surahNumber: surah,
+            ayahNumberInSurah: ayah,
+            arabicText: String(repeating: "word ", count: wordCount).trimmingCharacters(in: .whitespaces),
+            transliteration: "",
+            wordCount: wordCount
         )
     }
 

@@ -178,29 +178,13 @@ final class ReciteToUnblockViewModel: ObservableObject {
     }
 
     private func loadAyahSequence(count: Int) async throws -> [Ayah] {
-        if isHardMode {
-            return try await loadHardModeSequence(count: count)
-        }
-        return try await loadRandomSequence(count: count)
-    }
-
-    private func loadHardModeSequence(count: Int) async throws -> [Ayah] {
-        let pool: [AyahPoolItem]
-        do {
-            pool = try await ayahPoolService.fetchPool()
-        } catch {
-            print("⚠️ [HardMode] Pool fetch failed: \(error) — falling back to random")
-            pool = []
-        }
-        let eligible = pool.filter { $0.wordCount >= 5 }
+        let eligible = await resolveEligiblePool()
 
         if eligible.isEmpty {
-            maybeShowPoolNudge()
             return try await loadRandomSequence(count: count)
         }
 
         var result: [Ayah] = []
-
         for item in eligible.shuffled() {
             guard result.count < count else { break }
             guard let ayah = try? await fetchAyah(surahNo: item.surahNumber, ayahNo: item.ayahNumberInSurah) else { continue }
@@ -213,6 +197,18 @@ final class ReciteToUnblockViewModel: ObservableObject {
         }
 
         return result
+    }
+
+    /// Fetch eligible pool items. Filters by Hard Mode word-count rule.
+    /// Side effect: triggers the once/day pool nudge when the eligible set is empty.
+    func resolveEligiblePool() async -> [AyahPoolItem] {
+        let pool = await ayahPoolService.fetchPool()
+        let eligible = isHardMode ? pool.filter { $0.wordCount >= 5 } : pool
+
+        if eligible.isEmpty {
+            maybeShowPoolNudge()
+        }
+        return eligible
     }
 
     private func fetchAyah(surahNo: Int, ayahNo: Int) async throws -> Ayah? {

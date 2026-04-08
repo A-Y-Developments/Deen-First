@@ -271,4 +271,6 @@ final class MockNotificationSchedulingServiceForLockEditing: NotificationSchedul
     func cancelTimeLimitWarning(for ruleId: UUID) {}
     func scheduleMotivationalNotifications() async {}
     func cancelMotivationalNotifications() async {}
+    func schedulePendingChangeNotification(for change: PendingRuleChange, ruleName: String) {}
+    func cancelPendingChangeNotification(for changeId: UUID) {}
 }
