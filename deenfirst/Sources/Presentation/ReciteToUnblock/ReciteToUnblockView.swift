@@ -141,6 +141,12 @@ struct ReciteToUnblockView: View {
                     .padding(.horizontal, 24)
             }
 
+            if viewModel.showPoolNudge {
+                poolNudgeBanner
+                    .padding(.horizontal, 24)
+                    .padding(.top, 16)
+            }
+
             if case .transcribing = viewModel.state {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -153,6 +159,30 @@ struct ReciteToUnblockView: View {
                 .padding(.top, 24)
             }
         }
+    }
+
+    // MARK: - Pool Nudge Banner
+
+    private var poolNudgeBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "books.vertical.fill")
+                .font(.system(size: 13))
+                .foregroundColor(Color(hex: "#4ADE80"))
+            Text("Add ayahs to your pool to use them in Hard Mode")
+                .font(.system(size: 13))
+                .foregroundColor(.white.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(hex: "#4ADE80").opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color(hex: "#4ADE80").opacity(0.25), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Ayah Card
@@ -182,12 +212,14 @@ struct ReciteToUnblockView: View {
                             )
                     }
 
-                    Button {
-                        Task { await viewModel.loadRandomAyah() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 13))
-                            .foregroundColor(.white.opacity(0.4))
+                    if viewModel.canRefreshAyah {
+                        Button {
+                            Task { await viewModel.loadRandomAyah() }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 13))
+                                .foregroundColor(.white.opacity(0.4))
+                        }
                     }
                 }
             }

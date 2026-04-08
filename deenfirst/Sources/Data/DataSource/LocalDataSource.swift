@@ -93,4 +93,14 @@ final class LocalDataSource {
         try context.save()
     }
 
+    // MARK: - AyahPool Operations
+
+    @MainActor
+    func fetchAyahPool() throws -> [AyahPoolItem] {
+        let descriptor = FetchDescriptor<AyahPoolItem>(
+            sortBy: [SortDescriptor(\.addedAt)]
+        )
+        return try context.fetch(descriptor)
+    }
+
 }

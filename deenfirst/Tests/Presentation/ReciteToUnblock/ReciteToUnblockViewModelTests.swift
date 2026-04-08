@@ -126,6 +126,75 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         XCTAssertFalse(mockService.temporaryUnblockCalled)
     }
 
+    // MARK: - Hard Mode computed properties
+
+    func testCanRefreshAyah_TrueInNormalMode() {
+        let ruleId = UUID()
+        let rule = makeTimeLimitRule(id: ruleId, isHardMode: false)
+        mockService.ruleToReturn = rule
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        XCTAssertTrue(vm.canRefreshAyah)
+    }
+
+    func testCanRefreshAyah_FalseInHardMode() {
+        let ruleId = UUID()
+        let rule = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        mockService.ruleToReturn = rule
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        XCTAssertFalse(vm.canRefreshAyah)
+    }
+
+    func testSimilarityThreshold_NormalMode() {
+        let vm = makeViewModel()
+        XCTAssertEqual(vm.similarityThreshold, 0.70, accuracy: 0.001)
+    }
+
+    func testSimilarityThreshold_HardMode() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        XCTAssertEqual(vm.similarityThreshold, 0.85, accuracy: 0.001)
+    }
+
+    func testMinWordCount_NilInNormalMode() {
+        let vm = makeViewModel()
+        XCTAssertNil(vm.minWordCount)
+    }
+
+    func testMinWordCount_5InHardMode() {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let vm = makeViewModel()
+        vm.targetRuleId = ruleId
+        XCTAssertEqual(vm.minWordCount, 5)
+    }
+
+    // MARK: - Pool nudge
+
+    func testPoolNudge_NotShownInNormalMode() {
+        let vm = makeViewModel()
+        // showPoolNudge defaults false and is only set via maybeShowPoolNudge() in Hard Mode
+        XCTAssertFalse(vm.showPoolNudge)
+    }
+
+    func testPoolNudge_ShownOncePerDay_NotRepeated() {
+        let nudgeDefaults = UserDefaults(suiteName: "com.test.nudge-\(UUID().uuidString)")!
+        let vm = ReciteToUnblockViewModel(
+            quranPreferences: MockQuranPreferencesServiceForRecite(),
+            screenTimeService: mockService,
+            sharedDefaults: testDefaults,
+            nudgeDefaults: nudgeDefaults
+        )
+        // Simulate nudge already recorded today
+        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
+        // showPoolNudge should remain false since nudge already fired today
+        XCTAssertFalse(vm.showPoolNudge)
+        nudgeDefaults.removePersistentDomain(forName: nudgeDefaults.suiteName ?? "")
+    }
+
     // MARK: - Helpers
 
     private func makeViewModel() -> ReciteToUnblockViewModel {
@@ -137,14 +206,15 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
     }
 
     /// A timeLimit rule active all day so isCurrentlyInBlockingPeriod returns true during tests.
-    private func makeTimeLimitRule(id: UUID) -> ScreenTimeRule {
+    private func makeTimeLimitRule(id: UUID, isHardMode: Bool = false) -> ScreenTimeRule {
         ScreenTimeRule(
             id: id,
             name: "Test Rule",
             selection: FamilyActivitySelection(),
             type: .timeLimit,
             startTime: DateComponents(hour: 0, minute: 0),
-            endTime: DateComponents(hour: 23, minute: 59)
+            endTime: DateComponents(hour: 23, minute: 59),
+            isHardMode: isHardMode
         )
     }
 }
@@ -189,4 +259,9 @@ final class MockQuranPreferencesServiceForRecite: QuranPreferencesService {
     var selectedReciterId: Int = 1
     func getTranslation(for ayah: Ayah) -> String { "" }
     func getReciterAudio(for ayah: Ayah) -> ReciterAudio? { nil }
+}
+
+final class MockAyahPoolServiceForRecite: AyahPoolService {
+    var poolToReturn: [AyahPoolItem] = []
+    func fetchPool() async throws -> [AyahPoolItem] { poolToReturn }
 }

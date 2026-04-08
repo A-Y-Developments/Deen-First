@@ -74,6 +74,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
     @Published var isPlayingAudio: Bool = false
     /// Non-nil for multi-ayah tiers (e.g. "Ayah 1 of 2"). Nil for Tier 1.
     @Published var progressText: String?
+    /// True when Hard Mode is active but the ayah pool is empty — shown max once/day.
+    @Published var showPoolNudge: Bool = false
     var unblockDurationMinutes: Int { tier.minutes }
 
     // MARK: - Target Rule
@@ -90,6 +92,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
 
     private let quranPreferences: QuranPreferencesService
     private let screenTimeService: ScreenTimeRulesService
+    private let ayahPoolService: AyahPoolService
     private var quranService: QuranService {
         DIContainer.shared.quranService
     }
@@ -100,6 +103,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private var audioRecorder: AVAudioRecorder?
     private var audioFileURL: URL?
     private let sharedDefaults: UserDefaults?
+    private let nudgeDefaults: UserDefaults
+    private let poolNudgeDateKey = "com.aydev.deenfirst.poolNudgeDate"
 
     private let surahRange = 1...114
     private let maxAyahWordCount = 20
@@ -116,8 +121,10 @@ final class ReciteToUnblockViewModel: ObservableObject {
         return screenTimeService.getRule(id: ruleId)?.isHardMode ?? false
     }
 
-    private var recitationThreshold: Int { isHardMode ? 85 : 70 }
-    private var minAyahWordCount: Int { isHardMode ? 5 : 1 }
+    var similarityThreshold: Double { isHardMode ? 0.85 : 0.70 }
+    var canRefreshAyah: Bool { !isHardMode }
+    var minWordCount: Int? { isHardMode ? 5 : nil }
+
     private var ayahCount: Int { tier == .tier2 ? 2 : 1 }
 
     // MARK: - Init
@@ -125,11 +132,15 @@ final class ReciteToUnblockViewModel: ObservableObject {
     init(
         quranPreferences: QuranPreferencesService = DIContainer.shared.quranPreferencesService,
         screenTimeService: ScreenTimeRulesService = DIContainer.shared.screenTimeRulesService,
-        sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName),
+        ayahPoolService: AyahPoolService = DIContainer.shared.ayahPoolService,
+        nudgeDefaults: UserDefaults = .standard
     ) {
         self.quranPreferences = quranPreferences
         self.screenTimeService = screenTimeService
         self.sharedDefaults = sharedDefaults
+        self.ayahPoolService = ayahPoolService
+        self.nudgeDefaults = nudgeDefaults
     }
 
     // MARK: - Load Ayah(s)
@@ -159,6 +170,50 @@ final class ReciteToUnblockViewModel: ObservableObject {
     }
 
     private func loadAyahSequence(count: Int) async throws -> [Ayah] {
+        if isHardMode {
+            return try await loadHardModeSequence(count: count)
+        }
+        return try await loadRandomSequence(count: count)
+    }
+
+    private func loadHardModeSequence(count: Int) async throws -> [Ayah] {
+        let pool: [AyahPoolItem]
+        do {
+            pool = try await ayahPoolService.fetchPool()
+        } catch {
+            print("⚠️ [HardMode] Pool fetch failed: \(error) — falling back to random")
+            pool = []
+        }
+        let eligible = pool.filter { $0.wordCount >= 5 }
+
+        if eligible.isEmpty {
+            maybeShowPoolNudge()
+            return try await loadRandomSequence(count: count)
+        }
+
+        var result: [Ayah] = []
+
+        for item in eligible.shuffled() {
+            guard result.count < count else { break }
+            guard let ayah = try? await fetchAyah(surahNo: item.surahNumber, ayahNo: item.ayahNumberInSurah) else { continue }
+            result.append(ayah)
+        }
+
+        if result.count < count {
+            let fallback = try await loadRandomSequence(count: count - result.count)
+            result.append(contentsOf: fallback)
+        }
+
+        return result
+    }
+
+    private func fetchAyah(surahNo: Int, ayahNo: Int) async throws -> Ayah? {
+        let (_, ayahs) = try await quranService.loadSurah(number: surahNo)
+        return ayahs.first { $0.numberInSurah == ayahNo }
+    }
+
+    private func loadRandomSequence(count: Int) async throws -> [Ayah] {
+        let minCount = minWordCount ?? 1
         var result: [Ayah] = []
         var usedSurahs = Set<Int>()
         var attempts = 0
@@ -176,13 +231,23 @@ final class ReciteToUnblockViewModel: ObservableObject {
             let (_, ayahs) = try await quranService.loadSurah(number: surahNo)
             let filtered = ayahs.filter { a in
                 let wordCount = a.arabic2.split(separator: " ").count
-                return wordCount >= minAyahWordCount && wordCount <= maxAyahWordCount
+                return wordCount >= minCount && wordCount <= maxAyahWordCount
             }
             guard let picked = filtered.randomElement() else { continue }
             result.append(picked)
             usedSurahs.insert(surahNo)
         }
         return result
+    }
+
+    private func maybeShowPoolNudge() {
+        let today = Calendar.current.startOfDay(for: Date())
+        if let last = nudgeDefaults.object(forKey: poolNudgeDateKey) as? Date,
+           Calendar.current.isDate(last, inSameDayAs: today) {
+            return
+        }
+        nudgeDefaults.set(today, forKey: poolNudgeDateKey)
+        showPoolNudge = true
     }
 
     // MARK: - Audio Playback
@@ -309,7 +374,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
             )
             print("  Score: \(score)%")
 
-            let passed = score >= recitationThreshold
+            let passed = score >= Int((similarityThreshold * 100).rounded())
 
             if passed {
                 if tier == .tier2 && currentAyahIndex == 0 {
