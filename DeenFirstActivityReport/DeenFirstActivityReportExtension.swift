@@ -6,5 +6,6 @@ struct DeenFirstActivityReportExtension: DeviceActivityReportExtension {
     var body: some DeviceActivityReportScene {
         DeenScoreReportScene()
         ScreenTimeOverviewReportScene()
+        QuranEngagementReportScene()
     }
 }

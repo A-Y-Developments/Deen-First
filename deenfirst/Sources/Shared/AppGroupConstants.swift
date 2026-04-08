@@ -70,6 +70,7 @@ enum AppGroupConstants {
     /// Date-keyed (format: yyyy-MM-dd)
     static func quranSecondsKey(_ date: String) -> String { "deen.\(date).quranSeconds" }
     static func focusSessionsKey(_ date: String) -> String { "deen.\(date).focusSessions" }
+    static func focusSecondsKey(_ date: String) -> String { "deen.\(date).focusSeconds" }
     static func recitationsPassedKey(_ date: String) -> String { "deen.\(date).recitations.passed" }
     static func recitationsAttemptsKey(_ date: String) -> String { "deen.\(date).recitations.attempts" }
 

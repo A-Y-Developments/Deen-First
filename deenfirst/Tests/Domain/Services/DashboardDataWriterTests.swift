@@ -57,6 +57,7 @@ final class DashboardDataWriterTests: XCTestCase {
 
         let day = currentDayKey()
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSessionsKey(day)), 1)
+        XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSecondsKey(day)), 120)
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.quranSecondsKey(day)), 120)
     }
 
@@ -66,6 +67,7 @@ final class DashboardDataWriterTests: XCTestCase {
 
         let day = currentDayKey()
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSessionsKey(day)), 2)
+        XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSecondsKey(day)), 150)
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.quranSecondsKey(day)), 150)
     }
 
@@ -75,6 +77,7 @@ final class DashboardDataWriterTests: XCTestCase {
 
         let day = currentDayKey()
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSessionsKey(day)), 0)
+        XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.focusSecondsKey(day)), 0)
         XCTAssertEqual(defaults.integer(forKey: AppGroupConstants.quranSecondsKey(day)), 0)
     }
 
