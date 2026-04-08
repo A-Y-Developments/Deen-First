@@ -7,6 +7,7 @@ struct BlockRuleCard: View {
     let timeInfo: String
     let daysText: String
 
+    var isHardMode: Bool
     var showUnblockButton: Bool
     var onUnblock: (() -> Void)?
 
@@ -19,6 +20,7 @@ struct BlockRuleCard: View {
         categoriesCount: Int = 0,
         timeInfo: String = "30 mins/day",
         daysText: String = "Every day",
+        isHardMode: Bool = false,
         showUnblockButton: Bool = true,
         onUnblock: (() -> Void)? = nil,
         countdownDisplay: String? = nil
@@ -28,6 +30,7 @@ struct BlockRuleCard: View {
         self.categoriesCount = categoriesCount
         self.timeInfo = timeInfo
         self.daysText = daysText
+        self.isHardMode = isHardMode
         self.showUnblockButton = showUnblockButton
         self.onUnblock = onUnblock
         self.countdownDisplay = countdownDisplay
@@ -55,6 +58,12 @@ struct BlockRuleCard: View {
                     .foregroundColor(.white)
                     .fontWeight(.semibold)
                     .font(.system(.callout))
+
+                if isHardMode {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(hex: "FF6B35"))
+                }
 
                 Spacer()
 
@@ -122,6 +131,7 @@ struct BlockRuleCard: View {
             categoriesCount: 1,
             timeInfo: "1h/day",
             daysText: "Weekdays",
+            isHardMode: true,
             onUnblock: { print("Unblock tapped") }
         )
         BlockRuleCard(
