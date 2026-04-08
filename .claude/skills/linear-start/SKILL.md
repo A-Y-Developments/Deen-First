@@ -125,20 +125,20 @@ Mark each task **done immediately** when that unit of work completes. Do not bat
 
 ---
 
-## Step 7 — Route to domain agent
+## Step 7 — Identify domain role
 
 Use the ticket's **labels** field (from Step 1 MCP response — not title text):
 
-| Label | Agent to spawn |
-|---|---|
-| `Agent-iOS` | `deenfirst-ios` |
-| `Agent-Infra` | `deenfirst-infra` |
-| `Agent-QA` | `deenfirst-qa` |
-| `Human Touch` | STOP — output checklist, do not automate |
+| Label | Domain role | Rules file |
+|---|---|---|
+| `Agent-iOS` | iOS | `.claude/agents/deenfirst-ios.md` |
+| `Agent-Infra` | Infra | `.claude/agents/deenfirst-infra.md` |
+| `Agent-QA` | QA | `.claude/agents/deenfirst-qa.md` |
+| `Human Touch` | STOP — output checklist, do not automate | — |
 
 Fallback: if no agent label, check title prefix `[iOS]` / `[Infra]` / `[QA]`. If still unclear — ask.
 
-Tell the user which agent will be spawned and why.
+**Read the identified rules file now.** Internalize its constraints before implementing. Tell the user which domain role applies and why.
 
 ---
 
@@ -161,17 +161,13 @@ Set ticket status to **In Progress** via Linear MCP.
 
 ## Step 10 — Implement
 
-Spawn the domain agent identified in Step 7. Pass it:
-- The full ticket description and acceptance criteria
-- The branch name
-- The list of relevant files found in Step 5
-- Any plan approved in Step 6
+Implement inline in this session using the domain rules loaded in Step 7. You have already read the relevant files and have full project context — no agent spawning needed.
 
-After the domain agent completes:
+After implementation:
 1. Mark implementation task(s) done via `TaskUpdate`
-2. Spawn `deenfirst-qa` on affected files (skip if this is a QA ticket) → mark "QA tests" task done
+2. Write tests inline for affected files (skip if this is a QA ticket) — apply `.claude/agents/deenfirst-qa.md` rules → mark "QA tests" task done
 3. Run `/review` on all uncommitted changes → mark "Review" task done
-4. If review flags Must Fix → spawn domain agent to resolve → re-run `/review`
+4. If review flags Must Fix → fix inline → re-run `/review`
 
 ---
 
