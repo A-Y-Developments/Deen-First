@@ -185,6 +185,7 @@ struct HomeTabView: View {
                         timeInfo: limit.limitDisplayName ?? "N/A",
                         daysText: limit.daysDisplayText,
                         isHardMode: limit.isHardMode,
+                        hasPendingChange: viewModel.hasPendingChange(for: limit.id),
                         showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                         onUnblock: {
                             pendingUnblockRuleId = limit.id
@@ -205,6 +206,7 @@ struct HomeTabView: View {
                         timeInfo: limit.timeRangeDisplay ?? "N/A",
                         daysText: limit.daysDisplayText,
                         isHardMode: limit.isHardMode,
+                        hasPendingChange: viewModel.hasPendingChange(for: limit.id),
                         showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                         onUnblock: {
                             pendingUnblockRuleId = limit.id

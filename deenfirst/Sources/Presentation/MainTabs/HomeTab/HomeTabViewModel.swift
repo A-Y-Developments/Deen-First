@@ -14,6 +14,7 @@ final class HomeTabViewModel: ObservableObject {
     private let quranService: QuranService
     private let authService: AuthService
     private let screenTimeRulesService: ScreenTimeRulesService
+    private let pendingChangeService: PendingChangeService
 
     private var surahs: [Surah] = []
     private var countdownTimers: [UUID: AnyCancellable] = [:]
@@ -21,11 +22,13 @@ final class HomeTabViewModel: ObservableObject {
     init(
         quranService: QuranService = DIContainer.shared.quranService,
         authService: AuthService = DIContainer.shared.authService,
-        screenTimeRulesService: ScreenTimeRulesService? = nil
+        screenTimeRulesService: ScreenTimeRulesService? = nil,
+        pendingChangeService: PendingChangeService? = nil
     ) {
         self.quranService = quranService
         self.authService = authService
         self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
+        self.pendingChangeService = pendingChangeService ?? DIContainer.shared.pendingChangeService
     }
 
     func loadData() async {
@@ -158,5 +161,9 @@ final class HomeTabViewModel: ObservableObject {
 
     var hasBlocks: Bool {
         !visibleAppLimits.isEmpty || !visibleTimeLimits.isEmpty
+    }
+
+    func hasPendingChange(for ruleId: UUID) -> Bool {
+        pendingChangeService.hasPendingChange(for: ruleId)
     }
 }
