@@ -232,10 +232,7 @@ struct RootView: View {
         case .dashboard:
             DashboardTabView()
         case .ayahPool:
-            Text("Ayah Pool — coming soon")
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.primary900.ignoresSafeArea())
+            AyahPoolView()
         }
     }
 }
