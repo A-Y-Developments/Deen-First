@@ -35,8 +35,10 @@ final class DashboardDataWriterImpl: DashboardDataWriter {
     func recordFocusSession(duration: TimeInterval) {
         guard duration > 0 else { return }
         let date = currentDateString()
+        let seconds = Int(duration.rounded())
         addInt(key: AppGroupConstants.focusSessionsKey(date), by: 1)
-        addInt(key: AppGroupConstants.quranSecondsKey(date), by: Int(duration.rounded()))
+        addInt(key: AppGroupConstants.focusSecondsKey(date), by: seconds)
+        addInt(key: AppGroupConstants.quranSecondsKey(date), by: seconds)
         stampUpdatedAt()
     }
 
