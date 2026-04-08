@@ -61,8 +61,8 @@ enum AppGroupConstants {
 
     static let motivationalNotificationPrefix = "motivational_"
 
-    static func pendingChangeAppliedNotificationId(for ruleId: UUID) -> String {
-        "pendingChangeApplied_\(ruleId.uuidString)"
+    static func pendingChangeScheduledNotificationId(for changeId: UUID) -> String {
+        "pendingChangeScheduled_\(changeId.uuidString)"
     }
 
     // MARK: - Dashboard V2 Keys
