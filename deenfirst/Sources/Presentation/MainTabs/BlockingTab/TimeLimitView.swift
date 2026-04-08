@@ -59,6 +59,14 @@ struct TimeLimitView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .alert(
+            "Lock Editing Enabled",
+            isPresented: $viewModel.showLockEditingEnabledConfirmation
+        ) {
+            Button("OK") { dismiss() }
+        } message: {
+            Text("Lock Editing has been enabled for this rule.")
+        }
         .alert("Delete Block?", isPresented: $viewModel.showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {

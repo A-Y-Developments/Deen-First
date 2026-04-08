@@ -23,6 +23,7 @@ final class TimeLimitViewModel: ObservableObject {
     @Published var showDeleteConfirmation: Bool = false
     @Published var expandedPicker: PickerType? = nil
     @Published var isHardMode: Bool = false
+    @Published var showLockEditingEnabledConfirmation: Bool = false
 
     enum PickerType { case start, end }
 
@@ -265,7 +266,11 @@ final class TimeLimitViewModel: ObservableObject {
             }
 
             try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
-            hasSetupCompleted = true
+            if isHardMode {
+                showLockEditingEnabledConfirmation = true
+            } else {
+                hasSetupCompleted = true
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
