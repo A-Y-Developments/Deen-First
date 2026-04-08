@@ -144,12 +144,12 @@ struct ActiveSessionView: View {
         .alert("Audio Unavailable", isPresented: $viewModel.showUnblockFallback) {
             Button("Recite 1 Ayah (5 min)") {
                 reciteToUnblockViewModel.targetRuleId = unlockRuleId
-                reciteToUnblockViewModel.unblockDurationMinutes = 5
+                reciteToUnblockViewModel.tier = .tier1
                 router.navigate(to: .reciteToUnlock)
             }
             Button("Recite 2 Ayahs (10 min)") {
                 reciteToUnblockViewModel.targetRuleId = unlockRuleId
-                reciteToUnblockViewModel.unblockDurationMinutes = 10
+                reciteToUnblockViewModel.tier = .tier2
                 router.navigate(to: .reciteToUnlock)
             }
             Button("Cancel", role: .cancel) {

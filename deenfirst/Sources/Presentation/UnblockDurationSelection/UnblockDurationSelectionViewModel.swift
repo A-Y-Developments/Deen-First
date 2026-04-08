@@ -37,8 +37,8 @@ enum UnblockTier {
 
     private let screenTimeRulesService: ScreenTimeRulesService
 
-    init(screenTimeRulesService: ScreenTimeRulesService = DIContainer.shared.screenTimeRulesService) {
-        self.screenTimeRulesService = screenTimeRulesService
+    init(screenTimeRulesService: ScreenTimeRulesService? = nil) {
+        self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
     }
 
     func loadRule(ruleId: UUID) {
