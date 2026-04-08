@@ -82,11 +82,11 @@ struct UnblockDurationSelectionView: View {
         switch tier {
         case .tier1:
             reciteToUnblockViewModel.targetRuleId = ruleId
-            reciteToUnblockViewModel.unblockDurationMinutes = 5
+            reciteToUnblockViewModel.tier = .tier1
             router.navigate(to: .reciteToUnlock)
         case .tier2:
             reciteToUnblockViewModel.targetRuleId = ruleId
-            reciteToUnblockViewModel.unblockDurationMinutes = 10
+            reciteToUnblockViewModel.tier = .tier2
             router.navigate(to: .reciteToUnlock)
         case .tier3:
             router.navigate(to: .selectSurah(surahs: []))
