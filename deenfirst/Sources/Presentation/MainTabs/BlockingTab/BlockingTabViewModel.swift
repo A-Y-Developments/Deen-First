@@ -16,6 +16,10 @@ final class BlockingTabViewModel: ObservableObject {
     /// Key = rule UUID. nil entry (or missing key) means that rule is not currently unblocked.
     @Published var unblockRemainingSeconds: [UUID: Int] = [:]
 
+    /// Non-nil when PendingChangeSheet should be presented.
+    @Published var pendingChangeSheetRule: ScreenTimeRule?
+    @Published var pendingChangeSheetType: PendingChangeType = .edit
+
     // MARK: - Dependencies
 
     private let screenTimeRulesService: ScreenTimeRulesService
@@ -125,20 +129,60 @@ final class BlockingTabViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Lock Editing Gate
+
+    /// Returns true if navigation to editor should proceed.
+    /// Returns false and presents PendingChangeSheet if the rule is locked.
+    func attemptEdit(_ rule: ScreenTimeRule) -> Bool {
+        guard rule.isLockEditingEnabled else { return true }
+        pendingChangeSheetType = .edit
+        pendingChangeSheetRule = rule
+        return false
+    }
+
+    /// Attempts to delete a rule. If locked, presents PendingChangeSheet instead.
+    func attemptDelete(_ rule: ScreenTimeRule) async {
+        guard rule.isLockEditingEnabled else {
+            await performDelete(rule)
+            return
+        }
+        pendingChangeSheetType = .delete
+        pendingChangeSheetRule = rule
+    }
+
+    func confirmPendingChange() async {
+        guard let rule = pendingChangeSheetRule else { return }
+        await pendingChangeService.createPendingChange(
+            for: rule,
+            changeType: pendingChangeSheetType.rawValue,
+            pendingData: nil
+        )
+        pendingChangeSheetRule = nil
+    }
+
+    func cancelExistingPendingChange() async {
+        guard let rule = pendingChangeSheetRule else { return }
+        await pendingChangeService.cancelPendingChange(for: rule.id)
+        pendingChangeSheetRule = nil
+    }
+
+    func existingPendingChange(for ruleId: UUID) -> PendingRuleChange? {
+        pendingChangeService.pendingChange(for: ruleId)
+    }
+
     // MARK: - Delete Operations
 
     func deleteAppLimit(_ limit: ScreenTimeRule) async {
-        do {
-            try await screenTimeRulesService.deleteRule(id: limit.id)
-            await loadBlockedApps()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
+        await attemptDelete(limit)
     }
 
     func deleteTimeLimit(_ limit: ScreenTimeRule) async {
+        await attemptDelete(limit)
+    }
+
+    private func performDelete(_ rule: ScreenTimeRule) async {
         do {
-            try await screenTimeRulesService.deleteRule(id: limit.id)
+            try await screenTimeRulesService.deleteRule(id: rule.id)
             await loadBlockedApps()
         } catch {
             errorMessage = error.localizedDescription

@@ -86,6 +86,21 @@ struct BlockingTabView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.primary900)
         }
+        .sheet(item: Binding(
+            get: { viewModel.pendingChangeSheetRule },
+            set: { viewModel.pendingChangeSheetRule = $0 }
+        )) { rule in
+            PendingChangeSheet(
+                rule: rule,
+                changeType: viewModel.pendingChangeSheetType,
+                existingPendingChange: viewModel.existingPendingChange(for: rule.id),
+                onConfirm: { await viewModel.confirmPendingChange() },
+                onCancelExisting: { await viewModel.cancelExistingPendingChange() }
+            )
+            .presentationDetents([.fraction(0.55)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Color.primary900)
+        }
         .alert(
             "Error",
             isPresented: Binding(
@@ -148,7 +163,16 @@ struct BlockingTabView: View {
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
                 .onTapGesture {
-                    router.navigate(to: .editAppLimit(id: limit.id))
+                    if viewModel.attemptEdit(limit) {
+                        router.navigate(to: .editAppLimit(id: limit.id))
+                    }
+                }
+                .contextMenu {
+                    Button(role: .destructive) {
+                        Task { await viewModel.deleteAppLimit(limit) }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
 
@@ -169,7 +193,16 @@ struct BlockingTabView: View {
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
                 .onTapGesture {
-                    router.navigate(to: .editTimeLimit(id: limit.id))
+                    if viewModel.attemptEdit(limit) {
+                        router.navigate(to: .editTimeLimit(id: limit.id))
+                    }
+                }
+                .contextMenu {
+                    Button(role: .destructive) {
+                        Task { await viewModel.deleteTimeLimit(limit) }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
                 }
             }
         }
