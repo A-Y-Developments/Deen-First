@@ -103,4 +103,31 @@ final class LocalDataSource {
         return try context.fetch(descriptor)
     }
 
+    // MARK: - PendingRuleChange Operations
+
+    @MainActor
+    func fetchPendingChanges() throws -> [PendingRuleChange] {
+        let descriptor = FetchDescriptor<PendingRuleChange>(
+            sortBy: [SortDescriptor(\.requestedAt)]
+        )
+        return try context.fetch(descriptor)
+    }
+
+    @MainActor
+    func insertPendingChange(_ change: PendingRuleChange) throws {
+        context.insert(change)
+        try context.save()
+    }
+
+    @MainActor
+    func savePendingChanges() throws {
+        try context.save()
+    }
+
+    @MainActor
+    func deletePendingChange(_ change: PendingRuleChange) throws {
+        context.delete(change)
+        try context.save()
+    }
+
 }

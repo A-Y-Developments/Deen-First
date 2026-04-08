@@ -54,6 +54,13 @@ final class DIContainer {
     lazy var notificationPermissionService: NotificationPermissionService = NotificationPermissionServiceImpl()
 
     @MainActor
+    lazy var pendingChangeService: PendingChangeService = PendingChangeServiceImpl(
+        localDataSource: localDataSource,
+        screenTimeRulesService: screenTimeRulesService,
+        screenTimeRulesRepository: screenTimeRulesRepository
+    )
+
+    @MainActor
     lazy var ayahPoolService: AyahPoolService = AyahPoolServiceImpl(localDataSource: localDataSource)
 
     @MainActor
