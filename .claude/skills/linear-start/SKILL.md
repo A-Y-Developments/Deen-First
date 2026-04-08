@@ -156,12 +156,20 @@ Internalize its constraints before writing any code. Tell the user which domain 
 
 ## Step 8 — Create branch
 
-```
+Capture the current branch as the base, pull latest, then cut the feature branch:
+
+```bash
+BASE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git fetch origin "$BASE_BRANCH"
+git rebase "origin/$BASE_BRANCH"
 git checkout -b <type>/df-<number>-<short-slug>
 ```
+
 - Type from label: `feat`, `fix`, `chore`
 - Slug: 2–4 word kebab from ticket title
 - Must include the ticket number (e.g. `feature/df-5-hard-mode-toggle`)
+- `BASE_BRANCH` is whatever branch you were on before — do not hardcode `develop/v2`
+- If rebase fails due to conflicts — STOP. Report the conflict to the user and do not proceed.
 
 ---
 
@@ -191,9 +199,22 @@ After implementation:
 
 ---
 
-## Step 10 — Build verification
+## Step 10 — Rebase + Build verification
 
-Before opening the PR, verify the code actually compiles. Only errors matter — suppress everything else:
+### 10a — Rebase onto latest base branch
+
+Before building, rebase to pick up any changes merged into the base since Step 8:
+
+```bash
+git fetch origin "$BASE_BRANCH"
+git rebase "origin/$BASE_BRANCH"
+```
+
+- If rebase fails — STOP. Report conflicts to user. Do not open a PR until resolved.
+
+### 10b — Build verification
+
+After rebasing, verify the code compiles. Only errors matter — suppress everything else:
 
 ```bash
 set -a && . ./.env && set +a && \
