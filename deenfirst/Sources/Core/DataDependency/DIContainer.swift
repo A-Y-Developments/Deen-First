@@ -54,6 +54,9 @@ final class DIContainer {
     lazy var notificationPermissionService: NotificationPermissionService = NotificationPermissionServiceImpl()
 
     @MainActor
+    lazy var ayahPoolService: AyahPoolService = AyahPoolServiceImpl(localDataSource: localDataSource)
+
+    @MainActor
     lazy var audioPlayerService: AudioPlayerService = AudioPlayerServiceImpl()
 
     @MainActor
