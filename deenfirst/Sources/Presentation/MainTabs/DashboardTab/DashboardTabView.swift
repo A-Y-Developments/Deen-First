@@ -49,25 +49,31 @@ struct DashboardTabView: View {
                 }
                 .padding(.vertical, 24)
             }
+            .scrollContentBackground(.hidden)
             .refreshable {
                 refreshNonce &+= 1
             }
             .navigationTitle("Dashboard")
         }
+        .mainBackground()
     }
 
     private var fallbackPlaceholder: some View {
         VStack(spacing: 12) {
-            ProgressView()
-                .controlSize(.large)
-            Text("Score loading… Pull down to refresh.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            Image(systemName: "chart.bar.xaxis")
+                .font(.system(size: 36, weight: .light))
+                .foregroundStyle(.white.opacity(0.6))
+            Text("Dashboard unavailable")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+            Text("Pull down to refresh.")
+                .font(.footnote)
+                .foregroundStyle(.white.opacity(0.7))
                 .multilineTextAlignment(.center)
         }
         .padding()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Dashboard loading. Pull down to refresh.")
+        .accessibilityLabel("Dashboard unavailable. Pull down to refresh.")
     }
 
     private var filter: DeviceActivityFilter {
