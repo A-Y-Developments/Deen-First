@@ -141,25 +141,6 @@ struct Summary1View: View {
 
             Spacer()
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Humans average about 46 hours/week on screens.")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color.secondary200)
-                    .lineLimit(nil)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text(
-                    "Reclaiming even part of that can become Qur'an, dzikr, and real connection with Allah."
-                )
-                .font(.callout)
-                .foregroundColor(Color.secondary300)
-                .lineLimit(nil)
-                .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer()
-
             Button(action: {
                 router.navigate(to: .summary(step: 2, answers: viewModel.answers))
             }) {
