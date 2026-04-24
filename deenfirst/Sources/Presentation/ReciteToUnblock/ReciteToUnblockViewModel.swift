@@ -130,7 +130,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
             ayah = result.sequence[0]
             let total = ayahCount
             progressText = total > 1 ? "Ayah 1 of \(total)" : nil
-            if result.poolWasEmpty {
+            if result.poolWasEmpty && isHardMode {
                 maybeShowPoolNudge()
             }
             state = .ready
