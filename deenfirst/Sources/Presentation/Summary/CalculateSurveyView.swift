@@ -88,11 +88,10 @@ struct CalculateSurveyView: View {
             .padding(.horizontal, 72)
             .padding(.top, 100)
             .mainBackground()
-            .onAppear {
+            .task {
                 viewModel.answers = answers
-                viewModel.startCalculation(screenWidth: geometry.size.width) {
-                    router.navigate(to: .summary(step: 1, answers: answers))
-                }
+                await viewModel.startCalculation(screenWidth: geometry.size.width)
+                router.navigate(to: .summary(step: 1, answers: answers))
             }
             .navigationBarBackButtonHidden(true)
         }
