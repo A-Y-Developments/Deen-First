@@ -5,6 +5,18 @@ import Foundation
 
 extension ScreenTimeRulesServiceImpl {
 
+    /// Resolves the injected `PendingChangeService` or crashes if it was
+    /// never wired. DIContainer injects this after both services are built
+    /// to break a circular init dependency — a nil here means the DI wiring
+    /// regressed, and silently no-op'ing would disable the entire lock-editing
+    /// gate (security-critical). Fail loudly instead.
+    fileprivate func requirePendingChangeService(_ context: String) -> PendingChangeService {
+        guard let pending = pendingChangeService else {
+            preconditionFailure("PendingChangeService must be injected before \(context) is called")
+        }
+        return pending
+    }
+
     // MARK: - Edit App Limit (Gated)
 
     func editAppLimitRule(for selection: FamilyActivitySelection, config: AppLimitConfig) async throws {
@@ -16,10 +28,7 @@ extension ScreenTimeRulesServiceImpl {
         guard let rule = repository.getRule(id: ruleId) else { return }
 
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue edit for rule \(ruleId)")
-                return
-            }
+            let pending = requirePendingChangeService("editAppLimitRule")
             let updatedRule = ScreenTimeRule(
                 id: ruleId,
                 name: config.name,
@@ -55,10 +64,7 @@ extension ScreenTimeRulesServiceImpl {
         guard let rule = repository.getRule(id: ruleId) else { return }
 
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue edit for rule \(ruleId)")
-                return
-            }
+            let pending = requirePendingChangeService("editTimeLimitRule")
             let updatedRule = ScreenTimeRule(
                 id: ruleId,
                 name: config.name,
@@ -87,10 +93,7 @@ extension ScreenTimeRulesServiceImpl {
         guard let rule = repository.getRule(id: id) else { return }
 
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue delete for rule \(id)")
-                return
-            }
+            let pending = requirePendingChangeService("deleteRule")
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.delete.rawValue, pendingData: nil)
         } else {
             switch rule.type {
@@ -106,10 +109,7 @@ extension ScreenTimeRulesServiceImpl {
         guard let rule = repository.getRule(id: id) else { return }
 
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue disable for rule \(id)")
-                return
-            }
+            let pending = requirePendingChangeService("disableRule")
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disable.rawValue, pendingData: nil)
         } else {
             try await deactivateRule(id: id)
@@ -120,11 +120,7 @@ extension ScreenTimeRulesServiceImpl {
 
     func disableHardMode(for ruleId: UUID) async {
         guard let rule = repository.getRule(id: ruleId) else { return }
-
-        guard let pending = pendingChangeService else {
-            print("⚠️ [LockEditing] pendingChangeService not injected — cannot disableHardMode for rule \(ruleId)")
-            return
-        }
+        let pending = requirePendingChangeService("disableHardMode")
 
         if rule.isLockEditingEnabled {
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disableHardMode.rawValue, pendingData: nil)
@@ -137,11 +133,7 @@ extension ScreenTimeRulesServiceImpl {
 
     func disableLockEditing(for ruleId: UUID) async {
         guard let rule = repository.getRule(id: ruleId) else { return }
-
-        guard let pending = pendingChangeService else {
-            print("⚠️ [LockEditing] pendingChangeService not injected — cannot disableLockEditing for rule \(ruleId)")
-            return
-        }
+        let pending = requirePendingChangeService("disableLockEditing")
 
         if rule.isLockEditingEnabled {
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disableLockEditing.rawValue, pendingData: nil)

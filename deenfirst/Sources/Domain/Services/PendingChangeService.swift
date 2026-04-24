@@ -55,13 +55,21 @@ final class PendingChangeServiceImpl: PendingChangeService {
     // MARK: - Create
 
     func createPendingChange(for rule: ScreenTimeRule, changeType: String, pendingData: Data?) async {
+        // Soft-cancel any existing pending change instead of hard-deleting it,
+        // so the audit trail is preserved and we don't risk losing the prior
+        // change if the subsequent insert fails.
         if let existing = pendingChange(for: rule.id) {
             notificationSchedulingService.cancelPendingChangeNotification(for: existing.id)
-            try? localDataSource.deletePendingChange(existing)
+            existing.isCancelled = true
+            do {
+                try localDataSource.savePendingChanges()
+            } catch {
+                logger.error("Failed to soft-cancel prior pending change for rule \(rule.id): \(error.localizedDescription)")
+            }
         }
 
         guard let parsedType = PendingChangeType(rawValue: changeType) else {
-            print("⚠️ [PendingChangeService] Unknown changeType '\(changeType)' — change not created")
+            logger.warning("Unknown changeType '\(changeType)' — change not created")
             return
         }
 
@@ -74,7 +82,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
             try localDataSource.insertPendingChange(change)
             notificationSchedulingService.schedulePendingChangeNotification(for: change, ruleName: rule.name)
         } catch {
-            print("⚠️ [PendingChangeService] Failed to insert change for rule \(rule.id): \(error)")
+            logger.error("Failed to insert change for rule \(rule.id): \(error.localizedDescription)")
         }
     }
 
@@ -84,7 +92,11 @@ final class PendingChangeServiceImpl: PendingChangeService {
         guard let change = pendingChange(for: ruleId) else { return }
         notificationSchedulingService.cancelPendingChangeNotification(for: change.id)
         change.isCancelled = true
-        try? localDataSource.savePendingChanges()
+        do {
+            try localDataSource.savePendingChanges()
+        } catch {
+            logger.error("Failed to persist cancelled pending change \(change.id): \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Apply Expired
@@ -134,10 +146,14 @@ final class PendingChangeServiceImpl: PendingChangeService {
             do {
                 try await applyChange(change)
                 change.isApplied = true
-                try? localDataSource.savePendingChanges()
+                do {
+                    try localDataSource.savePendingChanges()
+                } catch {
+                    logger.error("Applied change \(change.id) but failed to persist isApplied: \(error.localizedDescription)")
+                }
                 notificationSchedulingService.cancelPendingChangeNotification(for: change.id)
             } catch {
-                print("⚠️ [PendingChangeService] Failed to apply change \(change.id) for rule \(change.ruleId): \(error)")
+                logger.error("Failed to apply change \(change.id) for rule \(change.ruleId): \(error.localizedDescription)")
             }
         }
     }
@@ -162,7 +178,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
 
     private func applyChange(_ change: PendingRuleChange) async throws {
         guard let type = PendingChangeType(rawValue: change.changeType) else {
-            print("⚠️ [PendingChangeService] Unknown changeType '\(change.changeType)' — skipping")
+            logger.warning("Unknown changeType '\(change.changeType)' — skipping")
             return
         }
 
@@ -234,7 +250,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
 
     func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void) {
         guard var rule = screenTimeRulesRepository.getRule(id: ruleId) else {
-            print("⚠️ [PendingChangeService] Rule \(ruleId) not found — skipping flag update")
+            logger.warning("Rule \(ruleId) not found — skipping flag update")
             return
         }
         update(&rule)
