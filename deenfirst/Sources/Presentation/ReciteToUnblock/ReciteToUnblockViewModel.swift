@@ -70,7 +70,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
     private var audioFileURL: URL?
     private let sharedDefaults: UserDefaults?
     private let nudgeDefaults: UserDefaults
-    private let poolNudgeDateKey = "com.aydev.deenfirst.poolNudgeDate"
+    private let poolNudgeDateKey = AppGroupConstants.poolNudgeDateKey
 
     // Tier 2 sequence state — internal for test-driven state setup.
     var ayahSequence: [Ayah] = []
@@ -99,7 +99,7 @@ final class ReciteToUnblockViewModel: ObservableObject {
         scoringService: RecitationScoringService = DIContainer.shared.recitationScoringService,
         sequenceProvider: AyahSequenceProvider = MainActor.assumeIsolated { DIContainer.shared.ayahSequenceProvider },
         sharedDefaults: UserDefaults? = UserDefaults(suiteName: AppGroupConstants.suiteName),
-        nudgeDefaults: UserDefaults = .standard,
+        nudgeDefaults: UserDefaults = AppGroupConstants.sharedDefaults ?? .standard,
         dashboardDataWriter: DashboardDataWriter? = DIContainer.shared.dashboardDataWriter
     ) {
         self.quranPreferences = quranPreferences
