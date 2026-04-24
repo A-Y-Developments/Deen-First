@@ -117,7 +117,7 @@ final class TieredUnblockIntegrationTests: XCTestCase {
         // Ayah 1 passes → advance to Ayah 2 (no unblock yet)
         await vm.processRecitationOutcome(passed: true, score: 80)
 
-        XCTAssertEqual(vm.state, .awaitingNextAyah(score: 80))
+        XCTAssertEqual(vm.state, .awaitingNextAyah(score: 80, completedIndex: 1, totalAyahs: 2))
         XCTAssertEqual(vm.currentAyahIndex, 1)
         XCTAssertEqual(vm.ayah?.numberInSurah, 2, "Ayah should advance to second item")
         XCTAssertEqual(vm.progressText, "Ayah 2 of 2")

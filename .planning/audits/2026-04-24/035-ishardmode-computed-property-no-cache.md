@@ -3,7 +3,7 @@ id: 035
 title: isHardMode computed property re-fetches rule on every access — no mid-session caching
 severity: P2
 area: hard-mode
-status: open
+status: closed
 ---
 
 ## Problem

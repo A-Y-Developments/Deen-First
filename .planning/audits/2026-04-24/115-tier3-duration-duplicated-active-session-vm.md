@@ -3,7 +3,7 @@ id: 115
 title: Tier 3 duration logic duplicated in ActiveSessionViewModel
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

@@ -38,8 +38,8 @@ struct ReciteToUnblockView: View {
                         reciteContent
                     case .result(let passed, let score):
                         resultContent(passed: passed, score: score)
-                    case .awaitingNextAyah(let score):
-                        awaitingNextAyahContent(score: score)
+                    case .awaitingNextAyah(let score, let completedIndex, let totalAyahs):
+                        awaitingNextAyahContent(score: score, completedIndex: completedIndex, totalAyahs: totalAyahs)
                     case .downgradeOffered:
                         downgradeOfferedContent
                     }
@@ -310,7 +310,7 @@ struct ReciteToUnblockView: View {
 
     // MARK: - Awaiting Next Ayah (Tier 2)
 
-    private func awaitingNextAyahContent(score: Int) -> some View {
+    private func awaitingNextAyahContent(score: Int, completedIndex: Int, totalAyahs: Int) -> some View {
         VStack(spacing: 0) {
             ZStack {
                 Circle()
@@ -322,12 +322,12 @@ struct ReciteToUnblockView: View {
             }
             .padding(.bottom, 24)
 
-            Text("Ayah \(viewModel.currentAyahIndex) Complete!")
+            Text("Ayah \(completedIndex) Complete!")
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
 
-            Text(viewModel.progressText ?? "Now recite the next ayah")
+            Text(viewModel.progressText ?? "Now recite ayah \(completedIndex + 1) of \(totalAyahs)")
                 .font(.system(size: 16))
                 .foregroundColor(.white.opacity(0.55))
                 .padding(.bottom, 32)

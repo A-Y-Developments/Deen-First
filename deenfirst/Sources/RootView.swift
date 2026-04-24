@@ -24,6 +24,7 @@ struct RootView: View {
     @StateObject private var appLimitViewModel = AppLimitViewModel()
     @StateObject private var timeLimitViewModel = TimeLimitViewModel()
     @StateObject private var supportViewModel = SupportViewModel()
+    @StateObject private var ayahPoolViewModel = AyahPoolViewModel()
 
     @State private var currentUser: User?
     @State private var isPremium = false
@@ -78,6 +79,7 @@ struct RootView: View {
         .environmentObject(appLimitViewModel)
         .environmentObject(timeLimitViewModel)
         .environmentObject(supportViewModel)
+        .environmentObject(ayahPoolViewModel)
         .task {
             await DIContainer.shared.pendingChangeService.applyExpiredChanges()
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()

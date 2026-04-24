@@ -3,7 +3,7 @@ id: 068
 title: AyahPoolView instantiates AyahPoolViewModel directly instead of via environmentObject
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

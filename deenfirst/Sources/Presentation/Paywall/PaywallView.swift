@@ -181,9 +181,13 @@ struct PaywallView: View {
             .padding(.top, 16)
 
             HStack(spacing: 4) {
-                Link("Terms of Use", destination: URL(string: "https://deenfirst.co/terms-and-conditions")!)
+                if let termsURL = URL(string: "https://deenfirst.co/terms-and-conditions") {
+                    Link("Terms of Use", destination: termsURL)
+                }
                 Text("·")
-                Link("Privacy Policy", destination: URL(string: "https://deenfirst.co/privacy-policy")!)
+                if let privacyURL = URL(string: "https://deenfirst.co/privacy-policy") {
+                    Link("Privacy Policy", destination: privacyURL)
+                }
             }
             .font(.caption)
             .foregroundColor(.white)

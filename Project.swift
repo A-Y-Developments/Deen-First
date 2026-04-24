@@ -38,7 +38,10 @@ let project = Project(
                     "Deen First needs permission to block distracting apps during your Quran focus sessions.",
                 "NSMicrophoneUsageDescription":
                     "Deen First needs the microphone to record your Quran recitation.",
-                "UIBackgroundModes": ["audio"],
+                "UIBackgroundModes": ["audio", "fetch"],
+                // DF-055: BGTaskScheduler identifier for the pending-apply background refresh.
+                // Handler is registered in `AppDelegate.registerPendingApplyTask()`.
+                "BGTaskSchedulerPermittedIdentifiers": ["com.aydev.deenfirst.pending-apply"],
                 "RevenueCatAPIKey": "$(REVENUECAT_API_KEY)",
                 "OpenAIAPIKey": "$(OPENAI_API_KEY)",
                 "BypassPaywall": "$(BYPASS_PAYWALL)",

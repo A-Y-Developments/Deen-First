@@ -3,7 +3,7 @@ id: 044
 title: Hard Mode save silently force-enables Lock Editing with no user confirmation
 severity: P1
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

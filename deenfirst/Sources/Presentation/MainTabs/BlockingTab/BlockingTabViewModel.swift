@@ -12,10 +12,6 @@ final class BlockingTabViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    /// Per-rule remaining seconds. Each rule has its own independent countdown.
-    /// Key = rule UUID. nil entry (or missing key) means that rule is not currently unblocked.
-    @Published var unblockRemainingSeconds: [UUID: Int] = [:]
-
     /// Non-nil when PendingChangeSheet should be presented.
     @Published var pendingChangeSheetRule: ScreenTimeRule?
     @Published var pendingChangeSheetType: PendingChangeType = .edit
@@ -25,8 +21,9 @@ final class BlockingTabViewModel: ObservableObject {
     private let screenTimeRulesService: ScreenTimeRulesService
     private let pendingChangeService: PendingChangeService
 
-    /// One timer subscription per rule — so rules tick down independently.
-    private var countdownTimers: [UUID: AnyCancellable] = [:]
+    // DF-066: countdown ticking lives in one place, shared with HomeTabViewModel.
+    private let countdownManager: UnblockCountdownManager
+    private var cancellables: Set<AnyCancellable> = []
 
     // MARK: - Init
 
@@ -36,6 +33,12 @@ final class BlockingTabViewModel: ObservableObject {
     ) {
         self.screenTimeRulesService = screenTimeRulesService
         self.pendingChangeService = pendingChangeService
+        self.countdownManager = UnblockCountdownManager(
+            screenTimeRulesService: screenTimeRulesService
+        )
+        countdownManager.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     convenience init() {
@@ -64,56 +67,9 @@ final class BlockingTabViewModel: ObservableObject {
 
     // MARK: - Countdown Timers (per-rule)
 
-    /// Reads per-rule unblock expiry from SharedDefaults and starts or stops
-    /// each rule's individual countdown timer.
+    /// Delegates to `UnblockCountdownManager` (shared with HomeTabViewModel).
     func syncCountdownFromStorage() {
-        let allRules = appLimits + timeLimits
-
-        for rule in allRules {
-            let key = AppGroupConstants.unblockExpiryKey(for: rule.id)
-            let expiry = AppGroupConstants.sharedDefaults?.double(forKey: key) ?? 0
-
-            guard expiry > 0 else {
-                stopCountdown(for: rule.id)
-                continue
-            }
-
-            let expiresAt = Date(timeIntervalSince1970: expiry)
-            let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
-            guard remaining > 0 else {
-                // Already expired — stop timer and trigger re-block
-                stopCountdown(for: rule.id)
-                Task { await screenTimeRulesService.reblockIfExpired(ruleId: rule.id) }
-                continue
-            }
-
-            unblockRemainingSeconds[rule.id] = remaining
-            startCountdownTimer(ruleId: rule.id, expiresAt: expiresAt)
-        }
-    }
-
-    private func startCountdownTimer(ruleId: UUID, expiresAt: Date) {
-        // Cancel existing timer for this rule before starting a new one
-        countdownTimers[ruleId]?.cancel()
-
-        countdownTimers[ruleId] = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
-                if remaining <= 0 {
-                    self.stopCountdown(for: ruleId)
-                    Task { await self.screenTimeRulesService.reblockIfExpired(ruleId: ruleId) }
-                } else {
-                    self.unblockRemainingSeconds[ruleId] = remaining
-                }
-            }
-    }
-
-    private func stopCountdown(for ruleId: UUID) {
-        countdownTimers[ruleId]?.cancel()
-        countdownTimers.removeValue(forKey: ruleId)
-        unblockRemainingSeconds.removeValue(forKey: ruleId)
+        countdownManager.sync(rules: appLimits + timeLimits)
     }
 
     // MARK: - Per-Rule Blocking State
@@ -198,8 +154,7 @@ final class BlockingTabViewModel: ObservableObject {
 
     /// Returns "4:32" style display string for a specific rule's countdown, or nil if not unblocked.
     func countdownDisplay(for ruleId: UUID) -> String? {
-        guard let seconds = unblockRemainingSeconds[ruleId] else { return nil }
-        return UnblockCountdownCalculator.formatted(remaining: TimeInterval(seconds))
+        countdownManager.countdownDisplay(for: ruleId)
     }
 
     func hasPendingChange(for ruleId: UUID) -> Bool {

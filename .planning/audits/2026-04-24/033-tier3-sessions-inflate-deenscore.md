@@ -3,7 +3,7 @@ id: 033
 title: Tier 3 unblock sessions counted as Quran focus sessions in Deen Score
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

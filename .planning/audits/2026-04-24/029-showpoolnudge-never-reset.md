@@ -3,7 +3,7 @@ id: 029
 title: showPoolNudge never reset to false — nudge banner persists for entire ViewModel lifetime
 severity: P2
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem

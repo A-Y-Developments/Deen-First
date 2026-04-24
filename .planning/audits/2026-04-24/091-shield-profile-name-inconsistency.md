@@ -3,7 +3,7 @@ id: 091
 title: Shield provisioning profile name inconsistency with other targets
 severity: P1
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

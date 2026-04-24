@@ -3,7 +3,7 @@ id: 025
 title: awaitingNextAyah UI hardcodes "Ayah 1 Complete!" — wrong for HM Tier 2 ayah 2→3 transition
 severity: P1
 area: hard-mode
-status: open
+status: closed
 ---
 
 ## Problem

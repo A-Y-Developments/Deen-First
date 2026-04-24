@@ -3,7 +3,7 @@ id: 055
 title: Pending changes only apply on foreground — no BGTaskScheduler registration
 severity: P2
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

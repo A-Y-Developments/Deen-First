@@ -3,7 +3,7 @@ id: 118
 title: Force unwrap catalog — 3 confirmed sites across V1+V2 paths
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

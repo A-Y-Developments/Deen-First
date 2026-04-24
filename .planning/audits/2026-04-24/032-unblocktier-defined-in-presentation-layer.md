@@ -3,7 +3,7 @@ id: 032
 title: UnblockTier enum defined in Presentation ViewModel file instead of Domain layer
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

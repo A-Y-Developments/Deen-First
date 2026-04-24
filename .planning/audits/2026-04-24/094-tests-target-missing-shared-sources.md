@@ -3,7 +3,7 @@ id: 094
 title: DeenFirstTests target does not include Shared/ in sources — tests it via main app dependency
 severity: P2
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem
