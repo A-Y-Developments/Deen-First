@@ -293,6 +293,10 @@ final class ReciteToUnblockViewModel: ObservableObject {
         sharedDefaults?.removeObject(forKey: AppGroupConstants.reciteRequested)
         sharedDefaults?.synchronize()
 
+        // DF-024: Hard Mode Tier 3 grants 20 minutes (not 15). Always derive minutes via the
+        // hard-mode-aware accessor so no tier silently falls back to the non-HM default.
+        let grantMinutes = tier.minutes(isHardMode: isHardMode)
+
         if let ruleId = targetRuleId {
             guard let rule = screenTimeService.getRule(id: ruleId),
                   isRuleStillBlocking(rule) else {
@@ -303,15 +307,15 @@ final class ReciteToUnblockViewModel: ObservableObject {
             let expiryKey = AppGroupConstants.unblockExpiryKey(for: ruleId)
             let existingExpiry = sharedDefaults?.double(forKey: expiryKey) ?? 0
             let remainingSeconds = existingExpiry - Date().timeIntervalSince1970
-            if existingExpiry > 0 && remainingSeconds > Double(tier.minutes * 60) {
+            if existingExpiry > 0 && remainingSeconds > Double(grantMinutes * 60) {
                 return
             }
 
-            await screenTimeService.temporaryUnblock(minutes: tier.minutes, ruleId: ruleId)
+            await screenTimeService.temporaryUnblock(minutes: grantMinutes, ruleId: ruleId)
             // DF-022 / DF-023: record that this tier has been used in the current block window.
             UsedTiersStore.mark(tier, ruleId: ruleId, defaults: sharedDefaults)
         } else {
-            await screenTimeService.temporaryUnblockAll(minutes: tier.minutes)
+            await screenTimeService.temporaryUnblockAll(minutes: grantMinutes)
         }
     }
 
