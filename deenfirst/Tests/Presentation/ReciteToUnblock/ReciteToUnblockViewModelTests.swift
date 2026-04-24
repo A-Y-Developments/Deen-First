@@ -344,6 +344,7 @@ final class MockScreenTimeRulesServiceForRecite: ScreenTimeRulesService {
     func deleteAppLimit(id: UUID) async throws {}
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
     func deleteTimeLimit(id: UUID) async throws {}
+    func deactivateRule(id: UUID) async throws {}
     func reapplyActiveShields() async {}
     func applySessionShield(for selection: FamilyActivitySelection) async {}
     func removeSessionShield() async {}

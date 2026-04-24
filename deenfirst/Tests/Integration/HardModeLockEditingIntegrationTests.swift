@@ -58,10 +58,12 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
         rulesService.pendingChangeService = pendingChangeService
 
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
+        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownMonotonicKey)
     }
 
     override func tearDown() async throws {
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
+        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownMonotonicKey)
         repository = nil
         deviceActivityManager = nil
         notificationService = nil
@@ -73,26 +75,26 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
 
     // MARK: - Hard Mode — (1) Enabling Hard Mode sets isLockEditingEnabled = true
 
-    func testHardMode_SaveWithHardModeOn_AutoEnablesLockEditing() async throws {
-        // Act — build an AppLimitConfig with isHardMode = true and isLockEditingEnabled left as default false.
-        // The config's init should force isLockEditingEnabled to true when isHardMode is true.
+    // DF-044: Hard Mode no longer force-enables Lock Editing in the config
+    // layer. Coupling is now explicit at the ViewModel — user confirms the
+    // pre-save dialog, then the VM sets both flags and saves. This test
+    // verifies the persisted result of that confirmed save.
+    func testHardMode_SaveWithConfirmedHardModeAndLockEditing_PersistsBothFlags() async throws {
         let ruleId = UUID()
         let config = AppLimitConfig(
             id: ruleId,
             name: "Social",
             timeLimit: .thirtyMin,
             isHardMode: true,
-            isLockEditingEnabled: false
+            isLockEditingEnabled: true
         )
-
-        XCTAssertTrue(config.isLockEditingEnabled, "AppLimitConfig must force isLockEditingEnabled when isHardMode is true")
 
         try await rulesService.setAppLimitBlock(for: FamilyActivitySelection(), config: config)
 
         let stored = repository.rules[ruleId]
         XCTAssertNotNil(stored)
         XCTAssertTrue(stored?.isHardMode ?? false)
-        XCTAssertTrue(stored?.isLockEditingEnabled ?? false, "Persisted rule must be locked when saved with Hard Mode on")
+        XCTAssertTrue(stored?.isLockEditingEnabled ?? false, "Persisted rule must carry both flags after confirmed save")
     }
 
     // MARK: - Hard Mode — (2) 85% threshold enforced, 75% fails
@@ -224,12 +226,8 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
         )
         try localDataSource.insertPendingChange(expiredChange)
 
-        // Seed a recent lastKnownDate so the clock-jump guard allows apply.
-        AppGroupConstants.sharedDefaults?.set(
-            Date().addingTimeInterval(-3_600).timeIntervalSince1970,
-            forKey: AppGroupConstants.lastKnownDateKey
-        )
-
+        // DF-040: Clock guard is now monotonic-aware. With neither baseline
+        // seeded, the guard block is skipped entirely and the apply proceeds.
         await pendingChangeService.applyExpiredChanges()
 
         let stored = try localDataSource.fetchPendingChanges()
@@ -267,11 +265,14 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
 
     func testCombined_HardModeOn_ResultsInLockedRule() async throws {
         let ruleId = UUID()
+        // DF-044: ViewModel now passes both flags explicitly after the user
+        // confirms the pre-save Hard Mode dialog.
         let config = AppLimitConfig(
             id: ruleId,
             name: "Focus",
             timeLimit: .oneHour,
-            isHardMode: true
+            isHardMode: true,
+            isLockEditingEnabled: true
         )
 
         try await rulesService.setAppLimitBlock(for: FamilyActivitySelection(), config: config)
@@ -285,7 +286,8 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
             id: ruleId,
             name: "Focus v2",
             timeLimit: .twoHours,
-            isHardMode: true
+            isHardMode: true,
+            isLockEditingEnabled: true
         )
         try await rulesService.editAppLimitRule(for: FamilyActivitySelection(), config: edited)
 
@@ -316,14 +318,13 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
             change.requestedAt = Date().addingTimeInterval(-90_000)
             change.appliesAt = change.requestedAt.addingTimeInterval(86_400)
         }
-        AppGroupConstants.sharedDefaults?.set(
-            Date().addingTimeInterval(-3_600).timeIntervalSince1970,
-            forKey: AppGroupConstants.lastKnownDateKey
-        )
 
         await pendingChangeService.applyExpiredChanges()
 
         XCTAssertFalse(repository.rules[ruleId]?.isHardMode ?? true, "Hard Mode must be disabled once the delay elapses")
+        // DF-043: disableHardMode apply also clears Lock Editing so the user
+        // doesn't get stuck needing a second 24h delay to unlock editing.
+        XCTAssertFalse(repository.rules[ruleId]?.isLockEditingEnabled ?? true, "Lock Editing must also clear when Hard Mode disables")
     }
 
     // MARK: - Helpers

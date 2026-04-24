@@ -200,4 +200,5 @@ final class MockPendingChangeServiceForHome: PendingChangeService {
     }
 
     func pendingChange(for ruleId: UUID) -> PendingRuleChange? { nil }
+    func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void) {}
 }

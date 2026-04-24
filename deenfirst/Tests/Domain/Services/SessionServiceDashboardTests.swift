@@ -143,6 +143,7 @@ private final class StubScreenTimeRulesService: ScreenTimeRulesService {
     func deleteAppLimit(id: UUID) async throws {}
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
     func deleteTimeLimit(id: UUID) async throws {}
+    func deactivateRule(id: UUID) async throws {}
     func editAppLimitRule(for selection: FamilyActivitySelection, config: AppLimitConfig) async throws {}
     func editTimeLimitRule(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
     func deleteRule(id: UUID) async throws {}

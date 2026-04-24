@@ -185,6 +185,7 @@ final class MockRulesServiceForBlocking: ScreenTimeRulesService {
     func deleteAppLimit(id: UUID) async throws { deletedRuleIds.append(id) }
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
     func deleteTimeLimit(id: UUID) async throws { deletedRuleIds.append(id) }
+    func deactivateRule(id: UUID) async throws { deletedRuleIds.append(id) }
     func getAllRules() -> [ScreenTimeRule] { Array(rules.values) }
     func getAppLimitRules() -> [ScreenTimeRule] { getAllRules().filter { $0.type == .appLimit } }
     func getTimeLimitRules() -> [ScreenTimeRule] { getAllRules().filter { $0.type == .timeLimit } }
@@ -243,4 +244,6 @@ final class MockPendingChangeServiceForBlocking: PendingChangeService {
     func pendingChange(for ruleId: UUID) -> PendingRuleChange? {
         pendingChanges[ruleId]
     }
+
+    func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void) {}
 }
