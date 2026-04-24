@@ -35,8 +35,13 @@ extension ScreenTimeRulesServiceImpl {
             let pendingData = try? JSONEncoder().encode(updatedRule)
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.edit.rawValue, pendingData: pendingData)
         } else {
-            try? await deleteAppLimit(id: ruleId)
+            // Transactional update-in-place. setAppLimitBlock starts monitoring
+            // under the same DeviceActivityName (replacing the prior monitor)
+            // before upserting the repo — if it throws, the existing rule and
+            // its monitor remain intact. Re-apply shields to reflect the new
+            // selection and clear any stale shields.
             try await setAppLimitBlock(for: selection, config: config)
+            await reapplyActiveShields()
         }
     }
 
@@ -70,8 +75,9 @@ extension ScreenTimeRulesServiceImpl {
             let pendingData = try? JSONEncoder().encode(updatedRule)
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.edit.rawValue, pendingData: pendingData)
         } else {
-            try? await deleteTimeLimit(id: ruleId)
+            // Transactional update-in-place. See editAppLimitRule above for rationale.
             try await setTimeLimitBlock(for: selection, config: config)
+            await reapplyActiveShields()
         }
     }
 
