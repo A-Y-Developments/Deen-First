@@ -33,7 +33,7 @@ struct AppLimitConfig: Codable {
         self.unblockAllowedAfterLimit = unblockAllowedAfterLimit
         self.durationOptions = durationOptions.isEmpty ? [15, 30, 60] : durationOptions
         self.isHardMode = isHardMode
-        self.isLockEditingEnabled = isHardMode ? true : isLockEditingEnabled
+        self.isLockEditingEnabled = isLockEditingEnabled
     }
 }
 

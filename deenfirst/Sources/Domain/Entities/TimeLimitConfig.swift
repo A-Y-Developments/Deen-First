@@ -52,6 +52,6 @@ struct TimeLimitConfig: Codable {
         self.unblockAllowedAfterLimit = unblockAllowedAfterLimit
         self.durationOptions = durationOptions.isEmpty ? [5, 10, 15] : durationOptions
         self.isHardMode = isHardMode
-        self.isLockEditingEnabled = isHardMode ? true : isLockEditingEnabled
+        self.isLockEditingEnabled = isLockEditingEnabled
     }
 }
