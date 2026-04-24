@@ -9,6 +9,10 @@ protocol PendingChangeService {
     func applyExpiredChanges() async
     func hasPendingChange(for ruleId: UUID) -> Bool
     func pendingChange(for ruleId: UUID) -> PendingRuleChange?
+
+    /// Canonical helper for flipping boolean flags on a persisted rule.
+    /// Shared with `ScreenTimeRulesService+LockEditing` — do not duplicate.
+    func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void)
 }
 
 // MARK: - Implementation
@@ -228,7 +232,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
         try await screenTimeRulesService.deactivateRule(id: ruleId)
     }
 
-    private func applyFlagUpdate(ruleId: UUID, update: (inout ScreenTimeRule) -> Void) {
+    func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void) {
         guard var rule = screenTimeRulesRepository.getRule(id: ruleId) else {
             print("⚠️ [PendingChangeService] Rule \(ruleId) not found — skipping flag update")
             return

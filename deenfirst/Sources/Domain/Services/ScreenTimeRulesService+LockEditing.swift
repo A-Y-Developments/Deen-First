@@ -121,14 +121,15 @@ extension ScreenTimeRulesServiceImpl {
     func disableHardMode(for ruleId: UUID) async {
         guard let rule = repository.getRule(id: ruleId) else { return }
 
+        guard let pending = pendingChangeService else {
+            print("⚠️ [LockEditing] pendingChangeService not injected — cannot disableHardMode for rule \(ruleId)")
+            return
+        }
+
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue disableHardMode for rule \(ruleId)")
-                return
-            }
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disableHardMode.rawValue, pendingData: nil)
         } else {
-            applyFlagUpdate(ruleId: ruleId) { $0.isHardMode = false }
+            await pending.applyFlagUpdate(ruleId: ruleId) { $0.isHardMode = false }
         }
     }
 
@@ -137,25 +138,15 @@ extension ScreenTimeRulesServiceImpl {
     func disableLockEditing(for ruleId: UUID) async {
         guard let rule = repository.getRule(id: ruleId) else { return }
 
+        guard let pending = pendingChangeService else {
+            print("⚠️ [LockEditing] pendingChangeService not injected — cannot disableLockEditing for rule \(ruleId)")
+            return
+        }
+
         if rule.isLockEditingEnabled {
-            guard let pending = pendingChangeService else {
-                print("⚠️ [LockEditing] pendingChangeService not injected — cannot queue disableLockEditing for rule \(ruleId)")
-                return
-            }
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disableLockEditing.rawValue, pendingData: nil)
         } else {
-            applyFlagUpdate(ruleId: ruleId) { $0.isLockEditingEnabled = false }
-        }
-    }
-
-    // MARK: - Private: Flag Update Helper
-
-    private func applyFlagUpdate(ruleId: UUID, update: (inout ScreenTimeRule) -> Void) {
-        guard var rule = repository.getRule(id: ruleId) else { return }
-        update(&rule)
-        switch rule.type {
-        case .appLimit:  repository.setAppLimitRule(rule)
-        case .timeLimit: repository.setTimeLimitRule(rule)
+            await pending.applyFlagUpdate(ruleId: ruleId) { $0.isLockEditingEnabled = false }
         }
     }
 }
