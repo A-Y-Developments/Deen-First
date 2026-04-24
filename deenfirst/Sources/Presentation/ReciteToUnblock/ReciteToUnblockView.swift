@@ -322,12 +322,12 @@ struct ReciteToUnblockView: View {
             }
             .padding(.bottom, 24)
 
-            Text("Ayah 1 Complete!")
+            Text("Ayah \(viewModel.currentAyahIndex) Complete!")
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(.white)
                 .padding(.bottom, 8)
 
-            Text("Now recite the second ayah")
+            Text(viewModel.progressText ?? "Now recite the next ayah")
                 .font(.system(size: 16))
                 .foregroundColor(.white.opacity(0.55))
                 .padding(.bottom, 32)
