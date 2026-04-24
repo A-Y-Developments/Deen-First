@@ -181,7 +181,8 @@ final class SessionServiceImpl: SessionService {
             user.longestStreak = 1
         }
 
-        user.lastActiveDate = Date()
+        let now = Date()
+        user.lastActiveDate = now
         print("💾 updateStreak: Saving user with currentStreak=\(user.currentStreak), longestStreak=\(user.longestStreak)")
         try await userRepository.updateUser(user)
 
@@ -190,7 +191,7 @@ final class SessionServiceImpl: SessionService {
             longest: user.longestStreak,
             userId: user.appleUserId
         )
-        UserPersistenceHelper.saveLastActiveDate(user.lastActiveDate!, userId: user.appleUserId)
+        UserPersistenceHelper.saveLastActiveDate(now, userId: user.appleUserId)
         dashboardDataWriter?.updateStreak(
             current: user.currentStreak,
             longest: user.longestStreak
