@@ -9,10 +9,10 @@ let openAIApiKey = Environment.openaiApiKey.getString(default: "")
 let bypassPaywall = Environment.bypassPaywall.getString(default: "false")
 let distributionCodeSignIdentity = "Apple Distribution"
 let appDistributionProfile = "Deen First Distribution"
-let screenTimeMonitorDistributionProfile = "Deen First ScreenTimeMonitor Distribution"
+let screenTimeMonitorDistributionProfile = "DeenFirst ScreenTimeMonitor Distribution"
 let shieldDistributionProfile = "Deen First Shield Distribution"
-let activityReportDistributionProfile = "Deen First ActivityReport Distribution"
-let appVersion: Plist.Value = .string("1.0.0")
+let activityReportDistributionProfile = "DeenFirst ActivityReport Distribution"
+let appVersion: Plist.Value = .string("1.1.0")
 let appBuild: Plist.Value = .string("1")
 
 let project = Project(
@@ -55,6 +55,7 @@ let project = Project(
                 .external(name: "BottomSheet"),
                 .target(name: "ScreenTimeMonitor"),
                 .target(name: "Shield"),
+                .target(name: "DeenFirstActivityReport"),
                 // ShieldAction removed — secondary button deleted from shield,
                 // recite to unblock is now triggered from BlockingTabView directly.
             ],
@@ -197,17 +198,15 @@ let project = Project(
         .target(
             name: "DeenFirstActivityReport",
             destinations: [.iPhone],
-            product: .appExtension,
+            product: .extensionKitExtension,
             bundleId: "\(baseBundleId).ActivityReport",
             deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleShortVersionString": appVersion,
                 "CFBundleVersion": appBuild,
                 "CFBundleDisplayName": "DeenFirstActivityReport",
-                "NSExtension": [
-                    "NSExtensionPointIdentifier": "com.apple.deviceactivity.report",
-                    "NSExtensionPrincipalClass":
-                        "$(PRODUCT_MODULE_NAME).DeenFirstActivityReportExtension",
+                "EXAppExtensionAttributes": [
+                    "EXExtensionPointIdentifier": "com.apple.deviceactivityui.report-extension",
                 ],
             ]),
             sources: [
