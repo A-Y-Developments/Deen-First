@@ -11,10 +11,15 @@ final class HomeTabViewModel: ObservableObject {
     @Published var unblockRemainingSeconds: [UUID: Int] = [:]
     @Published var errorMessage: String?
 
+    @Published var deenScore: Int = 0
+    @Published var todayFocusSessions: Int = 0
+    @Published var todayRecitationsPassed: Int = 0
+
     private let quranService: QuranService
     private let authService: AuthService
     private let screenTimeRulesService: ScreenTimeRulesService
     private let pendingChangeService: PendingChangeService
+    private let sharedDefaults: UserDefaults?
 
     private var surahs: [Surah] = []
     private var countdownTimers: [UUID: AnyCancellable] = [:]
@@ -23,12 +28,14 @@ final class HomeTabViewModel: ObservableObject {
         quranService: QuranService = DIContainer.shared.quranService,
         authService: AuthService = DIContainer.shared.authService,
         screenTimeRulesService: ScreenTimeRulesService? = nil,
-        pendingChangeService: PendingChangeService? = nil
+        pendingChangeService: PendingChangeService? = nil,
+        sharedDefaults: UserDefaults? = AppGroupConstants.sharedDefaults
     ) {
         self.quranService = quranService
         self.authService = authService
         self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
         self.pendingChangeService = pendingChangeService ?? DIContainer.shared.pendingChangeService
+        self.sharedDefaults = sharedDefaults
     }
 
     func loadData() async {
@@ -36,6 +43,34 @@ final class HomeTabViewModel: ObservableObject {
         await refreshStreak()
         loadBlockingRules()
         syncCountdownFromStorage()
+        refreshDashboardSummary()
+    }
+
+    /// Reads today's Quran/focus/recitation counters from the App Group and
+    /// computes the Deen Score on-demand. Main-app-side score excludes screen
+    /// time penalty (not readable without the ActivityReport extension) — the
+    /// detail view renders the authoritative score via the extension.
+    func refreshDashboardSummary() {
+        let dayKey = DashboardDateKeys.dayKey(for: Date())
+        let weekKey = DashboardDateKeys.weekKey(for: Date())
+
+        let quranSeconds = sharedDefaults?.integer(forKey: AppGroupConstants.quranSecondsKey(dayKey)) ?? 0
+        let focusSessions = sharedDefaults?.integer(forKey: AppGroupConstants.focusSessionsKey(dayKey)) ?? 0
+        let recitationsPassed = sharedDefaults?.integer(forKey: AppGroupConstants.recitationsPassedKey(dayKey)) ?? 0
+        let emergencyUnblocks = sharedDefaults?.integer(forKey: AppGroupConstants.emergencyUnblocksKey(weekKey)) ?? 0
+
+        todayFocusSessions = focusSessions
+        todayRecitationsPassed = recitationsPassed
+
+        let input = DeenScoreInput(
+            quranSeconds: quranSeconds,
+            focusSessions: focusSessions,
+            recitationsPassed: recitationsPassed,
+            streakDays: currentStreak,
+            screenTimeOverLimitSeconds: 0,
+            emergencyUnblocksThisWeek: emergencyUnblocks
+        )
+        deenScore = calculateDeenScore(input)
     }
 
     private func loadDailySurah() async {

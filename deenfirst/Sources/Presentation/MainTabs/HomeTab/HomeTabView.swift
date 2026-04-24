@@ -22,6 +22,7 @@ struct HomeTabView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 heroSection
+                dashboardSummarySection
                 dailySurahSection
                 activeBlocksSection
             }
@@ -118,6 +119,18 @@ struct HomeTabView: View {
                 .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private var dashboardSummarySection: some View {
+        DashboardSummaryCard(
+            deenScore: viewModel.deenScore,
+            focusSessions: viewModel.todayFocusSessions,
+            recitationsPassed: viewModel.todayRecitationsPassed,
+            streakDays: viewModel.currentStreak,
+            action: {
+                router.navigate(to: .dashboard)
+            }
+        )
     }
 
     private var dailySurahSection: some View {
