@@ -66,7 +66,7 @@ struct DashboardTabView: View {
                     )
                     section(
                         context: weeklyTrendContext,
-                        filter: filter,
+                        filter: weeklyTrendFilter,
                         minHeight: 260
                     )
                 }
@@ -124,13 +124,28 @@ struct DashboardTabView: View {
                 devices: .init([.iPhone])
             )
         case .thisWeek:
-            let interval = Calendar.current.dateInterval(of: .weekOfYear, for: .now)
-                ?? DateInterval(start: .now, duration: 86_400 * 7)
-            return DeviceActivityFilter(
-                segment: .weekly(during: interval),
-                users: .all,
-                devices: .init([.iPhone])
-            )
+            return Self.makeSevenDayDailyFilter()
         }
+    }
+
+    /// Weekly Trend always needs 7 daily segments so
+    /// `WeeklyTrendReportScene` can bucket by day. Driven independently of
+    /// `dateRange` to avoid silent data bugs when the user picks "Today".
+    private var weeklyTrendFilter: DeviceActivityFilter {
+        Self.makeSevenDayDailyFilter()
+    }
+
+    private static func makeSevenDayDailyFilter(
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) -> DeviceActivityFilter {
+        let todayStart = calendar.startOfDay(for: now)
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -6, to: todayStart) ?? todayStart
+        let interval = DateInterval(start: sevenDaysAgo, end: now)
+        return DeviceActivityFilter(
+            segment: .daily(during: interval),
+            users: .all,
+            devices: .init([.iPhone])
+        )
     }
 }
