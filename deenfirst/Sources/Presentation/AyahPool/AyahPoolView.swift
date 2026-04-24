@@ -2,7 +2,11 @@ import SwiftUI
 
 struct AyahPoolView: View {
     @EnvironmentObject private var router: Router
-    @StateObject private var viewModel = AyahPoolViewModel()
+    @StateObject private var viewModel: AyahPoolViewModel
+
+    init(viewModel: AyahPoolViewModel = MainActor.assumeIsolated { AyahPoolViewModel() }) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         ZStack {

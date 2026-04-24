@@ -2,8 +2,12 @@ import SwiftUI
 
 struct AyahPoolSurahPickerView: View {
     @EnvironmentObject private var router: Router
-    @StateObject private var viewModel = AyahPoolSurahPickerViewModel()
+    @StateObject private var viewModel: AyahPoolSurahPickerViewModel
     @State private var showSearch = false
+
+    init(viewModel: AyahPoolSurahPickerViewModel = MainActor.assumeIsolated { AyahPoolSurahPickerViewModel() }) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
 
     var body: some View {
         ZStack {
