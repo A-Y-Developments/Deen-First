@@ -100,8 +100,9 @@ final class ActiveSessionViewModel: ObservableObject {
     }
 
     private func unblockMinutes(for ruleId: UUID) -> Int {
-        guard let rule = screenTimeRulesService.getRule(id: ruleId) else { return 15 }
-        return rule.isHardMode ? 20 : 15
+        // DF-115: single source of truth — UnblockTier owns the tier-to-minutes mapping.
+        let isHardMode = screenTimeRulesService.getRule(id: ruleId)?.isHardMode ?? false
+        return UnblockTier.tier3.minutes(isHardMode: isHardMode)
     }
 
     func startSession() async {
@@ -115,14 +116,16 @@ final class ActiveSessionViewModel: ObservableObject {
 
             let reciterId = quranPreferences.selectedReciterId
 
+            // DF-028: session type must be set BEFORE the repository save, not after.
+            let sessionType: SessionType = isUnblockSession ? .unblock(ruleId: unlockRuleId) : .normal
+
             // SessionService handles shield application
             let newSession = try await sessionService.startSession(
-                type: .listening,
+                modality: .listening,
                 surahNumbers: surahs.map { $0.surah.number },
-                reciterId: reciterId
+                reciterId: reciterId,
+                type: sessionType
             )
-            newSession.isUnblockSession = isUnblockSession
-            newSession.unlockRuleId = unlockRuleId
             session = newSession
 
             do {

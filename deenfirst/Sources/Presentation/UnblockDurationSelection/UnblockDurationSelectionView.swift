@@ -144,11 +144,8 @@ private struct TierCardView: View {
     }
 
     private var durationLabel: String {
-        switch tier {
-        case .tier1: return "5 min"
-        case .tier2: return "10 min"
-        case .tier3: return isHardMode ? "20 min" : "15 min"
-        }
+        // DF-115: read from the canonical UnblockTier source instead of inlining.
+        "\(tier.minutes(isHardMode: isHardMode)) min"
     }
 
     private var requirementLabel: String {
