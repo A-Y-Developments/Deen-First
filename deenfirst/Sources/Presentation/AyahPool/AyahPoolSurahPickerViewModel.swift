@@ -27,13 +27,16 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
 
     private let ayahPoolService: AyahPoolService
     private let quranService: QuranService
+    private let nudgeDefaults: UserDefaults?
 
     init(
         ayahPoolService: AyahPoolService? = nil,
-        quranService: QuranService? = nil
+        quranService: QuranService? = nil,
+        nudgeDefaults: UserDefaults? = AppGroupConstants.sharedDefaults
     ) {
         self.ayahPoolService = ayahPoolService ?? DIContainer.shared.ayahPoolService
         self.quranService = quranService ?? DIContainer.shared.quranService
+        self.nudgeDefaults = nudgeDefaults
     }
 
     // MARK: - Derived
@@ -179,7 +182,7 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
     /// Resets the HM "empty pool" nudge 24h gate so it can re-fire in a future
     /// HM session if the pool is emptied again.
     private func clearPoolNudgeStamp() {
-        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.poolNudgeDateKey)
+        nudgeDefaults?.removeObject(forKey: AppGroupConstants.poolNudgeDateKey)
     }
 
     // MARK: - Helpers
