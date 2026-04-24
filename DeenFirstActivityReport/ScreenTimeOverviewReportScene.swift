@@ -1,6 +1,4 @@
 import DeviceActivity
-import FamilyControls
-import ManagedSettings
 import SwiftUI
 
 /// Scene that aggregates today's `DeviceActivityResults` into a `ScreenTimeOverviewReport`
