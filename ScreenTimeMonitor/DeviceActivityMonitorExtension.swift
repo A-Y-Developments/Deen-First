@@ -2,6 +2,9 @@ import DeviceActivity
 import FamilyControls
 import Foundation
 import ManagedSettings
+import os
+
+private let logger = Logger(subsystem: "com.aydev.deenfirst", category: "ScreenTimeMonitor")
 
 class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
@@ -21,7 +24,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
             ScreenTimeEvents.removeTriggeredRuleId(ruleId: uuid)
             removeShieldsForRule(ruleId: ruleId)
-            print("✅ Reset daily quota for rule: \(ruleId)")
+            logger.info("Reset daily quota for rule: \(ruleId, privacy: .private)")
         }
     }
 
@@ -33,13 +36,13 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             guard UUID(uuidString: ruleId) != nil else { return }
 
             removeShieldsForRule(ruleId: ruleId)
-            print("✅ Removed shields at interval end for rule: \(ruleId)")
+            logger.info("Removed shields at interval end for rule: \(ruleId, privacy: .private)")
 
         } else if activity.rawValue.hasPrefix("timeLimit_") {
             let ruleId = activity.rawValue.replacingOccurrences(of: "timeLimit_", with: "")
             guard UUID(uuidString: ruleId) != nil else { return }
             removeShieldsForRule(ruleId: ruleId)
-            print("✅ Removed TimeLimit shields at interval end for rule: \(ruleId)")
+            logger.info("Removed TimeLimit shields at interval end for rule: \(ruleId, privacy: .private)")
 
         } else if activity.rawValue.hasPrefix(AppGroupConstants.tempUnblockActivityPrefix) {
             let ruleIdString = activity.rawValue.replacingOccurrences(
@@ -57,7 +60,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         activity: DeviceActivityName
     ) {
         super.eventDidReachThreshold(event, activity: activity)
-        print("🚦 THRESHOLD REACHED: \(event.rawValue)")
+        logger.info("Threshold reached: \(event.rawValue, privacy: .private)")
 
         let raw = event.rawValue
         let ruleIdString: String
@@ -68,7 +71,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         } else { return }
 
         guard isRuleActiveToday(ruleId: ruleIdString) else {
-            print("⏭️ Skipping shield — rule \(ruleIdString) not active today")
+            logger.notice("Skipping shield — rule not active today: \(ruleIdString, privacy: .private)")
             return
         }
 
@@ -77,7 +80,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         if raw.hasPrefix("limitReached_") {
             if let ruleId = UUID(uuidString: ruleIdString) {
                 ScreenTimeEvents.markRuleAsTriggered(ruleId: ruleId)
-                print("✅ Marked rule as triggered: \(ruleIdString)")
+                logger.info("Marked rule as triggered: \(ruleIdString, privacy: .private)")
             }
         }
     }
@@ -101,7 +104,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
     // MARK: - Temp Unblock Expiry (per-rule)
 
     private func handleTempUnblockExpired(ruleId: String) {
-        print("🔒 [TempUnblock] Window expired for rule: \(ruleId) — re-applying shields")
+        logger.info("TempUnblock window expired for rule: \(ruleId, privacy: .private) — re-applying shields")
 
         // Clear the per-rule expiry key
         guard let uuid = UUID(uuidString: ruleId) else { return }
@@ -114,7 +117,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         if triggeredIds.contains(ruleId) {
             // AppLimit rule — re-shield its tokens
             applyShieldsFromStorage(ruleId: ruleId)
-            print("✅ [TempUnblock] AppLimit shields restored for rule: \(ruleId)")
+            logger.info("TempUnblock AppLimit shields restored for rule: \(ruleId, privacy: .private)")
         } else {
             // TimeLimit rule — only re-shield if currently inside the active window
             reapplyTimeLimitShieldForRule(ruleId: ruleId)
@@ -160,12 +163,12 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         }
 
         guard inWindow else {
-            print("✅ [TempUnblock] TimeLimit rule \(ruleId) is outside its window — no shield needed")
+            logger.info("TempUnblock TimeLimit rule outside its window — no shield needed: \(ruleId, privacy: .private)")
             return
         }
 
         applyShieldsFromStorage(ruleId: ruleId)
-        print("✅ [TempUnblock] TimeLimit shields restored for rule: \(ruleId)")
+        logger.info("TempUnblock TimeLimit shields restored for rule: \(ruleId, privacy: .private)")
     }
 
     private func applyShieldsFromStorage(ruleId: String) {
@@ -210,26 +213,26 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
         } else if raw.hasPrefix("timeLimit_") {
             ruleIdString = raw.replacingOccurrences(of: "timeLimit_", with: "")
         } else {
-            print("❌ Unknown event prefix: \(raw)")
+            logger.error("Unknown event prefix: \(raw, privacy: .public)")
             return
         }
 
         guard UUID(uuidString: ruleIdString) != nil else {
-            print("❌ Invalid ruleId: \(ruleIdString)")
+            logger.error("Invalid ruleId: \(ruleIdString, privacy: .private)")
             return
         }
 
         let (appTokens, categoryTokens) = loadRuleTokens(ruleIdString: ruleIdString)
 
         guard !appTokens.isEmpty || !categoryTokens.isEmpty else {
-            print("❌ No tokens found for rule: \(ruleIdString)")
+            logger.warning("No tokens found for rule: \(ruleIdString, privacy: .private)")
             return
         }
 
         if !appTokens.isEmpty {
             let existing = store.shield.applications ?? []
             store.shield.applications = existing.union(appTokens)
-            print("✅ Shielded \(appTokens.count) apps for rule: \(ruleIdString)")
+            logger.info("Shielded \(appTokens.count) apps for rule: \(ruleIdString, privacy: .private)")
         }
 
         if !categoryTokens.isEmpty {
@@ -242,7 +245,7 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
             default:
                 store.shield.applicationCategories = .specific(categoryTokens, except: [])
             }
-            print("✅ Shielded \(categoryTokens.count) categories for rule: \(ruleIdString)")
+            logger.info("Shielded \(categoryTokens.count) categories for rule: \(ruleIdString, privacy: .private)")
         }
     }
 
