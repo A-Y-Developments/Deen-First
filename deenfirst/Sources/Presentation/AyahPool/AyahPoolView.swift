@@ -31,6 +31,17 @@ struct AyahPoolView: View {
         } message: {
             Text("You've reached the 20 ayah limit. Remove an ayah to add a new one.")
         }
+        .alert(
+            "Something went wrong",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     // MARK: - Subviews

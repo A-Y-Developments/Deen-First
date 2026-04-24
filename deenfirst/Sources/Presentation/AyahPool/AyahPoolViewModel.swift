@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: "com.aydev.deenfirst", category: "AyahPool")
 
 @MainActor
 final class AyahPoolViewModel: ObservableObject {
@@ -54,6 +57,7 @@ final class AyahPoolViewModel: ObservableObject {
             do {
                 try await ayahPoolService.removeAyah(id: id)
             } catch {
+                logger.error("Failed to remove ayah \(id, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 errorMessage = "Could not remove ayah. Please try again."
             }
             items = await ayahPoolService.fetchPool()

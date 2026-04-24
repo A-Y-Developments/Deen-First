@@ -93,6 +93,20 @@ final class AyahPoolViewModelTests: XCTestCase {
         XCTAssertEqual(mockPool.removedIds, [item1.id])
     }
 
+    /// DF-050: Remove errors must surface to `errorMessage` instead of being swallowed.
+    func testRemove_surfacesErrorMessage_whenServiceThrows() async {
+        let item = makeItem(surah: 1, ayah: 1)
+        mockPool.pool = [item]
+        viewModel.load()
+        await waitForLoad()
+
+        mockPool.throwOnRemove = true
+        viewModel.remove(id: item.id)
+        await waitForLoad()
+
+        XCTAssertNotNil(viewModel.errorMessage, "Remove failure must surface an error message to the user")
+    }
+
     // MARK: - handleAddAyahsTap
 
     func testHandleAddAyahsTap_returnsTrue_whenNotFull() async {
