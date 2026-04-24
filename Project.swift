@@ -115,6 +115,7 @@ let project = Project(
             sources: [
                 "ScreenTimeMonitor/**",
                 "deenfirst/Sources/Shared/**",
+                "deenfirst/Sources/Domain/ScreenTime/**",
             ],
             entitlements: .file(path: "ScreenTimeMonitor/ScreenTimeMonitor.entitlements"),
             dependencies: [
