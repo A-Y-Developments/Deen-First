@@ -4,6 +4,7 @@ struct QuranReadingView: View {
     let surahId: Int
     @EnvironmentObject private var viewModel: QuranReadingViewModel
     @EnvironmentObject var router: Router
+    @Environment(\.scenePhase) private var scenePhase
     @State private var scrollOffset: CGFloat = 0
 
     var body: some View {
@@ -27,6 +28,9 @@ struct QuranReadingView: View {
         .onDisappear {
             viewModel.stopAudio()
             viewModel.recordReadingSession()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            viewModel.handleScenePhase(newPhase)
         }
         .task {
             await viewModel.setup(with: surahId)

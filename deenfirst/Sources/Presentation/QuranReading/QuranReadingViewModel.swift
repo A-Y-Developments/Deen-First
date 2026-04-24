@@ -55,6 +55,25 @@ final class QuranReadingViewModel: ObservableObject {
         dashboardDataWriter?.recordQuranReading(duration: duration)
     }
 
+    /// Persists the in-progress slice on background and starts a fresh window
+    /// on active return. onDisappear doesn't fire when the app backgrounds
+    /// with this view on screen, so without this, elapsed time is dropped.
+    func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .background:
+            recordReadingSession()
+            stopAudio()
+        case .active:
+            if readingStartedAt == nil {
+                readingStartedAt = Date()
+            }
+        case .inactive:
+            break
+        @unknown default:
+            break
+        }
+    }
+
     private func loadAllSurahs(initialSurahId: Int) async {
         isLoading = true
         errorMessage = nil
