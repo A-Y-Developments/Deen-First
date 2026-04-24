@@ -115,10 +115,13 @@ final class AppLimitConfigTests: XCTestCase {
         XCTAssertFalse(config.isLockEditingEnabled)
     }
 
-    func testAppLimitConfigHardModeAutoEnablesLockEditing() {
+    // DF-044: Hard Mode no longer force-enables Lock Editing at config level.
+    // The two flags are now coupled at the ViewModel layer (pre-save confirmation)
+    // so the user explicitly consents before both flip on together.
+    func testAppLimitConfigHardModeDoesNotForceLockEditing() {
         let config = AppLimitConfig(name: "Test", timeLimit: .oneHour, isHardMode: true)
         XCTAssertTrue(config.isHardMode)
-        XCTAssertTrue(config.isLockEditingEnabled)
+        XCTAssertFalse(config.isLockEditingEnabled)
     }
 
     func testAppLimitConfigNormalModePreservesLockEditing() {

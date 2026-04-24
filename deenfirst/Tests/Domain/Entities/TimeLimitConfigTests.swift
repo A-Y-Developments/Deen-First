@@ -112,7 +112,8 @@ final class timeLimitConfigTests: XCTestCase {
         XCTAssertFalse(config.isLockEditingEnabled)
     }
 
-    func testtimeLimitConfigHardModeAutoEnablesLockEditing() {
+    // DF-044: see AppLimitConfigTests for rationale.
+    func testtimeLimitConfigHardModeDoesNotForceLockEditing() {
         let start = DateComponents(hour: 9, minute: 0)
         let end = DateComponents(hour: 17, minute: 0)
         let config = TimeLimitConfig(
@@ -122,7 +123,7 @@ final class timeLimitConfigTests: XCTestCase {
             isHardMode: true
         )
         XCTAssertTrue(config.isHardMode)
-        XCTAssertTrue(config.isLockEditingEnabled)
+        XCTAssertFalse(config.isLockEditingEnabled)
     }
 
     func testtimeLimitConfigNormalModePreservesLockEditing() {

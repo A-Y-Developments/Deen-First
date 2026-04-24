@@ -4,6 +4,14 @@ import XCTest
 
 @testable import DeenFirst
 
+/// Matches `PendingChangeServiceImpl.monotonicNow()` so tests can seed the
+/// baseline using the same clock source the guard reads.
+private func currentMonotonicNow() -> TimeInterval {
+    var ts = timespec()
+    clock_gettime(CLOCK_MONOTONIC, &ts)
+    return TimeInterval(ts.tv_sec) + TimeInterval(ts.tv_nsec) / 1_000_000_000
+}
+
 @MainActor
 final class PendingChangeServiceTests: XCTestCase {
     var container: ModelContainer!
@@ -28,10 +36,12 @@ final class PendingChangeServiceTests: XCTestCase {
             notificationSchedulingService: mockNotificationService
         )
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
+        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownMonotonicKey)
     }
 
     override func tearDown() async throws {
         AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownDateKey)
+        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.lastKnownMonotonicKey)
         container = nil
         localDataSource = nil
         mockRulesService = nil
@@ -152,23 +162,33 @@ final class PendingChangeServiceTests: XCTestCase {
 
     // MARK: - applyExpiredChanges — clock jump
 
-    func testApplyExpiredChanges_clockJumpSkipsApply() async {
+    // DF-040: guard now compares wall-clock delta to monotonic-clock delta.
+    // A tamper attempt looks like wall-clock advanced far more than monotonic.
+    // Here we simulate that by seeding a recent monotonic baseline together
+    // with a wall baseline far in the past — wallElapsed is large, monoElapsed
+    // is near-zero, so the guard fires.
+    func testApplyExpiredChanges_wallJumpWithoutMonotonicAdvance_skipsApply() async {
         let ruleId = UUID()
         let pastDate = Date().addingTimeInterval(-90_000)
         let expiredChange = PendingRuleChange(
             ruleId: ruleId, changeType: .disableLockEditing, requestedAt: pastDate)
         try? localDataSource.insertPendingChange(expiredChange)
 
-        let clockJumpDate = Date().addingTimeInterval(-8_000)
+        // Wall clock baseline = 1h in the past → wallElapsed ≈ 3600s on apply.
         AppGroupConstants.sharedDefaults?.set(
-            clockJumpDate.timeIntervalSince1970,
+            Date().addingTimeInterval(-3_600).timeIntervalSince1970,
             forKey: AppGroupConstants.lastKnownDateKey
+        )
+        // Monotonic baseline = "now" → monoElapsed ≈ 0s on apply.
+        AppGroupConstants.sharedDefaults?.set(
+            currentMonotonicNow(),
+            forKey: AppGroupConstants.lastKnownMonotonicKey
         )
 
         await service.applyExpiredChanges()
 
         let all = try? localDataSource.fetchPendingChanges()
-        XCTAssertFalse(all?.first?.isApplied ?? true, "Clock jump should prevent apply")
+        XCTAssertFalse(all?.first?.isApplied ?? true, "Tamper (wall jumped, mono didn't) must skip apply")
         XCTAssertEqual(mockRulesRepository.setAppLimitCallCount + mockRulesRepository.setTimeLimitCallCount, 0)
     }
 
@@ -236,7 +256,10 @@ final class PendingChangeServiceTests: XCTestCase {
         XCTAssertTrue(mockRulesService.deletedAppLimitIds.contains(ruleId))
     }
 
-    func testApplyExpiredChanges_normalProgressionUnderTwoHoursProceeds() async {
+    // DF-040: overnight sleep — wall clock advances many hours alongside
+    // monotonic (device wasn't tampered, it just slept). Guard must allow
+    // the apply to proceed.
+    func testApplyExpiredChanges_overnightSleep_proceeds() async {
         let ruleId = UUID()
         var rule = makeRule(id: ruleId)
         rule.isLockEditingEnabled = true
@@ -247,17 +270,21 @@ final class PendingChangeServiceTests: XCTestCase {
             ruleId: ruleId, changeType: .disableLockEditing, requestedAt: pastDate)
         try? localDataSource.insertPendingChange(expiredChange)
 
-        // lastKnownDate 1 hour ago — well within the 2hr threshold
-        let oneHourAgo = Date().addingTimeInterval(-3_600)
+        // Simulate 8h proportional advance on both clocks.
+        let eightHours: TimeInterval = 8 * 3600
         AppGroupConstants.sharedDefaults?.set(
-            oneHourAgo.timeIntervalSince1970,
+            Date().addingTimeInterval(-eightHours).timeIntervalSince1970,
             forKey: AppGroupConstants.lastKnownDateKey
+        )
+        AppGroupConstants.sharedDefaults?.set(
+            currentMonotonicNow() - eightHours,
+            forKey: AppGroupConstants.lastKnownMonotonicKey
         )
 
         await service.applyExpiredChanges()
 
         let all = try? localDataSource.fetchPendingChanges()
-        XCTAssertTrue(all?.first?.isApplied ?? false, "Normal time progression should allow apply")
+        XCTAssertTrue(all?.first?.isApplied ?? false, "Proportional wall+mono advance (benign overnight sleep) should allow apply")
     }
 
     func testApplyExpiredChanges_updatesLastKnownDateAfterRun() async {
@@ -355,6 +382,14 @@ final class MockScreenTimeRulesServiceForPending: ScreenTimeRulesService {
     func deleteAppLimit(id: UUID) async throws { deletedAppLimitIds.append(id) }
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws {}
     func deleteTimeLimit(id: UUID) async throws { deletedTimeLimitIds.append(id) }
+    var deactivatedIds: [UUID] = []
+    func deactivateRule(id: UUID) async throws {
+        deactivatedIds.append(id)
+        if var rule = rulesById[id] {
+            rule.isEnabled = false
+            rulesById[id] = rule
+        }
+    }
     func getAllRules() -> [ScreenTimeRule] { Array(rulesById.values) }
     func getAppLimitRules() -> [ScreenTimeRule] { getAllRules().filter { $0.type == .appLimit } }
     func getTimeLimitRules() -> [ScreenTimeRule] { getAllRules().filter { $0.type == .timeLimit } }

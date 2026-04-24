@@ -17,6 +17,7 @@ final class ScreenTimeRulesServiceLockEditingTests: XCTestCase {
     override func setUp() async throws {
         mockRepository = MockLockEditingRepository()
         mockPendingChangeService = MockPendingChangeServiceForLockEditing()
+        mockPendingChangeService.repository = mockRepository
         service = ScreenTimeRulesServiceImpl(
             repository: mockRepository,
             deviceActivityManager: MockDeviceActivityManagerForLockEditing(),
@@ -149,14 +150,17 @@ final class ScreenTimeRulesServiceLockEditingTests: XCTestCase {
         XCTAssertEqual(mockPendingChangeService.lastChangeType, PendingChangeType.disable.rawValue)
     }
 
-    func testDisableRule_unlockedRule_deletesDirectly() async throws {
+    // DF-042: unlocked disable now flips isEnabled=false via deactivateRule
+    // (preserving the rule for re-enable) instead of hard-deleting it.
+    func testDisableRule_unlockedRule_deactivatesWithoutDeleting() async throws {
         let rule = makeUnlockedRule()
         mockRepository.rules[rule.id] = rule
 
         try await service.disableRule(id: rule.id)
 
         XCTAssertEqual(mockPendingChangeService.createCallCount, 0)
-        XCTAssertNil(mockRepository.rules[rule.id])
+        XCTAssertNotNil(mockRepository.rules[rule.id], "Rule record must be preserved")
+        XCTAssertFalse(mockRepository.rules[rule.id]?.isEnabled ?? true, "Rule must be flipped to disabled")
     }
 
     // MARK: - disableHardMode
@@ -228,6 +232,7 @@ final class MockPendingChangeServiceForLockEditing: PendingChangeService {
     var lastChangeType: String?
     var lastPendingData: Data?
     var lastRuleId: UUID?
+    weak var repository: MockLockEditingRepository?
 
     func createPendingChange(for rule: ScreenTimeRule, changeType: String, pendingData: Data?) async {
         createCallCount += 1
@@ -240,6 +245,14 @@ final class MockPendingChangeServiceForLockEditing: PendingChangeService {
     func applyExpiredChanges() async {}
     func hasPendingChange(for ruleId: UUID) -> Bool { false }
     func pendingChange(for ruleId: UUID) -> PendingRuleChange? { nil }
+
+    var flagUpdateCallCount = 0
+    func applyFlagUpdate(ruleId: UUID, update: @Sendable (inout ScreenTimeRule) -> Void) {
+        flagUpdateCallCount += 1
+        guard var rule = repository?.rules[ruleId] else { return }
+        update(&rule)
+        repository?.rules[ruleId] = rule
+    }
 }
 
 final class MockLockEditingRepository: ScreenTimeRulesRepository {
