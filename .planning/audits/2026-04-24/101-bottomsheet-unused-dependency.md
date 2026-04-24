@@ -3,7 +3,7 @@ id: 101
 title: BottomSheet SPM dependency — no import found in source; may be unused
 severity: P3
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

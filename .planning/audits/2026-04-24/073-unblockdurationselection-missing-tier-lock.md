@@ -3,7 +3,7 @@ id: 073
 title: UnblockDurationSelectionView shows all 3 tiers always — no progressive unlock gate
 severity: P1
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem

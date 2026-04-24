@@ -3,7 +3,7 @@ id: 004
 title: ScreenTimeEvents.swift compiled into ActivityReport extension (unused) — hygiene issue
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

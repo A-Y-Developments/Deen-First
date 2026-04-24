@@ -3,7 +3,7 @@ id: 074
 title: applyFlagUpdate helper duplicated in PendingChangeService and ScreenTimeRulesService+LockEditing
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

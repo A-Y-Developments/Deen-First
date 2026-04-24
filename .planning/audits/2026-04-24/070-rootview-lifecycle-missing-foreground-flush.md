@@ -3,7 +3,7 @@ id: 070
 title: RootView foreground handler omits DashboardDataWriter.flush() in async block
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

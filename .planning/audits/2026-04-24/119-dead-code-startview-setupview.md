@@ -3,7 +3,7 @@ id: 119
 title: StartView and SetupView are dead code — not referenced anywhere
 severity: P3
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

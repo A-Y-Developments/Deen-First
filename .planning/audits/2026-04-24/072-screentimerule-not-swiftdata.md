@@ -3,7 +3,7 @@ id: 072
 title: ScreenTimeRule is a struct stored in UserDefaults — not a SwiftData @Model
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 050
 title: AyahPoolService.removeAyah uses try? swallowing delete errors silently
 severity: P2
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

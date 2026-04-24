@@ -3,7 +3,7 @@ id: 022
 title: Progressive tier unlock not enforced — all tiers always selectable
 severity: P1
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem

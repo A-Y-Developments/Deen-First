@@ -3,7 +3,7 @@ id: 005
 title: ScreenTimeOverviewReportScene imports FamilyControls and ManagedSettings without using either
 severity: P3
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

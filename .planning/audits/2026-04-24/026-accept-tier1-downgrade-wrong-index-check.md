@@ -3,7 +3,7 @@ id: 026
 title: acceptTier1Downgrade() index check fails Hard Mode Tier 2 after 2-of-3 ayahs
 severity: P1
 area: hard-mode
-status: open
+status: closed
 ---
 
 ## Problem

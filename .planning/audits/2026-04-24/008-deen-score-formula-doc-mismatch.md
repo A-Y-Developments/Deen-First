@@ -3,7 +3,7 @@ id: 008
 title: domain.md documents simple additive Deen Score formula; implementation uses tiered step-function
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

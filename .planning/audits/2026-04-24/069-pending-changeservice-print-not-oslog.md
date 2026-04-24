@@ -3,7 +3,7 @@ id: 069
 title: PendingChangeService uses print() alongside os_log — inconsistent logging
 severity: P3
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

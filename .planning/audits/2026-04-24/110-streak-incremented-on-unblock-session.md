@@ -3,7 +3,7 @@ id: 110
 title: Streak incremented on unblock sessions
 severity: P1
 area: v1-regression
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 046
 title: PendingChangeType enum has 5 cases but domain.md documents only 2
 severity: P3
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 116
 title: PendingChangeService save mutations wrapped in try? — state loss on failure
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

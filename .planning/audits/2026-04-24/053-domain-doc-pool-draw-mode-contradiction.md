@@ -3,7 +3,7 @@ id: 053
 title: domain.md pool-draw rule contradicts implemented behavior (draws from pool in both modes)
 severity: P3
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

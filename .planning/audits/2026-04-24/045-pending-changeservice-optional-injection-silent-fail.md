@@ -3,7 +3,7 @@ id: 045
 title: pendingChangeService optional injection silently no-ops lock-editing gate
 severity: P2
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

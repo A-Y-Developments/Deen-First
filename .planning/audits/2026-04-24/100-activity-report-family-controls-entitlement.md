@@ -3,7 +3,7 @@ id: 100
 title: DeenFirstActivityReport has com.apple.developer.family-controls entitlement — mindcore omits it
 severity: P2
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

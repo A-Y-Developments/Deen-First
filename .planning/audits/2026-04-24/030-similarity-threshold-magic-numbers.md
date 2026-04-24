@@ -3,7 +3,7 @@ id: 030
 title: Whisper similarity threshold uses magic number literals instead of named constants
 severity: P2
 area: hard-mode
-status: open
+status: closed
 ---
 
 ## Problem

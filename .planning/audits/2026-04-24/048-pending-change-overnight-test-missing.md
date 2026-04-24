@@ -3,7 +3,7 @@ id: 048
 title: PendingChangeServiceTests missing overnight-gap test case for clock-jump guard
 severity: P2
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 117
 title: SummaryViewModel uses @escaping closure + DispatchQueue — violates async/await rule
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 065
 title: Router.Route.dashboard is dead — routed to DashboardTabView not a push detail screen
 severity: P2
 area: nav
-status: open
+status: closed
 ---
 
 ## Problem

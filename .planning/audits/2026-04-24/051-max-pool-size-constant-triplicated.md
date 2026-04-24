@@ -3,7 +3,7 @@ id: 051
 title: maxPoolSize = 20 triplicated across service and two ViewModels
 severity: P2
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

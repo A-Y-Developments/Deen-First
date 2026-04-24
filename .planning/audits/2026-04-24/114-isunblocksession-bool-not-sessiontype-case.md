@@ -3,7 +3,7 @@ id: 114
 title: isUnblockSession bool flag instead of SessionType enum case
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 075
 title: DeenScore formula does not match PRD spec (clamp(50 + positives - negatives))
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

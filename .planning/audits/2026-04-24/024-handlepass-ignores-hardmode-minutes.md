@@ -3,7 +3,7 @@ id: 024
 title: handlePass() uses tier.minutes instead of tier.minutes(isHardMode:) — Hard Mode grant wrong
 severity: P1
 area: hard-mode
-status: open
+status: closed
 ---
 
 ## Problem

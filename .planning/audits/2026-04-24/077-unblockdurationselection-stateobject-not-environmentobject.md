@@ -3,7 +3,7 @@ id: 077
 title: UnblockDurationSelectionView uses @StateObject for ViewModel — not consistent with other tab VMs
 severity: P3
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

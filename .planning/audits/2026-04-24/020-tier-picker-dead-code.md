@@ -3,7 +3,7 @@ id: 020
 title: UnblockDurationSelectionView is dead code — never navigated to
 severity: P0
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem
