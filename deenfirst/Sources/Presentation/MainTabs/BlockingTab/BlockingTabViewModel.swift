@@ -78,7 +78,8 @@ final class BlockingTabViewModel: ObservableObject {
                 continue
             }
 
-            let remaining = Int(expiry - Date().timeIntervalSince1970)
+            let expiresAt = Date(timeIntervalSince1970: expiry)
+            let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
             guard remaining > 0 else {
                 // Already expired — stop timer and trigger re-block
                 stopCountdown(for: rule.id)
@@ -87,11 +88,11 @@ final class BlockingTabViewModel: ObservableObject {
             }
 
             unblockRemainingSeconds[rule.id] = remaining
-            startCountdownTimer(ruleId: rule.id, expiry: expiry)
+            startCountdownTimer(ruleId: rule.id, expiresAt: expiresAt)
         }
     }
 
-    private func startCountdownTimer(ruleId: UUID, expiry: TimeInterval) {
+    private func startCountdownTimer(ruleId: UUID, expiresAt: Date) {
         // Cancel existing timer for this rule before starting a new one
         countdownTimers[ruleId]?.cancel()
 
@@ -99,7 +100,7 @@ final class BlockingTabViewModel: ObservableObject {
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
-                let remaining = Int(expiry - Date().timeIntervalSince1970)
+                let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
                 if remaining <= 0 {
                     self.stopCountdown(for: ruleId)
                     Task { await self.screenTimeRulesService.reblockIfExpired(ruleId: ruleId) }
@@ -198,9 +199,7 @@ final class BlockingTabViewModel: ObservableObject {
     /// Returns "4:32" style display string for a specific rule's countdown, or nil if not unblocked.
     func countdownDisplay(for ruleId: UUID) -> String? {
         guard let seconds = unblockRemainingSeconds[ruleId] else { return nil }
-        let m = seconds / 60
-        let s = seconds % 60
-        return String(format: "%d:%02d", m, s)
+        return UnblockCountdownCalculator.formatted(remaining: TimeInterval(seconds))
     }
 
     func hasPendingChange(for ruleId: UUID) -> Bool {
