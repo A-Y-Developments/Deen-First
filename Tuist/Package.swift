@@ -14,6 +14,5 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/RevenueCat/purchases-ios.git", from: "5.57.0"),
         .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.10.0"),
-        .package(url: "https://github.com/lucaszischka/BottomSheet.git", from: "3.1.1"),
     ]
 )

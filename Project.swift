@@ -1,6 +1,5 @@
 import ProjectDescription
 
-let companyId = Environment.companyId.getString(default: "")
 let teamId = Environment.teamId.getString(default: "")
 let baseBundleId = Environment.baseBundleId.getString(default: "")
 let revenueCatApiKeyDebug = Environment.revenuecatApiKey.getString(default: "")
@@ -52,7 +51,6 @@ let project = Project(
             dependencies: [
                 .external(name: "RevenueCat"),
                 .external(name: "Alamofire"),
-                .external(name: "BottomSheet"),
                 .target(name: "ScreenTimeMonitor"),
                 .target(name: "Shield"),
                 .target(name: "DeenFirstActivityReport"),
