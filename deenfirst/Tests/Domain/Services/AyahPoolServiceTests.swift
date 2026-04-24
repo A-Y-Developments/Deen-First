@@ -9,6 +9,9 @@ final class AyahPoolServiceTests: XCTestCase {
     var localDataSource: LocalDataSource!
     var service: AyahPoolServiceImpl!
 
+    /// Five-word Arabic ayah snippet — passes `minWordCountForEligibility`.
+    private let eligibleArabic = "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ"
+
     override func setUp() async throws {
         let schema = Schema([AyahPoolItem.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -31,8 +34,8 @@ final class AyahPoolServiceTests: XCTestCase {
     }
 
     func testFetchPool_returnsAllItems() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "بِسْمِ اللَّهِ", transliteration: "Bismillah")
-        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: "اللَّهُ لَا إِلَٰهَ", transliteration: "Allahu la ilaha")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "Bismillah")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: eligibleArabic, transliteration: "Allahu la ilaha")
         let pool = await service.fetchPool()
         XCTAssertEqual(pool.count, 2)
     }
@@ -40,45 +43,57 @@ final class AyahPoolServiceTests: XCTestCase {
     // MARK: - addAyah
 
     func testAddAyah_storesWordCount() async throws {
-        let arabic = "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ"
-        let expectedCount = arabic.components(separatedBy: .whitespaces).filter { !$0.isEmpty }.count
-        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: arabic, transliteration: "test")
+        let expectedCount = eligibleArabic.components(separatedBy: .whitespaces).filter { !$0.isEmpty }.count
+        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: eligibleArabic, transliteration: "test")
         let pool = await service.fetchPool()
         XCTAssertEqual(pool.first?.wordCount, expectedCount)
     }
 
-    func testAddAyah_wordCountNotRecomputed() async throws {
-        let arabic = "كلمة كلمة كلمة"
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: arabic, transliteration: "t")
-        let pool = await service.fetchPool()
-        XCTAssertEqual(pool.first?.wordCount, 3)
+    func testAddAyah_rejectsAyahShorterThanMinimum() async {
+        do {
+            try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "كلمة كلمة كلمة", transliteration: "t")
+            XCTFail("Expected ayahTooShort error")
+        } catch AyahPoolError.ayahTooShort(let wordCount, let minimum) {
+            XCTAssertEqual(wordCount, 3)
+            XCTAssertEqual(minimum, 5)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        let count = await service.poolCount()
+        XCTAssertEqual(count, 0, "Rejected ayahs must not be persisted")
+    }
+
+    func testAddAyah_acceptsExactlyFiveWords() async throws {
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a b c d e", transliteration: "t")
+        let count = await service.poolCount()
+        XCTAssertEqual(count, 1)
     }
 
     func testAddAyah_throwsPoolFullAtMax() async throws {
         for i in 1...20 {
-            try await service.addAyah(surahNumber: i, ayahNumber: 1, arabicText: "word", transliteration: "t")
+            try await service.addAyah(surahNumber: i, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "t")
         }
         do {
-            try await service.addAyah(surahNumber: 21, ayahNumber: 1, arabicText: "word", transliteration: "t")
+            try await service.addAyah(surahNumber: 21, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "t")
             XCTFail("Expected poolFull error")
-        } catch AyahPoolError.poolFull {
-            // expected
+        } catch AyahPoolError.poolFull(let max) {
+            XCTAssertEqual(max, 20)
         }
     }
 
     func testAddAyah_doesNotExceedMaxAfterFull() async throws {
         for i in 1...20 {
-            try await service.addAyah(surahNumber: i, ayahNumber: 1, arabicText: "word", transliteration: "t")
+            try await service.addAyah(surahNumber: i, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "t")
         }
-        try? await service.addAyah(surahNumber: 21, ayahNumber: 1, arabicText: "word", transliteration: "t")
+        try? await service.addAyah(surahNumber: 21, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "t")
         let count = await service.poolCount()
         XCTAssertEqual(count, 20)
     }
 
     func testAddAyah_throwsAlreadyInPool() async throws {
-        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: "test", transliteration: "test")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: eligibleArabic, transliteration: "test")
         do {
-            try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: "other", transliteration: "other")
+            try await service.addAyah(surahNumber: 2, ayahNumber: 255, arabicText: eligibleArabic, transliteration: "other")
             XCTFail("Expected alreadyInPool error")
         } catch AyahPoolError.alreadyInPool {
             // expected
@@ -86,15 +101,15 @@ final class AyahPoolServiceTests: XCTestCase {
     }
 
     func testAddAyah_allowsDifferentAyahSameSurah() async throws {
-        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: "a", transliteration: "a")
-        try await service.addAyah(surahNumber: 2, ayahNumber: 2, arabicText: "b", transliteration: "b")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 2, arabicText: eligibleArabic, transliteration: "b")
         let count = await service.poolCount()
         XCTAssertEqual(count, 2)
     }
 
     func testAddAyah_allowsSameAyahDifferentSurah() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a", transliteration: "a")
-        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: "b", transliteration: "b")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "b")
         let count = await service.poolCount()
         XCTAssertEqual(count, 2)
     }
@@ -102,20 +117,20 @@ final class AyahPoolServiceTests: XCTestCase {
     // MARK: - removeAyah
 
     func testRemoveAyah_removesCorrectItem() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a", transliteration: "a")
-        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: "b", transliteration: "b")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "b")
         let pool = await service.fetchPool()
         guard let target = pool.first(where: { $0.surahNumber == 1 }) else {
             return XCTFail("Could not find item to remove")
         }
-        await service.removeAyah(id: target.id)
+        try await service.removeAyah(id: target.id)
         let remaining = await service.fetchPool()
         XCTAssertEqual(remaining.count, 1)
         XCTAssertEqual(remaining.first?.surahNumber, 2)
     }
 
-    func testRemoveAyah_noOpForUnknownId() async {
-        await service.removeAyah(id: UUID())
+    func testRemoveAyah_noOpForUnknownId() async throws {
+        try await service.removeAyah(id: UUID())
         let count = await service.poolCount()
         XCTAssertEqual(count, 0)
     }
@@ -128,10 +143,10 @@ final class AyahPoolServiceTests: XCTestCase {
     }
 
     func testPoolCount_incrementsOnAdd() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a", transliteration: "a")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
         let count1 = await service.poolCount()
         XCTAssertEqual(count1, 1)
-        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: "b", transliteration: "b")
+        try await service.addAyah(surahNumber: 2, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "b")
         let count2 = await service.poolCount()
         XCTAssertEqual(count2, 2)
     }
@@ -144,16 +159,16 @@ final class AyahPoolServiceTests: XCTestCase {
     }
 
     func testIsEmpty_falseAfterAdd() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a", transliteration: "a")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
         let empty = await service.isEmpty()
         XCTAssertFalse(empty)
     }
 
     func testIsEmpty_trueAfterRemoveLast() async throws {
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a", transliteration: "a")
+        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a")
         let pool = await service.fetchPool()
         guard let item = pool.first else { return XCTFail("No item") }
-        await service.removeAyah(id: item.id)
+        try await service.removeAyah(id: item.id)
         let empty = await service.isEmpty()
         XCTAssertTrue(empty)
     }
@@ -165,39 +180,38 @@ final class AyahPoolServiceTests: XCTestCase {
         XCTAssertNil(service.nextAyah(excludeShort: true))
     }
 
-    func testNextAyah_excludeShortFiltersShortAyah() async throws {
-        // wordCount 3 — short
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a b c", transliteration: "abc")
+    /// Defense-in-depth: even if a short ayah ends up in the store (migration, older data),
+    /// `nextAyah(excludeShort: true)` must filter it out.
+    func testNextAyah_excludeShortFiltersShortAyah() throws {
+        let short = AyahPoolItem(
+            surahNumber: 1, ayahNumberInSurah: 1,
+            arabicText: "a b c", transliteration: "abc", wordCount: 3
+        )
+        try localDataSource.insertAyahPoolItem(short)
         XCTAssertNil(service.nextAyah(excludeShort: true))
         XCTAssertNotNil(service.nextAyah(excludeShort: false))
     }
 
     func testNextAyah_excludeShortIncludesLongAyah() async throws {
-        // wordCount >= 5
         try await service.addAyah(
             surahNumber: 2, ayahNumber: 255,
-            arabicText: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ",
+            arabicText: eligibleArabic,
             transliteration: "Allahu la ilaha illa huwa"
         )
         XCTAssertNotNil(service.nextAyah(excludeShort: true))
     }
 
-    func testNextAyah_returnsItemFromPool() async throws {
-        try await service.addAyah(surahNumber: 36, ayahNumber: 1, arabicText: "يس", transliteration: "Ya Seen")
-        let result = service.nextAyah(excludeShort: false)
-        XCTAssertNotNil(result)
-        XCTAssertEqual(result?.surahNumber, 36)
-    }
-
     func testNextAyah_boundaryWordCountFive_includedWhenExcludeShort() async throws {
-        // Exactly 5 words — eligible
         try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a b c d e", transliteration: "t")
         XCTAssertNotNil(service.nextAyah(excludeShort: true))
     }
 
-    func testNextAyah_boundaryWordCountFour_excludedWhenExcludeShort() async throws {
-        // Exactly 4 words — not eligible
-        try await service.addAyah(surahNumber: 1, ayahNumber: 1, arabicText: "a b c d", transliteration: "t")
+    func testNextAyah_boundaryWordCountFour_excludedWhenExcludeShort() throws {
+        let fourWord = AyahPoolItem(
+            surahNumber: 1, ayahNumberInSurah: 1,
+            arabicText: "a b c d", transliteration: "t", wordCount: 4
+        )
+        try localDataSource.insertAyahPoolItem(fourWord)
         XCTAssertNil(service.nextAyah(excludeShort: true))
     }
 }

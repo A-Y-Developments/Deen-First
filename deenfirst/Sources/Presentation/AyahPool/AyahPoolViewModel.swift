@@ -51,7 +51,11 @@ final class AyahPoolViewModel: ObservableObject {
 
     func remove(id: UUID) {
         Task {
-            await ayahPoolService.removeAyah(id: id)
+            do {
+                try await ayahPoolService.removeAyah(id: id)
+            } catch {
+                errorMessage = "Could not remove ayah. Please try again."
+            }
             items = await ayahPoolService.fetchPool()
                 .sorted { $0.addedAt < $1.addedAt }
         }

@@ -161,8 +161,12 @@ final class MockAyahPoolService: AyahPoolService {
     var pool: [AyahPoolItem] = []
     var removedIds: [UUID] = []
     var addedCalls: [AddCall] = []
-    /// If set to N, the (N+1)th addAyah call throws `AyahPoolError.poolFull`.
+    /// If set to N, the (N+1)th addAyah call throws `AyahPoolError.poolFull(max:)`.
     var throwPoolFullAfter: Int?
+    /// If true, the next addAyah call throws `AyahPoolError.ayahTooShort(...)`.
+    var throwAyahTooShortOnce = false
+    /// Forces removeAyah to throw for error-surfacing tests.
+    var throwOnRemove = false
 
     func fetchPool() async -> [AyahPoolItem] { pool }
 
@@ -172,13 +176,18 @@ final class MockAyahPoolService: AyahPoolService {
         arabicText: String,
         transliteration: String
     ) async throws {
+        if throwAyahTooShortOnce {
+            throwAyahTooShortOnce = false
+            throw AyahPoolError.ayahTooShort(wordCount: 3, minimum: 5)
+        }
         if let limit = throwPoolFullAfter, addedCalls.count >= limit {
-            throw AyahPoolError.poolFull
+            throw AyahPoolError.poolFull(max: 20)
         }
         addedCalls.append(AddCall(surah: surahNumber, ayah: ayahNumber))
     }
 
-    func removeAyah(id: UUID) async {
+    func removeAyah(id: UUID) async throws {
+        if throwOnRemove { throw MockRemoveError.forced }
         removedIds.append(id)
         pool.removeAll { $0.id == id }
     }
@@ -189,6 +198,8 @@ final class MockAyahPoolService: AyahPoolService {
 
     func isEmpty() async -> Bool { pool.isEmpty }
 }
+
+enum MockRemoveError: Error { case forced }
 
 final class MockQuranServiceForPool: QuranService {
     var surahsToReturn: [Surah] = []
