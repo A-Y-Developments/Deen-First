@@ -18,29 +18,17 @@ struct PrimaryButton: View {
             HStack {
                 if isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .tint(Color.primary900)
                 } else {
                     Text(title)
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(
-                isEnabled ?
-                LinearGradient(
-                    colors: [Color(hex: "4facfe"), Color(hex: "00f2fe")],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                ) :
-                LinearGradient(
-                    colors: [Color.gray.opacity(0.5), Color.gray.opacity(0.5)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .foregroundColor(.white)
-            .cornerRadius(16)
+            .padding()
+            .background(isEnabled ? Color.white : Color.white.opacity(0.3))
+            .foregroundColor(isEnabled ? Color.primary900 : Color.primary900.opacity(0.5))
+            .clipShape(Capsule())
         }
         .disabled(!isEnabled || isLoading)
     }
