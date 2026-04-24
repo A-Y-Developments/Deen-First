@@ -75,6 +75,17 @@ final class DIContainer {
     @MainActor
     lazy var ayahPoolService: AyahPoolService = AyahPoolServiceImpl(localDataSource: localDataSource)
 
+    lazy var whisperTranscriber: Transcriber = WhisperTranscriber()
+
+    lazy var recitationScoringService: RecitationScoringService =
+        RecitationScoringServiceImpl(transcriber: whisperTranscriber)
+
+    @MainActor
+    lazy var ayahSequenceProvider: AyahSequenceProvider = AyahSequenceProviderImpl(
+        ayahPoolService: ayahPoolService,
+        quranService: quranService
+    )
+
     lazy var dashboardDataWriter: DashboardDataWriter = DashboardDataWriterImpl()
 
     @MainActor
