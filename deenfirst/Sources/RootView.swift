@@ -35,18 +35,20 @@ struct RootView: View {
             Group {
                 if isCheckingState {
                     LoadingOverlay()
-                } else if currentUser == nil {
-                    AuthView()
-                } else if !currentUser!.hasCompletedOnboarding {
-                    SurveyView()
-                } else if !isPremium {
-                    PaywallView()
-                } else if !isScreenTimeAuthorized {
-                    PermissionView()
-                } else if !hasCompletedSetup {
-                    AppToBlock()
+                } else if let user = currentUser {
+                    if !user.hasCompletedOnboarding {
+                        SurveyView()
+                    } else if !isPremium {
+                        PaywallView()
+                    } else if !isScreenTimeAuthorized {
+                        PermissionView()
+                    } else if !hasCompletedSetup {
+                        AppToBlock()
+                    } else {
+                        MainTabView()
+                    }
                 } else {
-                    MainTabView()
+                    AuthView()
                 }
             }
             .navigationDestination(for: Router.Route.self) { route in
@@ -75,11 +77,13 @@ struct RootView: View {
         .environmentObject(timeLimitViewModel)
         .environmentObject(supportViewModel)
         .task {
-            DIContainer.shared.dashboardDataWriter.flush()
             await DIContainer.shared.pendingChangeService.applyExpiredChanges()
             await DIContainer.shared.sessionService.cleanupOrphanedSessions()
             try? await DIContainer.shared.sessionService.checkAndResetStreakIfNeeded()
             await DIContainer.shared.notificationSchedulingService.scheduleMotivationalNotifications()
+            // Stamp App Group freshness AFTER writes so the extension never
+            // sees a fresh timestamp pointing at stale data.
+            DIContainer.shared.dashboardDataWriter.flush()
             await checkUserState()
         }
         .onReceive(NotificationCenter.default.publisher(for: .didSignIn)) { _ in
@@ -107,7 +111,6 @@ struct RootView: View {
         .onReceive(
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in
-            DIContainer.shared.dashboardDataWriter.flush()
             Task {
                 await DIContainer.shared.pendingChangeService.applyExpiredChanges()
                 await DIContainer.shared.sessionService.cleanupOrphanedSessions()
@@ -115,6 +118,9 @@ struct RootView: View {
                 await DIContainer.shared.screenTimeRulesService.reblockAllExpired()
                 await DIContainer.shared.screenTimeRulesService.reblockEmergencyIfExpired()
                 await DIContainer.shared.notificationSchedulingService.scheduleMotivationalNotifications()
+                // Stamp AFTER writes complete — stamping before the async work
+                // would advertise fresh data that may still be catching up.
+                DIContainer.shared.dashboardDataWriter.flush()
             }
         }
     }
