@@ -43,11 +43,8 @@ struct CircularPlusButton: View {
 
 struct BlockingTabView: View {
     @EnvironmentObject private var viewModel: BlockingTabViewModel
-    @EnvironmentObject private var reciteToUnblockViewModel: ReciteToUnblockViewModel
     @EnvironmentObject var router: Router
     @State private var showCreateSheet = false
-    @State private var showUnblockSheet = false
-    @State private var pendingUnblockRuleId: UUID? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -75,14 +72,6 @@ struct BlockingTabView: View {
             CreateBlockSheet()
                 .environmentObject(router)
                 .presentationDetents([.fraction(0.5)])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(Color.primary900)
-        }
-        .sheet(isPresented: $showUnblockSheet) {
-            UnblockDurationSheet(ruleId: pendingUnblockRuleId)
-                .environmentObject(reciteToUnblockViewModel)
-                .environmentObject(router)
-                .presentationDetents([.fraction(0.55)])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.primary900)
         }
@@ -157,8 +146,7 @@ struct BlockingTabView: View {
                     hasPendingChange: viewModel.hasPendingChange(for: limit.id),
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
-                        pendingUnblockRuleId = limit.id
-                        showUnblockSheet = true
+                        router.navigate(to: .unblockDurationSelection(ruleId: limit.id))
                     },
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
@@ -187,8 +175,7 @@ struct BlockingTabView: View {
                     hasPendingChange: viewModel.hasPendingChange(for: limit.id),
                     showUnblockButton: viewModel.isRuleCurrentlyBlocking(limit),
                     onUnblock: {
-                        pendingUnblockRuleId = limit.id
-                        showUnblockSheet = true
+                        router.navigate(to: .unblockDurationSelection(ruleId: limit.id))
                     },
                     countdownDisplay: viewModel.countdownDisplay(for: limit.id)
                 )
