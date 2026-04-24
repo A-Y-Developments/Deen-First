@@ -124,11 +124,10 @@ final class ActiveSessionViewModelTieredUnblockTests: XCTestCase {
     private func makeSession(unlockRuleId: UUID) -> Session {
         Session(
             userId: UUID(),
-            type: .listening,
+            modality: .listening,
             surahNumbers: [1],
             reciterId: 1,
-            isUnblockSession: true,
-            unlockRuleId: unlockRuleId
+            type: .unblock(ruleId: unlockRuleId)
         )
     }
 
@@ -151,8 +150,13 @@ final class MockSessionServiceForActive: SessionService {
     var endSessionCalled = false
     var savedDurationSeconds: Int?
 
-    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int?) async throws -> Session {
-        Session(userId: UUID(), type: type, surahNumbers: surahNumbers, reciterId: reciterId)
+    func startSession(
+        modality: Session.SessionModality,
+        surahNumbers: [Int],
+        reciterId: Int?,
+        type: SessionType
+    ) async throws -> Session {
+        Session(userId: UUID(), modality: modality, surahNumbers: surahNumbers, reciterId: reciterId, type: type)
     }
 
     func endSession(_ session: Session, durationSeconds: Int) async throws {

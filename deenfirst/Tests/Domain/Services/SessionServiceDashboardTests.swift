@@ -41,7 +41,7 @@ final class SessionServiceDashboardTests: XCTestCase {
     // MARK: - endSession
 
     func testEndSession_listening_recordsFocusSession() async throws {
-        let session = Session(userId: UUID(), type: .listening, surahNumbers: [1])
+        let session = Session(userId: UUID(), modality: .listening, surahNumbers: [1])
 
         try await service.endSession(session, durationSeconds: 300)
 
@@ -49,7 +49,7 @@ final class SessionServiceDashboardTests: XCTestCase {
     }
 
     func testEndSession_reading_doesNotRecordFocusSession() async throws {
-        let session = Session(userId: UUID(), type: .reading, surahNumbers: [1])
+        let session = Session(userId: UUID(), modality: .reading, surahNumbers: [1])
 
         try await service.endSession(session, durationSeconds: 300)
 
@@ -57,7 +57,7 @@ final class SessionServiceDashboardTests: XCTestCase {
     }
 
     func testEndSession_zeroDuration_doesNotRecord() async throws {
-        let session = Session(userId: UUID(), type: .listening, surahNumbers: [1])
+        let session = Session(userId: UUID(), modality: .listening, surahNumbers: [1])
 
         try await service.endSession(session, durationSeconds: 0)
 

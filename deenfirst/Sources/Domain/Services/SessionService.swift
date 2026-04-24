@@ -49,12 +49,32 @@ final class SessionRepositoryImpl: SessionRepository {
 // MARK: - Session Service Protocol
 
 protocol SessionService {
-    func startSession(type: Session.SessionType, surahNumbers: [Int], reciterId: Int?) async throws -> Session
+    func startSession(
+        modality: Session.SessionModality,
+        surahNumbers: [Int],
+        reciterId: Int?,
+        type: SessionType
+    ) async throws -> Session
     func endSession(_ session: Session, durationSeconds: Int) async throws
     func getTodaySession(for userId: UUID) async throws -> Session?
     func updateStreak(for userId: UUID) async throws
     func checkAndResetStreakIfNeeded() async throws
     func cleanupOrphanedSessions() async  // ← ADD
+}
+
+extension SessionService {
+    func startSession(
+        modality: Session.SessionModality,
+        surahNumbers: [Int],
+        reciterId: Int? = nil
+    ) async throws -> Session {
+        try await startSession(
+            modality: modality,
+            surahNumbers: surahNumbers,
+            reciterId: reciterId,
+            type: .normal
+        )
+    }
 }
 
 // MARK: - Session Service Errors
@@ -94,23 +114,25 @@ final class SessionServiceImpl: SessionService {
     // MARK: - Start Session
 
     func startSession(
-        type: Session.SessionType,
+        modality: Session.SessionModality,
         surahNumbers: [Int],
-        reciterId: Int? = nil
+        reciterId: Int? = nil,
+        type: SessionType = .normal
     ) async throws -> Session {
         guard let user = try await userRepository.getCurrentUser() else {
             throw SessionServiceError.noUser
         }
 
-        if type == .listening {
+        if modality == .listening {
             await applySessionShields()
         }
 
         let session = Session(
             userId: user.id,
-            type: type,
+            modality: modality,
             surahNumbers: surahNumbers,
-            reciterId: reciterId
+            reciterId: reciterId,
+            type: type
         )
 
         try await sessionRepository.save(session)
@@ -120,7 +142,10 @@ final class SessionServiceImpl: SessionService {
             UserDefaults.standard.set(reciterId, forKey: "lastReciterId")
         }
 
-        try await updateStreak(for: user.id)
+        // DF-110: streak must not bump for unblock sessions — they're friction, not habit.
+        if !session.type.isUnblock {
+            try await updateStreak(for: user.id)
+        }
 
         return session
     }
@@ -132,14 +157,14 @@ final class SessionServiceImpl: SessionService {
         session.durationSeconds = durationSeconds
         session.isCompleted = true
 
-        if session.type == .listening {
+        if session.modality == .listening {
             await removeSessionShields()
         }
 
         try await sessionRepository.updateSession(session)
 
         // Dashboard: record only completed listening (focus) sessions.
-        if session.type == .listening, durationSeconds > 0 {
+        if session.modality == .listening, durationSeconds > 0 {
             dashboardDataWriter?.recordFocusSession(duration: TimeInterval(durationSeconds))
         }
     }
