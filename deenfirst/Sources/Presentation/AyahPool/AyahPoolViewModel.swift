@@ -5,6 +5,7 @@ final class AyahPoolViewModel: ObservableObject {
     @Published private(set) var items: [AyahPoolItem] = []
     @Published private(set) var surahNames: [Int: String] = [:]
     @Published private(set) var isLoading = false
+    @Published private(set) var isRemoving = false
     @Published var errorMessage: String?
     @Published var showPoolFullAlert = false
 
@@ -49,6 +50,7 @@ final class AyahPoolViewModel: ObservableObject {
 
     func remove(id: UUID) {
         Task {
+            isRemoving = true
             do {
                 try await ayahPoolService.removeAyah(id: id)
             } catch {
@@ -56,6 +58,7 @@ final class AyahPoolViewModel: ObservableObject {
             }
             items = await ayahPoolService.fetchPool()
                 .sorted { $0.addedAt < $1.addedAt }
+            isRemoving = false
         }
     }
 

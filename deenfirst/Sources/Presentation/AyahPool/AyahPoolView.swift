@@ -79,6 +79,17 @@ struct AyahPoolView: View {
             emptyStateView
         } else {
             listView
+                .overlay(alignment: .top) {
+                    if viewModel.isRemoving {
+                        ProgressView()
+                            .progressViewStyle(.circular)
+                            .tint(.white)
+                            .padding(8)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Capsule())
+                            .padding(.top, 8)
+                    }
+                }
         }
     }
 
