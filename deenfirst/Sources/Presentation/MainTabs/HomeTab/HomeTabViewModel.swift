@@ -132,7 +132,8 @@ final class HomeTabViewModel: ObservableObject {
                 continue
             }
 
-            let remaining = Int(expiry - Date().timeIntervalSince1970)
+            let expiresAt = Date(timeIntervalSince1970: expiry)
+            let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
             guard remaining > 0 else {
                 stopCountdown(for: rule.id)
                 Task { await screenTimeRulesService.reblockIfExpired(ruleId: rule.id) }
@@ -140,11 +141,11 @@ final class HomeTabViewModel: ObservableObject {
             }
 
             unblockRemainingSeconds[rule.id] = remaining
-            startCountdownTimer(ruleId: rule.id, expiry: expiry)
+            startCountdownTimer(ruleId: rule.id, expiresAt: expiresAt)
         }
     }
 
-    private func startCountdownTimer(ruleId: UUID, expiry: TimeInterval) {
+    private func startCountdownTimer(ruleId: UUID, expiresAt: Date) {
         countdownTimers[ruleId]?.cancel()
 
         countdownTimers[ruleId] = Timer.publish(every: 1, on: .main, in: .common)
@@ -152,7 +153,7 @@ final class HomeTabViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
 
-                let remaining = Int(expiry - Date().timeIntervalSince1970)
+                let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
                 if remaining <= 0 {
                     self.stopCountdown(for: ruleId)
                     Task { await self.screenTimeRulesService.reblockIfExpired(ruleId: ruleId) }
@@ -181,9 +182,7 @@ final class HomeTabViewModel: ObservableObject {
 
     func countdownDisplay(for ruleId: UUID) -> String? {
         guard let seconds = unblockRemainingSeconds[ruleId] else { return nil }
-        let m = seconds / 60
-        let s = seconds % 60
-        return String(format: "%d:%02d", m, s)
+        return UnblockCountdownCalculator.formatted(remaining: TimeInterval(seconds))
     }
 
     var visibleAppLimits: [ScreenTimeRule] {
