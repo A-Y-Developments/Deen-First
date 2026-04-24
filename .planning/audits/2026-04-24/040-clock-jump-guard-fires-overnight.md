@@ -3,7 +3,7 @@ id: 040
 title: Clock-jump guard fires on overnight sleep, blocking legitimate applies
 severity: P1
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

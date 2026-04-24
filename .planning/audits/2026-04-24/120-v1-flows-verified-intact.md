@@ -3,7 +3,7 @@ id: 120
 title: V1 core flows verified intact (negative finding)
 severity: P3
 area: v1-regression
-status: open
+status: closed
 ---
 
 ## Problem

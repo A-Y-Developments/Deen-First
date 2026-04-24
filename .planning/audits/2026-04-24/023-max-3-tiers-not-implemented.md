@@ -3,7 +3,7 @@ id: 023
 title: Max-3-tiers-per-blocking-session rule not implemented
 severity: P1
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem

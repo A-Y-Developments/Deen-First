@@ -3,7 +3,7 @@ id: 054
 title: AyahPoolSurahPickerViewModel.addSelected() stops on poolFull with no per-ayah feedback
 severity: P2
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

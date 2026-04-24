@@ -3,7 +3,7 @@ id: 078
 title: ReciteToUnblockViewModel calls Whisper API directly via URLSession — bypasses HTTPClient service
 severity: P1
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

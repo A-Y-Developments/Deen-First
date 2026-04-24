@@ -3,7 +3,7 @@ id: 061
 title: Force unwrap on currentUser in RootView
 severity: P1
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

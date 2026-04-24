@@ -3,7 +3,7 @@ id: 031
 title: poolNudgeDateKey hardcoded inline in ViewModel — should be in AppGroupConstants
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

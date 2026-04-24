@@ -3,7 +3,7 @@ id: 049
 title: AyahPoolService.addAyah stores wordCount < 5 ayahs that are silently unusable in Hard Mode
 severity: P1
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

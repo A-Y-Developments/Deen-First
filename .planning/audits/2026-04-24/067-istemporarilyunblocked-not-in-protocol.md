@@ -3,7 +3,7 @@ id: 067
 title: isTemporarilyUnblocked and unblockRemainingSeconds not declared in ScreenTimeRulesService protocol
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

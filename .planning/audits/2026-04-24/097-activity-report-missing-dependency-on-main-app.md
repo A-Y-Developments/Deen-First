@@ -3,7 +3,7 @@ id: 097
 title: DeenFirstActivityReport was not a dependency of main app in committed state — working tree fix is correct
 severity: P0
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

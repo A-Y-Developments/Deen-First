@@ -3,7 +3,7 @@ id: 113
 title: ReciteToUnblockViewModel is 631 lines — needs decomposition
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

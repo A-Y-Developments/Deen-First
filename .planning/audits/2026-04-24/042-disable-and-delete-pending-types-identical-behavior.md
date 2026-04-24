@@ -3,7 +3,7 @@ id: 042
 title: PendingChangeType .disable and .delete both call applyDelete — identical behavior
 severity: P1
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

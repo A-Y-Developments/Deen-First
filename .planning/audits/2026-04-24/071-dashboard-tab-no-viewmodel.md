@@ -3,7 +3,7 @@ id: 071
 title: DashboardTabView has no ViewModel — local @State drives all logic
 severity: P2
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

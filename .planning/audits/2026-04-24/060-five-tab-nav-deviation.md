@@ -3,7 +3,7 @@ id: 060
 title: Dashboard is a separate tab — user wants 4-tab navigation
 severity: P1
 area: nav
-status: open
+status: closed
 ---
 
 ## Problem

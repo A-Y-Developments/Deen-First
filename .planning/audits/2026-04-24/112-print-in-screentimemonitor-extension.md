@@ -3,7 +3,7 @@ id: 112
 title: 15 print() calls in ScreenTimeMonitor extension
 severity: P1
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

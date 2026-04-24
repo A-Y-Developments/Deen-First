@@ -3,7 +3,7 @@ id: 098
 title: Shield extension does not include Shared/ sources — verified safe (no AppGroupConstants use)
 severity: P3
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

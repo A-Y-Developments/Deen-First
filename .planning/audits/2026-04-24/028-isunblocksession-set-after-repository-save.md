@@ -3,7 +3,7 @@ id: 028
 title: isUnblockSession set on Session after repository.save() — flag not persisted on crash
 severity: P1
 area: unblock
-status: open
+status: closed
 ---
 
 ## Problem

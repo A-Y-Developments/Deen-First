@@ -3,7 +3,7 @@ id: 099
 title: App Group entitlements consistent across all 4 targets — no violations found
 severity: P3
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

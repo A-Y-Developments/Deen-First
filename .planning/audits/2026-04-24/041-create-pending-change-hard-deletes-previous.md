@@ -3,7 +3,7 @@ id: 041
 title: createPendingChange hard-deletes previous change, losing audit trail
 severity: P2
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

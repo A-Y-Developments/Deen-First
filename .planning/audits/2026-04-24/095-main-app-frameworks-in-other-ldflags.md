@@ -3,7 +3,7 @@ id: 095
 title: FamilyControls/DeviceActivity/ManagedSettings linked via OTHER_LDFLAGS instead of SDK dependencies
 severity: P2
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

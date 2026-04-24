@@ -3,7 +3,7 @@ id: 096
 title: companyId env var declared but never used in Project.swift
 severity: P3
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

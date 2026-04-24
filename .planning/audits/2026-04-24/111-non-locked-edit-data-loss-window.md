@@ -3,7 +3,7 @@ id: 111
 title: Non-locked rule edit has data-loss window
 severity: P1
 area: v1-regression
-status: open
+status: closed
 ---
 
 ## Problem

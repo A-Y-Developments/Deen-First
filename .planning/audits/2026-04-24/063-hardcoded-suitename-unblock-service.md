@@ -3,7 +3,7 @@ id: 063
 title: Hardcoded UserDefaults suiteName in ScreenTimeRulesService+Unblock
 severity: P3
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

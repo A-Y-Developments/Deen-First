@@ -3,7 +3,7 @@ id: 027
 title: callWhisperAPI uses URLSession.shared directly and force-unwraps URL — two rule violations
 severity: P1
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

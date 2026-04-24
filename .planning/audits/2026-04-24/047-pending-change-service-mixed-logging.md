@@ -3,7 +3,7 @@ id: 047
 title: PendingChangeService mixes print() and Logger — violates logging rule
 severity: P3
 area: lock-editing
-status: open
+status: closed
 ---
 
 ## Problem

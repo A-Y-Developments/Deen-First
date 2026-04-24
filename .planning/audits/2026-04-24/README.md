@@ -4,6 +4,71 @@ Full audit of V2 (DF-1..DF-42) against PRD, architecture rules, and code. 82 fin
 
 ---
 
+## RESOLVED — 2026-04-24 sweep (Wave 3)
+
+Post-Wave-2 closure pass. Pipeline green (`make install && make generate && make build && make test` — 506 tests, 0 failures). 60 of 82 audits flipped `status: open → status: closed` after code-level verification. 1 audit kept pre-existing `status: reviewed-false-positive` (093). 21 remain `status: open`, split into two buckets below.
+
+### Closure counts by area
+
+| Area | Total | Closed | Device-pending | Still open | Negative / False-positive |
+|---|---|---|---|---|---|
+| Dashboard (001–008) | 8 | 5 | 3 | 0 | 0 |
+| Unblock / Hard Mode (020–035) | 16 | 9 | 1 | 6 | 0 |
+| Lock Editing / Ayah Pool (040–055) | 16 | 13 | 1 | 2 | 0 |
+| Navigation / Architecture (060–078) | 19 | 17 | 0 | 2 | 0 |
+| Infra / Tuist (090–101) | 12 | 7 | 1 | 3 | 1 (093) |
+| V1 regression + quality (110–120) | 11 | 9 | 0 | 2 | 0 (120 closed as verified intact) |
+| **Total** | **82** | **60** | **6** | **15** | **1** |
+
+### Code change shipped — pending physical-device verification (6)
+
+Code matches the Solution but the Wave 3 Step 3 device checklist must confirm behavior. Frontmatter kept at `status: open` until device-pass.
+
+| # | Reason |
+|---|---|
+| 001 | `.extensionKitExtension` + `EXAppExtensionAttributes` in place — need device to confirm extension actually loads |
+| 002 | `DashboardDetailView` instantiates all 5 contexts — need device to confirm they render |
+| 003 | `.daily(during:)` 7-segment filter in place — need device to confirm 7 bars render |
+| 021 | Legacy `UnblockDurationSheet` removed; tier 3 routes to `.focusSection` — need device to walk flow |
+| 043 | `.disableHardMode` apply now clears `isLockEditingEnabled` — need device to exercise pending apply |
+| 090 | Extension point identifier fixed per Apple recipe — behavior is device-behavioral |
+
+### Still open — no code fix landed (15)
+
+**Follow-up tickets NOT yet created** — this is an outstanding Wave 3 action. Each item below needs a Linear ticket that references its audit number (e.g., title `DF-NNN: fix audit 025 — dynamic "Ayah N Complete"`). Until those tickets exist, this wave does not meet the Step 5 acceptance criterion *"All 82 audits are either status: closed or have an explicit follow-up ticket referenced."*
+
+| # | Why still open |
+|---|---|
+| 025 | `awaitingNextAyah` still hardcodes "Ayah 1 Complete" — no dynamic index threaded through enum case |
+| 029 | `showPoolNudge` has no reset path — flag stays true after first nudge |
+| 032 | `UnblockTier` still defined in Presentation layer (`UnblockDurationSelectionViewModel.swift`) |
+| 033 | `SessionService.recordFocusSession()` still fires for `.listening` unblock sessions — no `!isUnblockSession` gate |
+| 034 | `Text("🔥")` emoji literal still in `TierCardView` — not replaced with SF Symbol |
+| 035 | `isHardMode` still recomputed via `getRule()` on every access — no snapshot |
+| 044 | Hard Mode coupling UX: silent force-enable removed from config init, but confirmation dialog not added |
+| 055 | No `BGTaskScheduler` registration for pending-change apply — still foreground-only |
+| 066 | Countdown timer logic still duplicated in `HomeTabViewModel` + `BlockingTabViewModel` — no shared helper extracted for the live timer (the DF-066 refactor only extracted `UnblockCountdownCalculator` for static time math) |
+| 068 | `AyahPoolViewModel` still instantiated inside view; not hoisted to `RootView` as `@EnvironmentObject` |
+| 091 | Shield provisioning profile names still contain spaces and diverge across targets |
+| 092 | Main app profile name still contains a space |
+| 094 | `DeenFirstTests` target still has no explicit `Shared/**` source glob — `Shared/` is compiled twice |
+| 115 | `UnblockTier.tier3.minutes(isHardMode:)` called correctly in `ActiveSessionViewModel`, but `UnblockTier` enum home not moved to Domain (coupled to 032) |
+| 118 | Two new `URL(string:)!` force-unwraps exist in `PaywallView.swift:184,186` (fixes landed elsewhere) |
+
+### Negative finding / false-positive (1 not in counts above, 5 closed)
+
+- **077** — closed. Pattern is now consistent (EnvironmentObject wired via RootView).
+- **093** — `status: reviewed-false-positive` (already set, not flipped). No `SFSpeechRecognizer` usage; Whisper HTTP upload + `NSMicrophoneUsageDescription` is sufficient.
+- **098, 099, 100** — closed. Confirmed no-action-required after verification.
+- **120** — closed. V1 auth, emergency unblock, daily surah, Quran search, paywall, streak, RevenueCat all traced intact.
+
+### Remaining work before this wave's PR can merge
+
+1. **Physical-device verification (Step 3)** — 40-item checklist in `prompts/WAVE-3-final-sweep.md`. Cannot be executed in simulator (`DeenFirstActivityReport` needs real device). Device pass will close the 6 device-pending audits, or produce fix commits on this branch.
+2. **Follow-up tickets** for the 15 still-open items above. Each should reference its audit number in the title.
+
+---
+
 ## TOP-LINE DIAGNOSIS
 
 **Why the Dashboard is not working.** Three compounding failures:

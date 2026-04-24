@@ -3,7 +3,7 @@ id: 062
 title: print() used throughout ScreenTimeMonitor extension (must use os_log)
 severity: P1
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

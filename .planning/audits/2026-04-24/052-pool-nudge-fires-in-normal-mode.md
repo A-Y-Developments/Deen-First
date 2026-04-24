@@ -3,7 +3,7 @@ id: 052
 title: Pool-empty nudge fires in Normal Mode when pool is intentionally empty
 severity: P1
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

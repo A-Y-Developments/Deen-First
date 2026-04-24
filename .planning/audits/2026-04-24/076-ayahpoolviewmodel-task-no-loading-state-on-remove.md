@@ -3,7 +3,7 @@ id: 076
 title: AyahPoolViewModel.remove() fires Task without setting isLoading — inconsistent loading state
 severity: P3
 area: ayah-pool
-status: open
+status: closed
 ---
 
 ## Problem

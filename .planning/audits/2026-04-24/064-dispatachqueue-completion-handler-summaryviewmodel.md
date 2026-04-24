@@ -3,7 +3,7 @@ id: 064
 title: DispatchQueue + completion handler in SummaryViewModel violates async/await rule
 severity: P1
 area: arch
-status: open
+status: closed
 ---
 
 ## Problem

@@ -3,7 +3,7 @@ id: 007
 title: QuranReadingViewModel records session time only on onDisappear; reading time lost on app background
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem

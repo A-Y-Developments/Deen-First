@@ -3,7 +3,7 @@ id: 006
 title: Fallback placeholder rendered behind DeviceActivityReport in ZStack; hidden when report renders blank view
 severity: P2
 area: dashboard
-status: open
+status: closed
 ---
 
 ## Problem
