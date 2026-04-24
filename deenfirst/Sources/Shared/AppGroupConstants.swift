@@ -88,4 +88,10 @@ enum AppGroupConstants {
     static let streakLongestKey = "deen.streak.longest"
     static let dataLastUpdatedAtKey = "deen.data.lastUpdatedAt"
     static let lastKnownDateKey = "lastKnownDate"
+
+    /// Monotonic clock reading (seconds since boot, unaffected by wall-clock
+    /// changes) captured alongside `lastKnownDateKey`. Used by
+    /// `PendingChangeService` to distinguish benign overnight sleep from
+    /// deliberate clock tampering.
+    static let lastKnownMonotonicKey = "lastKnownMonotonic"
 }

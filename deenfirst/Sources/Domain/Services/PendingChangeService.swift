@@ -20,8 +20,21 @@ final class PendingChangeServiceImpl: PendingChangeService {
     private let screenTimeRulesRepository: ScreenTimeRulesRepository
     private let notificationSchedulingService: NotificationSchedulingService
 
-    private static let clockJumpThreshold: TimeInterval = 7_200
+    /// Tolerance when comparing wall-clock delta to monotonic-clock delta.
+    /// Wall-clock may drift slightly relative to monotonic (NTP adjustments);
+    /// 10 minutes is well above normal drift and well below any meaningful
+    /// tamper attempt.
+    private static let clockTamperToleranceSeconds: TimeInterval = 600
+
     private let logger = Logger(subsystem: "com.aydev.deenfirst", category: "PendingChangeService")
+
+    /// Monotonic seconds since boot. Unlike `Date()`, this is unaffected by
+    /// wall-clock tampering and continues advancing during device sleep.
+    private static func monotonicNow() -> TimeInterval {
+        var ts = timespec()
+        clock_gettime(CLOCK_MONOTONIC, &ts)
+        return TimeInterval(ts.tv_sec) + TimeInterval(ts.tv_nsec) / 1_000_000_000
+    }
 
     init(
         localDataSource: LocalDataSource,
@@ -74,20 +87,39 @@ final class PendingChangeServiceImpl: PendingChangeService {
 
     func applyExpiredChanges() async {
         let defaults = AppGroupConstants.sharedDefaults
-        let lastKnownInterval = defaults?.double(forKey: AppGroupConstants.lastKnownDateKey) ?? 0
         let now = Date()
+        let monoNow = Self.monotonicNow()
+        let lastWall = defaults?.double(forKey: AppGroupConstants.lastKnownDateKey) ?? 0
+        let lastMono = defaults?.double(forKey: AppGroupConstants.lastKnownMonotonicKey) ?? 0
 
-        if lastKnownInterval > 0 {
-            let lastKnownDate = Date(timeIntervalSince1970: lastKnownInterval)
-            let elapsed = now.timeIntervalSince(lastKnownDate)
-            if elapsed > Self.clockJumpThreshold {
-                logger.fault("Clock manipulation suspected: jumped \(Int(elapsed))s — skipping auto-apply")
-                defaults?.set(now.timeIntervalSince1970, forKey: AppGroupConstants.lastKnownDateKey)
-                return
+        if lastWall > 0 && lastMono > 0 {
+            let wallElapsed = now.timeIntervalSince1970 - lastWall
+            let monoElapsed = monoNow - lastMono
+
+            // Monotonic clock resets on reboot. If it moved backwards (below
+            // zero) or is less than the recorded last value, the device rebooted;
+            // treat as benign and refresh the baseline.
+            if monoElapsed < 0 {
+                persistBaseline(wall: now, mono: monoNow, defaults: defaults)
+            } else {
+                // Wall clock rolled backwards: treat as tamper; skip silently.
+                if wallElapsed < -Self.clockTamperToleranceSeconds {
+                    logger.error("Wall clock rolled back \(Int(wallElapsed))s — skipping auto-apply")
+                    persistBaseline(wall: now, mono: monoNow, defaults: defaults)
+                    return
+                }
+
+                // Wall clock jumped forward materially further than monotonic:
+                // real time didn't pass but the clock moved. Tamper — skip.
+                if wallElapsed - monoElapsed > Self.clockTamperToleranceSeconds {
+                    logger.error("Wall clock jumped \(Int(wallElapsed))s while monotonic advanced \(Int(monoElapsed))s — skipping auto-apply")
+                    persistBaseline(wall: now, mono: monoNow, defaults: defaults)
+                    return
+                }
             }
         }
 
-        defaults?.set(now.timeIntervalSince1970, forKey: AppGroupConstants.lastKnownDateKey)
+        persistBaseline(wall: now, mono: monoNow, defaults: defaults)
 
         let allChanges = (try? localDataSource.fetchPendingChanges()) ?? []
         let expired = allChanges.filter {
@@ -104,6 +136,11 @@ final class PendingChangeServiceImpl: PendingChangeService {
                 print("⚠️ [PendingChangeService] Failed to apply change \(change.id) for rule \(change.ruleId): \(error)")
             }
         }
+    }
+
+    private func persistBaseline(wall: Date, mono: TimeInterval, defaults: UserDefaults?) {
+        defaults?.set(wall.timeIntervalSince1970, forKey: AppGroupConstants.lastKnownDateKey)
+        defaults?.set(mono, forKey: AppGroupConstants.lastKnownMonotonicKey)
     }
 
     // MARK: - Query
