@@ -5,11 +5,17 @@
 ### V1
 - `User` — id, isPremium, hasCompletedOnboarding, streakStartDate, currentStreak
 - `Session` — id, surahIds, ayahIds, duration, completedAt, isUnblockSession (V2)
-- `ScreenTimeRule` — id, name, isEnabled, **isHardMode** (V2), **isLockEditingEnabled** (V2)
 
 ### V2 New
 - `PendingRuleChange` — id, ruleId, changeType, pendingData, requestedAt, appliesAt, isCancelled, isApplied
 - `AyahPoolItem` — id, surahNumber, ayahNumberInSurah, arabicText, transliteration, wordCount, addedAt
+
+## UserDefaults-backed Entities
+
+`ScreenTimeRule` is **not** a SwiftData `@Model`. It is a `Codable struct` persisted to the App Group `UserDefaults` (`group.com.aydev.deenfirst`) via `ScreenTimeRulesRepository`. UserDefaults is used because extension targets (ScreenTimeMonitor, Shield, DeenFirstActivityReport) need cross-process read access to the rule set, and SwiftData stores are not shared across process boundaries in the same way.
+
+- `ScreenTimeRule` — id, name, type, applicationTokenData, categoryTokenData, limitSeconds, startTime, endTime, daysActiveArray, unblockAllowedAfterLimit, durationOptions, createdAt, **isHardMode** (V2), **isLockEditingEnabled** (V2)
+- V2 fields (`isHardMode`, `isLockEditingEnabled`) were added with a custom `Decodable` init that defaults both to `false` for rules persisted before V2 — a JSON-level backward-compat shim, not a SwiftData migration.
 
 ## Key Enums
 
