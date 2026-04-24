@@ -101,6 +101,8 @@ class MockScreenTimeRulesServiceForDurationSelection: ScreenTimeRulesService {
     func temporaryUnblockAll(minutes: Int) async {}
     func reblockIfExpired(ruleId: UUID) async {}
     func reblockAllExpired() async {}
+    func isTemporarilyUnblocked(ruleId: UUID) -> Bool { false }
+    func unblockRemainingSeconds(ruleId: UUID) -> Int? { nil }
     func activateEmergencyUnblock() async {}
     func deactivateEmergencyUnblock() async {}
     func reblockEmergencyIfExpired() async {}

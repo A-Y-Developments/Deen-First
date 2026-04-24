@@ -51,6 +51,12 @@ enum AppGroupConstants {
         "shorterDurationIgnored_\(ruleId.uuidString)"
     }
 
+    /// Stores the set of UnblockTier raw values the user has already completed
+    /// in the current blocking window for `ruleId`. Reset when the rule re-blocks.
+    static func usedTiersKey(for ruleId: UUID) -> String {
+        "usedTiers_\(ruleId.uuidString)"
+    }
+
     static func timeLimitWarningNotificationId(for ruleId: UUID) -> String {
         "timeLimitWarning_\(ruleId.uuidString)"
     }

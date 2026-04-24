@@ -83,6 +83,8 @@ final class ActiveSessionViewModel: ObservableObject {
         if isUnblockSession, let ruleId = unlockRuleId {
             let minutes = unblockMinutes(for: ruleId)
             await screenTimeRulesService.temporaryUnblock(minutes: minutes, ruleId: ruleId)
+            // DF-022 / DF-023: Tier 3 completed — record it against the block window.
+            UsedTiersStore.mark(.tier3, ruleId: ruleId)
             unblockGranted = true
         }
         sessionDidEnd = true

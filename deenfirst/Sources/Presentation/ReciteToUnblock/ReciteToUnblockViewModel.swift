@@ -308,6 +308,8 @@ final class ReciteToUnblockViewModel: ObservableObject {
             }
 
             await screenTimeService.temporaryUnblock(minutes: tier.minutes, ruleId: ruleId)
+            // DF-022 / DF-023: record that this tier has been used in the current block window.
+            UsedTiersStore.mark(tier, ruleId: ruleId, defaults: sharedDefaults)
         } else {
             await screenTimeService.temporaryUnblockAll(minutes: tier.minutes)
         }
