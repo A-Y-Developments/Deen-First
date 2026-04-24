@@ -200,6 +200,48 @@ final class MockAyahPoolService: AyahPoolService {
         addedCalls.append(AddCall(surah: surahNumber, ayah: ayahNumber))
     }
 
+    func addAyahs(_ inputs: [AyahInput]) async -> AddAyahsResult {
+        var added: [AyahPoolItem] = []
+        var rejected: [AddAyahsResult.Rejection] = []
+        for input in inputs {
+            do {
+                try await addAyah(
+                    surahNumber: input.surahNumber,
+                    ayahNumber: input.ayahNumber,
+                    arabicText: input.arabicText,
+                    transliteration: input.transliteration
+                )
+                let item = AyahPoolItem(
+                    surahNumber: input.surahNumber,
+                    ayahNumberInSurah: input.ayahNumber,
+                    arabicText: input.arabicText,
+                    transliteration: input.transliteration,
+                    wordCount: 5
+                )
+                pool.append(item)
+                added.append(item)
+            } catch let error as AyahPoolError {
+                rejected.append(
+                    AddAyahsResult.Rejection(
+                        surahNumber: input.surahNumber,
+                        ayahNumberInSurah: input.ayahNumber,
+                        reason: error
+                    )
+                )
+                if case .poolFull = error { break }
+            } catch {
+                rejected.append(
+                    AddAyahsResult.Rejection(
+                        surahNumber: input.surahNumber,
+                        ayahNumberInSurah: input.ayahNumber,
+                        reason: .alreadyInPool
+                    )
+                )
+            }
+        }
+        return AddAyahsResult(added: added, rejected: rejected)
+    }
+
     func removeAyah(id: UUID) async throws {
         if throwOnRemove { throw MockRemoveError.forced }
         removedIds.append(id)
