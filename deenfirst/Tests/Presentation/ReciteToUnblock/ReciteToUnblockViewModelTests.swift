@@ -211,34 +211,56 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         XCTAssertFalse(vm.showPoolNudge)
     }
 
-    func testPoolNudge_FiresWhenSequenceProviderReportsEmptyPool() async {
+    /// DF-052: Nudge only fires in Hard Mode. Empty pool in Normal Mode must stay silent.
+    func testPoolNudge_NormalMode_PoolWasEmpty_DoesNotShowNudge() async {
         let nudgeDefaults = makeFreshNudgeDefaults()
         let provider = MockAyahSequenceProvider()
         provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: true)
         let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+
+        await vm.loadRandomAyah()
+
+        XCTAssertFalse(vm.showPoolNudge, "Normal Mode empty-pool must not trigger the nudge")
+    }
+
+    /// DF-052: Hard Mode + empty pool → nudge fires.
+    func testPoolNudge_HardMode_PoolWasEmpty_ShowsNudge() async {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
+        let nudgeDefaults = makeFreshNudgeDefaults()
+        let provider = MockAyahSequenceProvider()
+        provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: true)
+        let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+        vm.targetRuleId = ruleId
 
         await vm.loadRandomAyah()
 
         XCTAssertTrue(vm.showPoolNudge)
     }
 
-    func testPoolNudge_DoesNotFire_WhenSequenceProviderUsedPool() async {
+    func testPoolNudge_HardMode_DoesNotFire_WhenSequenceProviderUsedPool() async {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
         let nudgeDefaults = makeFreshNudgeDefaults()
         let provider = MockAyahSequenceProvider()
         provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: false)
         let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+        vm.targetRuleId = ruleId
 
         await vm.loadRandomAyah()
 
         XCTAssertFalse(vm.showPoolNudge)
     }
 
-    func testPoolNudge_DoesNotRefireSameDay() async {
+    func testPoolNudge_HardMode_DoesNotRefireSameDay() async {
+        let ruleId = UUID()
+        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
         let nudgeDefaults = makeFreshNudgeDefaults()
-        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
+        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: AppGroupConstants.poolNudgeDateKey)
         let provider = MockAyahSequenceProvider()
         provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: true)
         let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+        vm.targetRuleId = ruleId
 
         await vm.loadRandomAyah()
 
