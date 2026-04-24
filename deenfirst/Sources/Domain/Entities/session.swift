@@ -35,10 +35,12 @@ final class Session {
     var durationSeconds: Int
     var isCompleted: Bool
 
-    // Legacy storage — do NOT read/write directly from new call sites.
-    // Bridged by `type` to keep migration risk zero while callers move to the enum.
-    var isUnblockSession: Bool
-    var unlockRuleId: UUID?
+    // Private storage for `type` — kept as bool + UUID? to avoid a SwiftData schema
+    // migration on a pre-release V2 build. Read/write through the `type` computed
+    // property so the enum's invariants (normal ⇔ no ruleId, unblock ⇔ ruleId present)
+    // are the only reachable states.
+    private var isUnblockSession: Bool
+    private var unlockRuleId: UUID?
 
     /// Purpose of this session. All new code should read/write this instead of
     /// the legacy `isUnblockSession` / `unlockRuleId` fields.
