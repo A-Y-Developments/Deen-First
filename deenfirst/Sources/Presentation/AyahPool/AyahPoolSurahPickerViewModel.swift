@@ -2,8 +2,6 @@ import Foundation
 
 @MainActor
 final class AyahPoolSurahPickerViewModel: ObservableObject {
-    static let maxPoolSize = 20
-
     // Surah list state
     @Published var allSurahs: [Surah] = []
     @Published var filteredSurahs: [Surah] = []
@@ -37,7 +35,7 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
     // MARK: - Derived
 
     var pooledCount: Int { pooledKeys.count }
-    var remainingSlots: Int { max(0, Self.maxPoolSize - pooledCount - newlySelected.count) }
+    var remainingSlots: Int { max(0, AyahPoolServiceImpl.maxPoolSize - pooledCount - newlySelected.count) }
     var canAddMore: Bool { remainingSlots > 0 }
     var selectedCountLabel: String { "\(newlySelected.count) selected" }
 

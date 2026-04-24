@@ -66,8 +66,8 @@ final class QuranTabViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.ayahPoolCount, 2)
     }
 
-    func testAyahPoolMaxSize_matchesAyahPoolViewModel() {
-        XCTAssertEqual(viewModel.ayahPoolMaxSize, AyahPoolViewModel.maxPoolSize)
+    func testAyahPoolMaxSize_matchesCanonicalConstant() {
+        XCTAssertEqual(viewModel.ayahPoolMaxSize, AyahPoolServiceImpl.maxPoolSize)
     }
 
     // MARK: - Helpers

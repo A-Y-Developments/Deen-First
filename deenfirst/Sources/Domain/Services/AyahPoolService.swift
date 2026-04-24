@@ -12,6 +12,9 @@ enum AyahPoolError: Error, Equatable {
 
 @MainActor
 protocol AyahPoolService {
+    static var maxPoolSize: Int { get }
+    static var minWordCountForEligibility: Int { get }
+
     func fetchPool() async -> [AyahPoolItem]
     func addAyah(surahNumber: Int, ayahNumber: Int, arabicText: String, transliteration: String) async throws
     func removeAyah(id: UUID) async throws
