@@ -112,6 +112,31 @@ final class PendingChangeServiceTests: XCTestCase {
         }
     }
 
+    // DF-041: creating a new pending change for the same rule must soft-cancel
+    // the prior one (not hard-delete it). Both records must persist in the
+    // store so the history is auditable; the prior record carries
+    // isCancelled = true.
+    func testCreatePendingChange_softCancelsPriorChange() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "disableHardMode", pendingData: nil)
+        let firstId = service.pendingChange(for: rule.id)?.id
+        XCTAssertNotNil(firstId)
+
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+
+        let all = (try? localDataSource.fetchPendingChanges()) ?? []
+        let forRule = all.filter { $0.ruleId == rule.id }
+        XCTAssertEqual(forRule.count, 2, "Both prior and new records must persist")
+
+        let prior = forRule.first { $0.id == firstId }
+        XCTAssertNotNil(prior, "Prior record must still exist in the store")
+        XCTAssertTrue(prior?.isCancelled ?? false, "Prior record must be soft-cancelled")
+
+        let active = forRule.filter { !$0.isCancelled && !$0.isApplied }
+        XCTAssertEqual(active.count, 1)
+        XCTAssertEqual(active.first?.changeType, "disableLockEditing")
+    }
+
     // MARK: - cancelPendingChange
 
     func testCancelPendingChange_marksCancelled() async {
