@@ -14,7 +14,7 @@ extension ScreenTimeRulesServiceImpl {
     /// Other rules remain fully blocked and unaffected.
     /// Implements "longer wins": if an active unblock with more time remaining exists, keeps it.
     func temporaryUnblock(minutes: Int, ruleId: UUID) async {
-        let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        let defaults = AppGroupConstants.sharedDefaults
         let now = Date()
         let newExpiry = now.addingTimeInterval(Double(minutes) * 60)
 
@@ -143,7 +143,7 @@ extension ScreenTimeRulesServiceImpl {
 
     /// Checks if a specific rule's unblock period has expired and re-applies its shields.
     func reblockIfExpired(ruleId: UUID) async {
-        let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        let defaults = AppGroupConstants.sharedDefaults
         let key = AppGroupConstants.unblockExpiryKey(for: ruleId)
         let expiry = defaults?.double(forKey: key) ?? 0
 
@@ -184,14 +184,14 @@ extension ScreenTimeRulesServiceImpl {
     // MARK: - Check Unblock Status (per-rule)
 
     func isTemporarilyUnblocked(ruleId: UUID) -> Bool {
-        let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        let defaults = AppGroupConstants.sharedDefaults
         let expiry = defaults?.double(forKey: AppGroupConstants.unblockExpiryKey(for: ruleId)) ?? 0
         guard expiry > 0 else { return false }
         return Date().timeIntervalSince1970 < expiry
     }
 
     func unblockRemainingSeconds(ruleId: UUID) -> Int? {
-        let defaults = UserDefaults(suiteName: AppGroupConstants.suiteName)
+        let defaults = AppGroupConstants.sharedDefaults
         let expiry = defaults?.double(forKey: AppGroupConstants.unblockExpiryKey(for: ruleId)) ?? 0
         guard expiry > 0 else { return nil }
         let remaining = expiry - Date().timeIntervalSince1970
