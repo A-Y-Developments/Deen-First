@@ -8,6 +8,34 @@ enum AyahPoolError: Error, Equatable {
     case ayahTooShort(wordCount: Int, minimum: Int)
 }
 
+// MARK: - Batch result
+
+struct AyahInput: Equatable {
+    let surahNumber: Int
+    let ayahNumber: Int
+    let arabicText: String
+    let transliteration: String
+}
+
+struct AddAyahsResult: Equatable {
+    struct Rejection: Equatable {
+        let surahNumber: Int
+        let ayahNumberInSurah: Int
+        let reason: AyahPoolError
+    }
+
+    let added: [AyahPoolItem]
+    let rejected: [Rejection]
+
+    var didHitPoolFull: Bool {
+        rejected.contains { if case .poolFull = $0.reason { return true } else { return false } }
+    }
+
+    func rejections(matching predicate: (AyahPoolError) -> Bool) -> [Rejection] {
+        rejected.filter { predicate($0.reason) }
+    }
+}
+
 // MARK: - Protocol
 
 @MainActor
@@ -17,6 +45,7 @@ protocol AyahPoolService {
 
     func fetchPool() async -> [AyahPoolItem]
     func addAyah(surahNumber: Int, ayahNumber: Int, arabicText: String, transliteration: String) async throws
+    func addAyahs(_ inputs: [AyahInput]) async -> AddAyahsResult
     func removeAyah(id: UUID) async throws
     func poolCount() async -> Int
     func nextAyah(excludeShort: Bool) -> AyahPoolItem?
@@ -84,6 +113,44 @@ final class AyahPoolServiceImpl: AyahPoolService {
             wordCount: wordCount
         )
         try localDataSource.insertAyahPoolItem(item)
+    }
+
+    func addAyahs(_ inputs: [AyahInput]) async -> AddAyahsResult {
+        var added: [AyahPoolItem] = []
+        var rejected: [AddAyahsResult.Rejection] = []
+        for input in inputs {
+            do {
+                try await addAyah(
+                    surahNumber: input.surahNumber,
+                    ayahNumber: input.ayahNumber,
+                    arabicText: input.arabicText,
+                    transliteration: input.transliteration
+                )
+                if let inserted = (try? localDataSource.fetchAyahPool())?.first(where: {
+                    $0.surahNumber == input.surahNumber && $0.ayahNumberInSurah == input.ayahNumber
+                }) {
+                    added.append(inserted)
+                }
+            } catch let error as AyahPoolError {
+                rejected.append(
+                    AddAyahsResult.Rejection(
+                        surahNumber: input.surahNumber,
+                        ayahNumberInSurah: input.ayahNumber,
+                        reason: error
+                    )
+                )
+                if case .poolFull = error { break }
+            } catch {
+                rejected.append(
+                    AddAyahsResult.Rejection(
+                        surahNumber: input.surahNumber,
+                        ayahNumberInSurah: input.ayahNumber,
+                        reason: .alreadyInPool
+                    )
+                )
+            }
+        }
+        return AddAyahsResult(added: added, rejected: rejected)
     }
 
     func removeAyah(id: UUID) async throws {

@@ -21,6 +21,10 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
     @Published var showPoolFullAlert = false
     @Published var didFinishAdding = false
 
+    /// Summary shown after a batch add (partial, full success, or full rejection).
+    /// Cleared when consumed by the View.
+    @Published var addSummary: AddSummary?
+
     private let ayahPoolService: AyahPoolService
     private let quranService: QuranService
 
@@ -125,37 +129,24 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
 
     // MARK: - Commit
 
-    /// Adds all newly selected ayahs to the pool via the service.
-    /// Stops early if the service reports the pool is full.
+    /// Adds all newly selected ayahs to the pool via the service, surfacing a
+    /// per-batch summary so the user sees partial outcomes (DF-054).
     func addSelected() {
         guard let surah = selectedSurah, !newlySelected.isEmpty else { return }
         let ayahsToAdd = ayahs
             .filter { newlySelected.contains(key(for: $0)) }
+        let total = ayahsToAdd.count
+        let inputs = ayahsToAdd.map { ayah in
+            AyahInput(
+                surahNumber: surah.number,
+                ayahNumber: ayah.numberInSurah,
+                arabicText: ayah.text,
+                transliteration: ayah.transliteration
+            )
+        }
         Task {
-            var addedKeys: [AyahKey] = []
-            var hitPoolFull = false
-            for ayah in ayahsToAdd {
-                do {
-                    try await ayahPoolService.addAyah(
-                        surahNumber: surah.number,
-                        ayahNumber: ayah.numberInSurah,
-                        arabicText: ayah.text,
-                        transliteration: ayah.transliteration
-                    )
-                    addedKeys.append(key(for: ayah))
-                } catch AyahPoolError.poolFull(_) {
-                    hitPoolFull = true
-                    break
-                } catch AyahPoolError.alreadyInPool {
-                    addedKeys.append(key(for: ayah))
-                } catch AyahPoolError.ayahTooShort(_, _) {
-                    // Skip short ayahs silently for now; partial-add feedback (DF-054) adds UX.
-                    continue
-                } catch {
-                    errorMessage = error.localizedDescription
-                    break
-                }
-            }
+            let result = await ayahPoolService.addAyahs(inputs)
+            let addedKeys = result.added.map { AyahKey(surah: $0.surahNumber, ayah: $0.ayahNumberInSurah) }
             for k in addedKeys {
                 pooledKeys.insert(k)
                 newlySelected.remove(k)
@@ -163,12 +154,26 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
             if !addedKeys.isEmpty {
                 clearPoolNudgeStamp()
             }
-            if hitPoolFull {
-                showPoolFullAlert = true
-            } else if errorMessage == nil {
-                didFinishAdding = true
-            }
+
+            let tooShortCount = result.rejections { if case .ayahTooShort = $0 { return true } else { return false } }.count
+            addSummary = AddSummary(
+                requested: total,
+                added: result.added.count,
+                tooShort: tooShortCount,
+                hitPoolFull: result.didHitPoolFull
+            )
+
+            // didFinishAdding is set when the user dismisses the summary
+            // (see `acknowledgeAddSummary()`). addSummary covers the pool-full case,
+            // so we don't also trigger showPoolFullAlert here.
+            _ = result.didHitPoolFull
         }
+    }
+
+    /// Called when the user dismisses the add-result summary. Navigates back.
+    func acknowledgeAddSummary() {
+        addSummary = nil
+        didFinishAdding = true
     }
 
     /// Resets the HM "empty pool" nudge 24h gate so it can re-fire in a future
@@ -190,4 +195,24 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
 struct AyahKey: Hashable {
     let surah: Int
     let ayah: Int
+}
+
+// MARK: - AddSummary
+
+struct AddSummary: Equatable {
+    let requested: Int
+    let added: Int
+    let tooShort: Int
+    let hitPoolFull: Bool
+
+    var message: String {
+        var parts: [String] = ["Added \(added) of \(requested)."]
+        if tooShort > 0 {
+            parts.append("\(tooShort) too short (need 5+ words).")
+        }
+        if hitPoolFull {
+            parts.append("Pool reached the 20-ayah limit.")
+        }
+        return parts.joined(separator: " ")
+    }
 }

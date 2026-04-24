@@ -196,10 +196,13 @@ final class AyahPoolSurahPickerViewModelTests: XCTestCase {
         XCTAssertEqual(mockPool.addedCalls.count, 2)
         XCTAssertTrue(mockPool.addedCalls.contains { $0.surah == 1 && $0.ayah == 1 })
         XCTAssertTrue(mockPool.addedCalls.contains { $0.surah == 1 && $0.ayah == 3 })
-        XCTAssertTrue(viewModel.didFinishAdding)
+        XCTAssertEqual(viewModel.addSummary?.requested, 2)
+        XCTAssertEqual(viewModel.addSummary?.added, 2)
+        XCTAssertFalse(viewModel.didFinishAdding, "Navigation waits until user dismisses summary")
     }
 
-    func testAddSelected_whenServiceReportsPoolFull_stopsAndShowsAlert() async {
+    /// DF-054: On a partial batch where pool hits capacity, summary reports added + hitPoolFull.
+    func testAddSelected_whenServiceReportsPoolFull_surfacesPartialAddSummary() async {
         let surah = makeSurah(number: 1, englishName: "Al-Fatihah")
         mockQuran.surahsToReturn = [surah]
         mockQuran.ayahsToReturn = [makeAyah(number: 1), makeAyah(number: 2)]
@@ -216,8 +219,53 @@ final class AyahPoolSurahPickerViewModelTests: XCTestCase {
         await yield()
 
         XCTAssertEqual(mockPool.addedCalls.count, 1)
-        XCTAssertTrue(viewModel.showPoolFullAlert)
-        XCTAssertFalse(viewModel.didFinishAdding)
+        XCTAssertEqual(viewModel.addSummary?.requested, 2)
+        XCTAssertEqual(viewModel.addSummary?.added, 1)
+        XCTAssertTrue(viewModel.addSummary?.hitPoolFull ?? false)
+        XCTAssertFalse(viewModel.didFinishAdding, "Navigation back waits for user to dismiss summary")
+    }
+
+    /// DF-054: When short ayahs are rejected by the service, summary includes tooShort count.
+    func testAddSelected_whenAyahsTooShort_summarizesTooShortCount() async {
+        let surah = makeSurah(number: 1, englishName: "Al-Fatihah")
+        mockQuran.surahsToReturn = [surah]
+        mockQuran.ayahsToReturn = [makeAyah(number: 1), makeAyah(number: 2)]
+        viewModel.loadInitial()
+        await yield()
+        viewModel.selectSurah(surah)
+        await yield()
+
+        viewModel.toggleSelection(viewModel.ayahs[0])
+        viewModel.toggleSelection(viewModel.ayahs[1])
+        mockPool.throwAyahTooShortOnce = true
+
+        viewModel.addSelected()
+        await yield()
+
+        XCTAssertEqual(viewModel.addSummary?.requested, 2)
+        XCTAssertEqual(viewModel.addSummary?.added, 1)
+        XCTAssertEqual(viewModel.addSummary?.tooShort, 1)
+    }
+
+    /// DF-054: `acknowledgeAddSummary` clears the summary and triggers navigation.
+    func testAcknowledgeAddSummary_clearsSummaryAndSetsDidFinish() async {
+        let surah = makeSurah(number: 1, englishName: "Al-Fatihah")
+        mockQuran.surahsToReturn = [surah]
+        mockQuran.ayahsToReturn = [makeAyah(number: 1)]
+        viewModel.loadInitial()
+        await yield()
+        viewModel.selectSurah(surah)
+        await yield()
+        viewModel.toggleSelection(viewModel.ayahs[0])
+
+        viewModel.addSelected()
+        await yield()
+        XCTAssertNotNil(viewModel.addSummary)
+
+        viewModel.acknowledgeAddSummary()
+
+        XCTAssertNil(viewModel.addSummary)
+        XCTAssertTrue(viewModel.didFinishAdding)
     }
 
     func testAddSelected_noSelection_isNoop() async {

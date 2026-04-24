@@ -45,6 +45,24 @@ struct AyahPoolSurahPickerView: View {
         } message: {
             Text("You've reached the 20 ayah limit. Remove an ayah to add a new one.")
         }
+        .alert(
+            addSummaryAlertTitle,
+            isPresented: Binding(
+                get: { viewModel.addSummary != nil },
+                set: { if !$0 { viewModel.acknowledgeAddSummary() } }
+            )
+        ) {
+            Button("OK") { viewModel.acknowledgeAddSummary() }
+        } message: {
+            Text(viewModel.addSummary?.message ?? "")
+        }
+    }
+
+    private var addSummaryAlertTitle: String {
+        guard let summary = viewModel.addSummary else { return "" }
+        if summary.added == 0 { return "No ayahs added" }
+        if summary.added < summary.requested { return "Partial add" }
+        return "Added"
     }
 
     // MARK: - Surah list
