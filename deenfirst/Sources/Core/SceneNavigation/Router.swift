@@ -32,7 +32,7 @@ final class Router: ObservableObject {
         case support
         case reciteToUnlock
         case emergencyUnblock
-        case dashboard
+        case dashboardDetail
         case ayahPool
         case ayahPoolSurahPicker
         case unblockDurationSelection(ruleId: UUID)
