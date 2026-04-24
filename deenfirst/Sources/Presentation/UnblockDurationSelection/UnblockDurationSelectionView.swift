@@ -5,7 +5,7 @@ struct UnblockDurationSelectionView: View {
 
     @EnvironmentObject private var router: Router
     @EnvironmentObject private var reciteToUnblockViewModel: ReciteToUnblockViewModel
-    @StateObject private var viewModel = UnblockDurationSelectionViewModel()
+    @EnvironmentObject private var viewModel: UnblockDurationSelectionViewModel
 
     var body: some View {
         ZStack {
@@ -48,21 +48,14 @@ struct UnblockDurationSelectionView: View {
 
     private var tierCardsView: some View {
         VStack(spacing: 14) {
-            TierCardView(
-                tier: .tier1,
-                isHardMode: viewModel.isHardMode,
-                onTap: { selectTier(.tier1) }
-            )
-            TierCardView(
-                tier: .tier2,
-                isHardMode: viewModel.isHardMode,
-                onTap: { selectTier(.tier2) }
-            )
-            TierCardView(
-                tier: .tier3,
-                isHardMode: viewModel.isHardMode,
-                onTap: { selectTier(.tier3) }
-            )
+            ForEach([UnblockTier.tier1, .tier2, .tier3], id: \.self) { tier in
+                TierCardView(
+                    tier: tier,
+                    isHardMode: viewModel.isHardMode,
+                    isLocked: !viewModel.isAvailable(tier),
+                    onTap: { selectTier(tier) }
+                )
+            }
         }
     }
 
@@ -79,14 +72,11 @@ struct UnblockDurationSelectionView: View {
     // MARK: - Actions
 
     private func selectTier(_ tier: UnblockTier) {
+        guard viewModel.isAvailable(tier) else { return }
         switch tier {
-        case .tier1:
+        case .tier1, .tier2:
             reciteToUnblockViewModel.targetRuleId = ruleId
-            reciteToUnblockViewModel.tier = .tier1
-            router.navigate(to: .reciteToUnlock)
-        case .tier2:
-            reciteToUnblockViewModel.targetRuleId = ruleId
-            reciteToUnblockViewModel.tier = .tier2
+            reciteToUnblockViewModel.tier = tier
             router.navigate(to: .reciteToUnlock)
         case .tier3:
             router.navigate(to: .focusSection(unlockRuleId: ruleId))
@@ -99,13 +89,14 @@ struct UnblockDurationSelectionView: View {
 private struct TierCardView: View {
     let tier: UnblockTier
     let isHardMode: Bool
+    let isLocked: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.08))
+                    .fill(Color.white.opacity(isLocked ? 0.04 : 0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
@@ -116,19 +107,25 @@ private struct TierCardView: View {
                         Text(durationLabel)
                             .font(.headline)
                             .fontWeight(.bold)
-                            .foregroundColor(.white)
+                            .foregroundColor(.white.opacity(isLocked ? 0.4 : 1.0))
 
                         Text(requirementLabel)
                             .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.7))
+                            .foregroundColor(.white.opacity(isLocked ? 0.3 : 0.7))
                             .multilineTextAlignment(.leading)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.trailing, isHardMode ? 36 : 0)
 
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.4))
+                    if isLocked {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.35))
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 20)
@@ -141,6 +138,7 @@ private struct TierCardView: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(isLocked)
     }
 
     private var durationLabel: String {

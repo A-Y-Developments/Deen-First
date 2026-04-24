@@ -51,6 +51,12 @@ protocol ScreenTimeRulesService {
     /// Called on foreground — iterates all rules and re-blocks any whose timer has expired.
     func reblockAllExpired() async
 
+    /// DF-067: whether a specific rule currently has an active temporary unblock window.
+    func isTemporarilyUnblocked(ruleId: UUID) -> Bool
+
+    /// Seconds remaining on the active temporary unblock for `ruleId`, or nil if none.
+    func unblockRemainingSeconds(ruleId: UUID) -> Int?
+
     // MARK: - Emergency Unblock
 
     func activateEmergencyUnblock() async

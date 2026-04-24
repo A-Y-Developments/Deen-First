@@ -152,6 +152,8 @@ extension ScreenTimeRulesServiceImpl {
 
         // Clear this rule's expiry
         defaults?.removeObject(forKey: key)
+        // DF-022 / DF-023: a fresh block window grants the user a fresh 3-tier budget.
+        UsedTiersStore.reset(ruleId: ruleId, defaults: defaults)
         defaults?.synchronize()
 
         // Stop the DeviceActivity schedule for this rule
