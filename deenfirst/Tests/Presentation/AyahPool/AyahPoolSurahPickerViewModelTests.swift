@@ -7,19 +7,27 @@ final class AyahPoolSurahPickerViewModelTests: XCTestCase {
     var mockPool: MockAyahPoolService!
     var mockQuran: MockQuranServiceForPicker!
     var viewModel: AyahPoolSurahPickerViewModel!
+    var nudgeDefaults: UserDefaults!
+    var nudgeSuiteName: String!
 
     override func setUp() async throws {
         mockPool = MockAyahPoolService()
         mockQuran = MockQuranServiceForPicker()
+        nudgeSuiteName = "com.test.picker-nudge-\(UUID().uuidString)"
+        nudgeDefaults = UserDefaults(suiteName: nudgeSuiteName)
         viewModel = AyahPoolSurahPickerViewModel(
             ayahPoolService: mockPool,
-            quranService: mockQuran
+            quranService: mockQuran,
+            nudgeDefaults: nudgeDefaults
         )
     }
 
     override func tearDown() async throws {
+        nudgeDefaults.removePersistentDomain(forName: nudgeSuiteName)
         mockPool = nil
         mockQuran = nil
+        nudgeDefaults = nil
+        nudgeSuiteName = nil
         viewModel = nil
     }
 
@@ -245,6 +253,51 @@ final class AyahPoolSurahPickerViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.addSummary?.requested, 2)
         XCTAssertEqual(viewModel.addSummary?.added, 1)
         XCTAssertEqual(viewModel.addSummary?.tooShort, 1)
+    }
+
+    /// DF-029: After a successful add, the pool-nudge stamp must be cleared so a
+    /// future HM-empty session can re-trigger the nudge.
+    func testAddSelected_clearsPoolNudgeStamp_afterSuccessfulAdd() async {
+        let surah = makeSurah(number: 1, englishName: "Al-Fatihah")
+        mockQuran.surahsToReturn = [surah]
+        mockQuran.ayahsToReturn = [makeAyah(number: 1)]
+        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: AppGroupConstants.poolNudgeDateKey)
+        viewModel.loadInitial()
+        await yield()
+        viewModel.selectSurah(surah)
+        await yield()
+        viewModel.toggleSelection(viewModel.ayahs[0])
+
+        viewModel.addSelected()
+        await yield()
+
+        XCTAssertNil(
+            nudgeDefaults.object(forKey: AppGroupConstants.poolNudgeDateKey),
+            "Nudge stamp must be cleared after at least one successful add"
+        )
+    }
+
+    /// DF-029: If the add batch fails entirely, the stamp is preserved.
+    func testAddSelected_preservesPoolNudgeStamp_whenNothingAdded() async {
+        let surah = makeSurah(number: 1, englishName: "Al-Fatihah")
+        mockQuran.surahsToReturn = [surah]
+        mockQuran.ayahsToReturn = [makeAyah(number: 1)]
+        let stamp = Calendar.current.startOfDay(for: Date())
+        nudgeDefaults.set(stamp, forKey: AppGroupConstants.poolNudgeDateKey)
+        viewModel.loadInitial()
+        await yield()
+        viewModel.selectSurah(surah)
+        await yield()
+        viewModel.toggleSelection(viewModel.ayahs[0])
+        mockPool.throwAyahTooShortOnce = true
+
+        viewModel.addSelected()
+        await yield()
+
+        XCTAssertNotNil(
+            nudgeDefaults.object(forKey: AppGroupConstants.poolNudgeDateKey),
+            "Stamp stays when no ayahs were actually added"
+        )
     }
 
     /// DF-054: `acknowledgeAddSummary` clears the summary and triggers navigation.

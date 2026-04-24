@@ -214,4 +214,55 @@ final class AyahPoolServiceTests: XCTestCase {
         try localDataSource.insertAyahPoolItem(fourWord)
         XCTAssertNil(service.nextAyah(excludeShort: true))
     }
+
+    // MARK: - addAyahs (batch)
+
+    /// DF-054: addAyahs must return per-input add/reject outcomes for mixed batches.
+    func testAddAyahs_mixedBatch_returnsAddedAndRejectedPerInput() async {
+        let inputs = [
+            AyahInput(surahNumber: 1, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a"),
+            AyahInput(surahNumber: 2, ayahNumber: 1, arabicText: "a b c", transliteration: "short"),
+            AyahInput(surahNumber: 3, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "c"),
+        ]
+
+        let result = await service.addAyahs(inputs)
+
+        XCTAssertEqual(result.added.count, 2, "Two eligible ayahs must be added")
+        XCTAssertEqual(result.rejected.count, 1, "One short ayah must be rejected")
+        XCTAssertEqual(result.rejected.first?.surahNumber, 2)
+        if case .ayahTooShort(let wc, let min) = result.rejected.first?.reason {
+            XCTAssertEqual(wc, 3)
+            XCTAssertEqual(min, 5)
+        } else {
+            XCTFail("Expected ayahTooShort rejection, got \(String(describing: result.rejected.first?.reason))")
+        }
+        XCTAssertFalse(result.didHitPoolFull)
+    }
+
+    /// DF-054: addAyahs stops on first poolFull and reports partial success.
+    func testAddAyahs_stopsOnPoolFull_reportsPartial() async throws {
+        for i in 1...19 {
+            try await service.addAyah(surahNumber: i, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "t")
+        }
+        let inputs = [
+            AyahInput(surahNumber: 100, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "a"),
+            AyahInput(surahNumber: 101, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "b"),
+            AyahInput(surahNumber: 102, ayahNumber: 1, arabicText: eligibleArabic, transliteration: "c"),
+        ]
+
+        let result = await service.addAyahs(inputs)
+
+        XCTAssertEqual(result.added.count, 1, "Only one slot remained")
+        XCTAssertTrue(result.didHitPoolFull)
+    }
+
+    // MARK: - Canonical constant access via protocol
+
+    /// DF-051: Track A and other clients must be able to read the cap through the
+    /// protocol name (not only `AyahPoolServiceImpl`).
+    func testProtocolExposesCanonicalMaxPoolSize() {
+        XCTAssertEqual(AyahPoolServiceImpl.maxPoolSize, 20)
+        let impl: AyahPoolService = service
+        XCTAssertEqual(type(of: impl).maxPoolSize, 20)
+    }
 }
