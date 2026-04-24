@@ -2,8 +2,6 @@ import Foundation
 
 @MainActor
 final class AyahPoolViewModel: ObservableObject {
-    static let maxPoolSize = 20
-
     @Published private(set) var items: [AyahPoolItem] = []
     @Published private(set) var surahNames: [Int: String] = [:]
     @Published private(set) var isLoading = false
@@ -23,8 +21,8 @@ final class AyahPoolViewModel: ObservableObject {
 
     var count: Int { items.count }
     var isEmpty: Bool { items.isEmpty }
-    var isFull: Bool { items.count >= Self.maxPoolSize }
-    var countLabel: String { "\(items.count) / \(Self.maxPoolSize)" }
+    var isFull: Bool { items.count >= AyahPoolServiceImpl.maxPoolSize }
+    var countLabel: String { "\(items.count) / \(AyahPoolServiceImpl.maxPoolSize)" }
 
     func load() {
         Task {

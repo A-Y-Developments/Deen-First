@@ -14,7 +14,7 @@ final class QuranTabViewModel: ObservableObject {
     @Published var viewMode: QuranViewMode = .surah
     @Published var ayahPoolCount: Int = 0
 
-    let ayahPoolMaxSize = AyahPoolViewModel.maxPoolSize
+    let ayahPoolMaxSize = AyahPoolServiceImpl.maxPoolSize
 
     private var cancellables = Set<AnyCancellable>()
 
