@@ -204,107 +204,45 @@ final class ReciteToUnblockViewModelTests: XCTestCase {
         XCTAssertEqual(vm.similarityThreshold, 0.85, accuracy: 0.001)
     }
 
-    func testMinWordCount_NilInNormalMode() {
-        let vm = makeViewModel()
-        XCTAssertNil(vm.minWordCount)
-    }
-
-    func testMinWordCount_5InHardMode() {
-        let ruleId = UUID()
-        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
-        let vm = makeViewModel()
-        vm.targetRuleId = ruleId
-        XCTAssertEqual(vm.minWordCount, 5)
-    }
-
-    // MARK: - Pool nudge
+    // MARK: - Pool nudge (via sequence provider)
 
     func testPoolNudge_NotShownByDefault() {
         let vm = makeViewModel()
         XCTAssertFalse(vm.showPoolNudge)
     }
 
-    func testPoolNudge_ShownOncePerDay_NotRepeated() async {
-        let nudgeSuiteName = "com.test.nudge-\(UUID().uuidString)"
-        let nudgeDefaults = UserDefaults(suiteName: nudgeSuiteName)!
-        defer { nudgeDefaults.removePersistentDomain(forName: nudgeSuiteName) }
-        // Simulate nudge already recorded today
-        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
-        let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = []
-        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
+    func testPoolNudge_FiresWhenSequenceProviderReportsEmptyPool() async {
+        let nudgeDefaults = makeFreshNudgeDefaults()
+        let provider = MockAyahSequenceProvider()
+        provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: true)
+        let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
 
-        _ = await vm.resolveEligiblePool()
+        await vm.loadRandomAyah()
+
+        XCTAssertTrue(vm.showPoolNudge)
+    }
+
+    func testPoolNudge_DoesNotFire_WhenSequenceProviderUsedPool() async {
+        let nudgeDefaults = makeFreshNudgeDefaults()
+        let provider = MockAyahSequenceProvider()
+        provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: false)
+        let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+
+        await vm.loadRandomAyah()
+
+        XCTAssertFalse(vm.showPoolNudge)
+    }
+
+    func testPoolNudge_DoesNotRefireSameDay() async {
+        let nudgeDefaults = makeFreshNudgeDefaults()
+        nudgeDefaults.set(Calendar.current.startOfDay(for: Date()), forKey: "com.aydev.deenfirst.poolNudgeDate")
+        let provider = MockAyahSequenceProvider()
+        provider.result = AyahSequenceResult(sequence: [makeAyah(id: 1)], poolWasEmpty: true)
+        let vm = makeViewModel(sequenceProvider: provider, nudgeDefaults: nudgeDefaults)
+
+        await vm.loadRandomAyah()
 
         XCTAssertFalse(vm.showPoolNudge, "Nudge must not re-fire on the same day")
-    }
-
-    /// Normal Mode, empty pool → nudge should show. (DF-29 extends DF-13 beyond Hard Mode.)
-    func testPoolNudge_NormalMode_EmptyPool_ShowsNudge() async {
-        let nudgeDefaults = makeFreshNudgeDefaults()
-let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = []
-        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
-
-        let eligible = await vm.resolveEligiblePool()
-
-        XCTAssertTrue(eligible.isEmpty)
-        XCTAssertTrue(vm.showPoolNudge)
-    }
-
-    /// Normal Mode, non-empty pool → pool returned, nudge NOT shown.
-    func testResolveEligiblePool_NormalMode_NonEmptyPool_ReturnsPoolNoNudge() async {
-        let nudgeDefaults = makeFreshNudgeDefaults()
-let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = [
-            makePoolItem(surah: 112, ayah: 1, wordCount: 4), // short — still eligible in normal mode
-            makePoolItem(surah: 114, ayah: 1, wordCount: 6),
-        ]
-        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
-
-        let eligible = await vm.resolveEligiblePool()
-
-        XCTAssertEqual(eligible.count, 2)
-        XCTAssertFalse(vm.showPoolNudge)
-    }
-
-    /// Hard Mode, non-empty pool but all short → eligible empty, nudge fires.
-    func testResolveEligiblePool_HardMode_OnlyShortAyahs_TriggersNudge() async {
-        let ruleId = UUID()
-        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
-        let nudgeDefaults = makeFreshNudgeDefaults()
-let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = [
-            makePoolItem(surah: 112, ayah: 1, wordCount: 4),
-            makePoolItem(surah: 112, ayah: 2, wordCount: 3),
-        ]
-        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
-        vm.targetRuleId = ruleId
-
-        let eligible = await vm.resolveEligiblePool()
-
-        XCTAssertTrue(eligible.isEmpty)
-        XCTAssertTrue(vm.showPoolNudge)
-    }
-
-    /// Hard Mode, pool with mixed word counts → only items with wordCount >= 5 kept.
-    func testResolveEligiblePool_HardMode_FiltersShortAyahs() async {
-        let ruleId = UUID()
-        mockService.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
-        let nudgeDefaults = makeFreshNudgeDefaults()
-let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = [
-            makePoolItem(surah: 112, ayah: 1, wordCount: 4),
-            makePoolItem(surah: 2, ayah: 255, wordCount: 40),
-        ]
-        let vm = makeViewModel(ayahPoolService: pool, nudgeDefaults: nudgeDefaults)
-        vm.targetRuleId = ruleId
-
-        let eligible = await vm.resolveEligiblePool()
-
-        XCTAssertEqual(eligible.count, 1)
-        XCTAssertEqual(eligible.first?.surahNumber, 2)
-        XCTAssertFalse(vm.showPoolNudge)
     }
 
     // MARK: - Hard Mode tier duration
@@ -348,14 +286,15 @@ let pool = MockAyahPoolServiceForRecite()
     // MARK: - Helpers
 
     private func makeViewModel(
-        ayahPoolService: AyahPoolService? = nil,
+        sequenceProvider: AyahSequenceProvider? = nil,
         nudgeDefaults: UserDefaults? = nil
     ) -> ReciteToUnblockViewModel {
         ReciteToUnblockViewModel(
             quranPreferences: MockQuranPreferencesServiceForRecite(),
             screenTimeService: mockService,
+            scoringService: MockRecitationScoringService(),
+            sequenceProvider: sequenceProvider ?? MockAyahSequenceProvider(),
             sharedDefaults: testDefaults,
-            ayahPoolService: ayahPoolService ?? MockAyahPoolServiceForRecite(),
             nudgeDefaults: nudgeDefaults ?? makeFreshNudgeDefaults()
         )
     }
@@ -371,14 +310,8 @@ let pool = MockAyahPoolServiceForRecite()
         return defaults
     }
 
-    private func makePoolItem(surah: Int, ayah: Int, wordCount: Int) -> AyahPoolItem {
-        AyahPoolItem(
-            surahNumber: surah,
-            ayahNumberInSurah: ayah,
-            arabicText: String(repeating: "word ", count: wordCount).trimmingCharacters(in: .whitespaces),
-            transliteration: "",
-            wordCount: wordCount
-        )
+    private func makeAyah(id: Int) -> Ayah {
+        Ayah(number: id, text: "ayah \(id)", numberInSurah: id, arabic2: "kalimah kalimah kalimah")
     }
 
     /// A timeLimit rule active all day so isCurrentlyInBlockingPeriod returns true during tests.
@@ -452,4 +385,25 @@ final class MockAyahPoolServiceForRecite: AyahPoolService {
     func poolCount() async -> Int { poolToReturn.count }
     func nextAyah(excludeShort: Bool) -> AyahPoolItem? { poolToReturn.first }
     func isEmpty() async -> Bool { poolToReturn.isEmpty }
+}
+
+@MainActor
+final class MockAyahSequenceProvider: AyahSequenceProvider {
+    var result = AyahSequenceResult(sequence: [], poolWasEmpty: false)
+    var errorToThrow: Error?
+
+    func makeSequence(count: Int, isHardMode: Bool) async throws -> AyahSequenceResult {
+        if let errorToThrow { throw errorToThrow }
+        return result
+    }
+}
+
+final class MockRecitationScoringService: RecitationScoringService {
+    var resultToReturn = RecitationScore(passed: false, score: 0, transcript: "")
+    var errorToThrow: Error?
+
+    func score(audioURL: URL, reference: Ayah, threshold: Double) async throws -> RecitationScore {
+        if let errorToThrow { throw errorToThrow }
+        return resultToReturn
+    }
 }

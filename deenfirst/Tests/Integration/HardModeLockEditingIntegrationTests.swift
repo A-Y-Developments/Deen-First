@@ -125,27 +125,21 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
     }
 
     // MARK: - Hard Mode — (4) Ayahs with < 5 words never surfaced in Hard Mode
+    //
+    // Pool filtering now lives in AyahSequenceProvider; QA covers the full
+    // word-count filter matrix in AyahSequenceProviderTests. The VM-level
+    // smoke test below just verifies the Hard Mode derivation still works
+    // after the 113 split.
 
-    func testHardMode_ResolveEligiblePool_FiltersAyahsBelowFiveWords() async {
+    func testHardMode_ReciteVM_DerivesHardModeFromRule() {
         let ruleId = UUID()
         let mockRecite = MockScreenTimeRulesServiceForRecite()
         mockRecite.ruleToReturn = makeTimeLimitRule(id: ruleId, isHardMode: true)
 
-        let pool = MockAyahPoolServiceForRecite()
-        pool.poolToReturn = [
-            makePoolItem(surah: 112, ayah: 1, wordCount: 4),   // short — must be filtered out
-            makePoolItem(surah: 112, ayah: 2, wordCount: 3),   // short — must be filtered out
-            makePoolItem(surah: 2, ayah: 255, wordCount: 40),  // eligible
-            makePoolItem(surah: 36, ayah: 1, wordCount: 5),    // boundary — eligible
-        ]
-
-        let vm = makeReciteVM(service: mockRecite, pool: pool)
+        let vm = makeReciteVM(service: mockRecite)
         vm.targetRuleId = ruleId
 
-        let eligible = await vm.resolveEligiblePool()
-
-        XCTAssertEqual(eligible.count, 2)
-        XCTAssertTrue(eligible.allSatisfy { $0.wordCount >= 5 })
+        XCTAssertEqual(vm.similarityThreshold, RecitationThreshold.hardMode, accuracy: 0.001)
     }
 
     // MARK: - Hard Mode — (5) Tier 1 requires 2 ayahs in Hard Mode
@@ -368,10 +362,8 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
     }
 
     private func makeReciteVM(
-        service: MockScreenTimeRulesServiceForRecite,
-        pool: MockAyahPoolServiceForRecite? = nil
+        service: MockScreenTimeRulesServiceForRecite
     ) -> ReciteToUnblockViewModel {
-        let effectivePool = pool ?? MockAyahPoolServiceForRecite()
         let nudgeSuite = "com.test.df42-nudge-\(UUID().uuidString)"
         let nudgeDefaults = UserDefaults(suiteName: nudgeSuite) ?? .standard
         let sharedSuite = "com.test.df42-shared-\(UUID().uuidString)"
@@ -379,8 +371,9 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
         return ReciteToUnblockViewModel(
             quranPreferences: MockQuranPreferencesServiceForRecite(),
             screenTimeService: service,
+            scoringService: MockRecitationScoringService(),
+            sequenceProvider: MockAyahSequenceProvider(),
             sharedDefaults: sharedDefaults,
-            ayahPoolService: effectivePool,
             nudgeDefaults: nudgeDefaults
         )
     }

@@ -193,8 +193,9 @@ final class TieredUnblockIntegrationTests: XCTestCase {
         ReciteToUnblockViewModel(
             quranPreferences: MockQuranPreferencesServiceForRecite(),
             screenTimeService: mockService,
+            scoringService: MockRecitationScoringService(),
+            sequenceProvider: MockAyahSequenceProvider(),
             sharedDefaults: testDefaults,
-            ayahPoolService: MockAyahPoolServiceForRecite(),
             nudgeDefaults: makeFreshNudgeDefaults()
         )
     }
