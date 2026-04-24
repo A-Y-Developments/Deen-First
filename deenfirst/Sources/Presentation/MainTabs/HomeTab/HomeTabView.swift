@@ -128,7 +128,7 @@ struct HomeTabView: View {
             recitationsPassed: viewModel.todayRecitationsPassed,
             streakDays: viewModel.currentStreak,
             action: {
-                router.navigate(to: .dashboard)
+                router.navigate(to: .dashboardDetail)
             }
         )
     }

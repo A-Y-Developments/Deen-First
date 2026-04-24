@@ -231,8 +231,9 @@ struct RootView: View {
             EmergencyUnblockView()
         case .unblockDurationSelection(let ruleId):
             UnblockDurationSelectionView(ruleId: ruleId)
-        case .dashboard:
-            DashboardTabView()
+        case .dashboardDetail:
+            DashboardDetailView()
+                .toolbar(.hidden, for: .tabBar)
         case .ayahPool:
             AyahPoolView()
         case .ayahPoolSurahPicker:
