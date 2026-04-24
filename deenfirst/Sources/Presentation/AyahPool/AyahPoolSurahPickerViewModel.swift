@@ -160,12 +160,21 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
                 pooledKeys.insert(k)
                 newlySelected.remove(k)
             }
+            if !addedKeys.isEmpty {
+                clearPoolNudgeStamp()
+            }
             if hitPoolFull {
                 showPoolFullAlert = true
             } else if errorMessage == nil {
                 didFinishAdding = true
             }
         }
+    }
+
+    /// Resets the HM "empty pool" nudge 24h gate so it can re-fire in a future
+    /// HM session if the pool is emptied again.
+    private func clearPoolNudgeStamp() {
+        AppGroupConstants.sharedDefaults?.removeObject(forKey: AppGroupConstants.poolNudgeDateKey)
     }
 
     // MARK: - Helpers

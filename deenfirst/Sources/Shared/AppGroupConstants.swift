@@ -71,6 +71,12 @@ enum AppGroupConstants {
         "pendingChangeScheduled_\(changeId.uuidString)"
     }
 
+    // MARK: - Ayah Pool Nudge
+
+    /// Last date (start-of-day) the Hard Mode "empty pool" nudge was shown.
+    /// Cleared after a successful ayah add so a future empty-pool HM session can re-trigger.
+    static let poolNudgeDateKey = "com.aydev.deenfirst.poolNudgeDate"
+
     // MARK: - Dashboard V2 Keys
 
     /// Date-keyed (format: yyyy-MM-dd)
