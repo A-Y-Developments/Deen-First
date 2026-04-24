@@ -131,8 +131,9 @@ private struct TierCardView: View {
                 .padding(.vertical, 20)
 
                 if isHardMode {
-                    Text("🔥")
+                    Image(systemName: "flame.fill")
                         .font(.title3)
+                        .foregroundColor(.orange)
                         .padding(12)
                 }
             }

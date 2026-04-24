@@ -3,7 +3,7 @@ id: 092
 title: Main app distribution profile also uses "Deen First" (with space) — unresolved inconsistency
 severity: P2
 area: infra
-status: open
+status: closed
 ---
 
 ## Problem

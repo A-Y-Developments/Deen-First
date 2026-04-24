@@ -3,7 +3,7 @@ id: 034
 title: Raw emoji literal in TierCardView violates no-emoji rule
 severity: P3
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem

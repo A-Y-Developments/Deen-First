@@ -2,11 +2,10 @@ import SwiftUI
 
 struct AyahPoolView: View {
     @EnvironmentObject private var router: Router
-    @StateObject private var viewModel: AyahPoolViewModel
-
-    init(viewModel: AyahPoolViewModel = MainActor.assumeIsolated { AyahPoolViewModel() }) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+    // DF-068: ViewModel is now hoisted to RootView and injected via @EnvironmentObject,
+    // matching the pattern used by every other tab/route VM. The init-parameter factory
+    // default (MainActor.assumeIsolated { AyahPoolViewModel() }) has been removed.
+    @EnvironmentObject private var viewModel: AyahPoolViewModel
 
     var body: some View {
         ZStack {

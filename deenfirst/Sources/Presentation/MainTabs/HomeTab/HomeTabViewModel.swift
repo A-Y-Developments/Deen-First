@@ -8,7 +8,6 @@ final class HomeTabViewModel: ObservableObject {
     @Published var isLoadingDailySurah = false
     @Published var appLimits: [ScreenTimeRule] = []
     @Published var timeLimits: [ScreenTimeRule] = []
-    @Published var unblockRemainingSeconds: [UUID: Int] = [:]
     @Published var errorMessage: String?
 
     @Published var deenScore: Int = 0
@@ -22,7 +21,9 @@ final class HomeTabViewModel: ObservableObject {
     private let sharedDefaults: UserDefaults?
 
     private var surahs: [Surah] = []
-    private var countdownTimers: [UUID: AnyCancellable] = [:]
+    private var cancellables: Set<AnyCancellable> = []
+    // DF-066: single source of truth for countdown ticking — shared with BlockingTabViewModel.
+    private let countdownManager: UnblockCountdownManager
 
     init(
         quranService: QuranService = DIContainer.shared.quranService,
@@ -33,9 +34,18 @@ final class HomeTabViewModel: ObservableObject {
     ) {
         self.quranService = quranService
         self.authService = authService
-        self.screenTimeRulesService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
+        let stService = screenTimeRulesService ?? DIContainer.shared.screenTimeRulesService
+        self.screenTimeRulesService = stService
         self.pendingChangeService = pendingChangeService ?? DIContainer.shared.pendingChangeService
         self.sharedDefaults = sharedDefaults
+        self.countdownManager = UnblockCountdownManager(
+            screenTimeRulesService: stService,
+            defaults: sharedDefaults
+        )
+        // Forward countdown ticks so SwiftUI re-renders card countdowns in this VM's views.
+        countdownManager.objectWillChange
+            .sink { [weak self] in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     func loadData() async {
@@ -121,52 +131,7 @@ final class HomeTabViewModel: ObservableObject {
     }
 
     func syncCountdownFromStorage() {
-        let allRules = appLimits + timeLimits
-
-        for rule in allRules {
-            let key = AppGroupConstants.unblockExpiryKey(for: rule.id)
-            let expiry = AppGroupConstants.sharedDefaults?.double(forKey: key) ?? 0
-
-            guard expiry > 0 else {
-                stopCountdown(for: rule.id)
-                continue
-            }
-
-            let expiresAt = Date(timeIntervalSince1970: expiry)
-            let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
-            guard remaining > 0 else {
-                stopCountdown(for: rule.id)
-                Task { await screenTimeRulesService.reblockIfExpired(ruleId: rule.id) }
-                continue
-            }
-
-            unblockRemainingSeconds[rule.id] = remaining
-            startCountdownTimer(ruleId: rule.id, expiresAt: expiresAt)
-        }
-    }
-
-    private func startCountdownTimer(ruleId: UUID, expiresAt: Date) {
-        countdownTimers[ruleId]?.cancel()
-
-        countdownTimers[ruleId] = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self else { return }
-
-                let remaining = Int(UnblockCountdownCalculator.remaining(expiresAt: expiresAt))
-                if remaining <= 0 {
-                    self.stopCountdown(for: ruleId)
-                    Task { await self.screenTimeRulesService.reblockIfExpired(ruleId: ruleId) }
-                } else {
-                    self.unblockRemainingSeconds[ruleId] = remaining
-                }
-            }
-    }
-
-    private func stopCountdown(for ruleId: UUID) {
-        countdownTimers[ruleId]?.cancel()
-        countdownTimers.removeValue(forKey: ruleId)
-        unblockRemainingSeconds.removeValue(forKey: ruleId)
+        countdownManager.sync(rules: appLimits + timeLimits)
     }
 
     func isRuleCurrentlyBlocking(_ rule: ScreenTimeRule) -> Bool {
@@ -181,8 +146,7 @@ final class HomeTabViewModel: ObservableObject {
     }
 
     func countdownDisplay(for ruleId: UUID) -> String? {
-        guard let seconds = unblockRemainingSeconds[ruleId] else { return nil }
-        return UnblockCountdownCalculator.formatted(remaining: TimeInterval(seconds))
+        countdownManager.countdownDisplay(for: ruleId)
     }
 
     var visibleAppLimits: [ScreenTimeRule] {

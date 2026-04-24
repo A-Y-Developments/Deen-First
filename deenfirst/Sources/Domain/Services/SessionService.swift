@@ -163,8 +163,9 @@ final class SessionServiceImpl: SessionService {
 
         try await sessionRepository.updateSession(session)
 
-        // Dashboard: record only completed listening (focus) sessions.
-        if session.modality == .listening, durationSeconds > 0 {
+        // Dashboard: record only completed listening (focus) sessions that are NOT unblock sessions.
+        // Tier 3 unblock sessions use .listening modality but should not inflate the focus-session count.
+        if session.modality == .listening, durationSeconds > 0, !session.type.isUnblock {
             dashboardDataWriter?.recordFocusSession(duration: TimeInterval(durationSeconds))
         }
     }

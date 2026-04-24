@@ -12,7 +12,8 @@ enum ReciteState: Equatable {
     case transcribing
     case result(passed: Bool, score: Int)
     /// Tier 2 only: a non-final ayah passed — show score, prompt user to proceed.
-    case awaitingNextAyah(score: Int)
+    /// `completedIndex` is 1-based — "Ayah 1 Complete" means the 1st ayah of the sequence just passed.
+    case awaitingNextAyah(score: Int, completedIndex: Int, totalAyahs: Int)
     /// Hard Mode only: 3 consecutive failures on the same ayah — offer Tier 1 downgrade.
     case downgradeOffered
     case error(String)
@@ -50,7 +51,19 @@ final class ReciteToUnblockViewModel: ObservableObject {
     /// Set by UnblockDurationSelectionView before navigating here — identifies which rule's apps to unblock.
     /// nil means the flow was triggered from the Shield screen (no specific rule context),
     /// in which case handlePass falls back to unblocking ALL currently blocking rules.
-    var targetRuleId: UUID?
+    /// DF-035: assigning `targetRuleId` eagerly snapshots Hard Mode for the session so
+    /// downstream reads (similarityThreshold, ayahCount, canRefreshAyah) are stable
+    /// even before `loadRandomAyah` runs — matches test expectations and guards against
+    /// a rule edit landing between navigation and first ayah load.
+    var targetRuleId: UUID? {
+        didSet {
+            if let ruleId = targetRuleId {
+                isHardModeSession = screenTimeService.getRule(id: ruleId)?.isHardMode ?? false
+            } else {
+                isHardModeSession = false
+            }
+        }
+    }
 
     // MARK: - Dependencies
 
@@ -77,12 +90,14 @@ final class ReciteToUnblockViewModel: ObservableObject {
     var currentAyahIndex: Int = 0
     var failureCountForCurrentAyah: Int = 0
 
-    // MARK: - Computed
+    // MARK: - Session snapshot (DF-035)
 
-    private var isHardMode: Bool {
-        guard let ruleId = targetRuleId else { return false }
-        return screenTimeService.getRule(id: ruleId)?.isHardMode ?? false
-    }
+    /// Snapshot of `rule.isHardMode` taken at session start. Stable across the entire recitation
+    /// so that mid-session rule edits (e.g. Lock Editing apply) cannot shift thresholds, ayah counts,
+    /// or minutes granted between the recording and scoring of the same attempt.
+    private(set) var isHardModeSession: Bool = false
+
+    private var isHardMode: Bool { isHardModeSession }
 
     var similarityThreshold: Double {
         isHardMode ? RecitationThreshold.hardMode : RecitationThreshold.normal
@@ -114,6 +129,18 @@ final class ReciteToUnblockViewModel: ObservableObject {
     // MARK: - Load Ayah(s)
 
     func loadRandomAyah() async {
+        // DF-035: snapshot Hard Mode at session start so thresholds / ayah count / grant minutes
+        // stay consistent for the whole attempt.
+        if let ruleId = targetRuleId {
+            isHardModeSession = screenTimeService.getRule(id: ruleId)?.isHardMode ?? false
+        } else {
+            isHardModeSession = false
+        }
+
+        // DF-029: reset the in-session nudge flag. maybeShowPoolNudge() will re-enable it
+        // only if the pool is still empty for this fresh session.
+        showPoolNudge = false
+
         state = .loadingAyah
         currentAyahIndex = 0
         failureCountForCurrentAyah = 0
@@ -268,11 +295,15 @@ final class ReciteToUnblockViewModel: ObservableObject {
             dashboardDataWriter?.recordRecitationPassed()
             let total = ayahCount
             if currentAyahIndex < total - 1 {
+                // DF-025: completedIndex is the 1-based index of the ayah that just passed,
+                // BEFORE advancing. This lets the view render "Ayah 1 Complete" / "Ayah 2 Complete"
+                // dynamically for Hard Mode Tier 2 (3 ayahs) without hardcoding.
+                let completedIndex = currentAyahIndex + 1
                 currentAyahIndex += 1
                 if ayahSequence.count > currentAyahIndex { self.ayah = ayahSequence[currentAyahIndex] }
                 failureCountForCurrentAyah = 0
                 progressText = "Ayah \(currentAyahIndex + 1) of \(total)"
-                state = .awaitingNextAyah(score: score)
+                state = .awaitingNextAyah(score: score, completedIndex: completedIndex, totalAyahs: total)
             } else {
                 await handlePass()
                 state = .result(passed: true, score: score)

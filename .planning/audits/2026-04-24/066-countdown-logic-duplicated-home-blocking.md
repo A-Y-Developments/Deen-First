@@ -3,7 +3,7 @@ id: 066
 title: Countdown timer / unblock tracking logic duplicated across HomeTabViewModel and BlockingTabViewModel
 severity: P2
 area: code-quality
-status: open
+status: closed
 ---
 
 ## Problem
