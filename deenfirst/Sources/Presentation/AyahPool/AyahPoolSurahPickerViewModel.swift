@@ -145,11 +145,14 @@ final class AyahPoolSurahPickerViewModel: ObservableObject {
                         transliteration: ayah.transliteration
                     )
                     addedKeys.append(key(for: ayah))
-                } catch AyahPoolError.poolFull {
+                } catch AyahPoolError.poolFull(_) {
                     hitPoolFull = true
                     break
                 } catch AyahPoolError.alreadyInPool {
                     addedKeys.append(key(for: ayah))
+                } catch AyahPoolError.ayahTooShort(_, _) {
+                    // Skip short ayahs silently for now; partial-add feedback (DF-054) adds UX.
+                    continue
                 } catch {
                     errorMessage = error.localizedDescription
                     break
