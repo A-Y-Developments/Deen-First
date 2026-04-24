@@ -1,7 +1,9 @@
+import BackgroundTasks
 import RevenueCat
 import SwiftData
 import SwiftUI
 import UserNotifications
+import os
 
 @main
 struct DeenFirstApp: App {
@@ -38,12 +40,61 @@ struct DeenFirstApp: App {
 
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
+    /// Must match `BGTaskSchedulerPermittedIdentifiers` in Info.plist.
+    /// Info.plist entry is owned by Track D (`Project.swift`); coordinate on merge.
+    static let pendingApplyTaskIdentifier = "com.aydev.deenfirst.pending-apply"
+
+    private let bgLogger = Logger(subsystem: "com.aydev.deenfirst", category: "BGTaskScheduler")
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        registerPendingApplyTask()
         return true
+    }
+
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        schedulePendingApplyTask()
+    }
+
+    // MARK: - BGTaskScheduler
+
+    private func registerPendingApplyTask() {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: Self.pendingApplyTaskIdentifier,
+            using: nil
+        ) { [weak self] task in
+            self?.handlePendingApplyTask(task)
+        }
+    }
+
+    private func schedulePendingApplyTask() {
+        let request = BGAppRefreshTaskRequest(identifier: Self.pendingApplyTaskIdentifier)
+        // Earliest fire is 15 minutes out — iOS decides the actual firing time
+        // based on user activity patterns and battery state.
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            bgLogger.error("Failed to submit pending-apply task: \(error.localizedDescription)")
+        }
+    }
+
+    private func handlePendingApplyTask(_ task: BGTask) {
+        // Reschedule so the task continues firing while the user is away.
+        schedulePendingApplyTask()
+
+        let applyTask = Task { @MainActor in
+            await DIContainer.shared.pendingChangeService.applyExpiredChanges()
+            task.setTaskCompleted(success: true)
+        }
+
+        task.expirationHandler = {
+            applyTask.cancel()
+            task.setTaskCompleted(success: false)
+        }
     }
 
     // Called when user taps a notification (e.g. reblock notification after temp unblock expires).
