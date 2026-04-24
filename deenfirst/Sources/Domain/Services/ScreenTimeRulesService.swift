@@ -12,6 +12,11 @@ protocol ScreenTimeRulesService {
     func setTimeLimitBlock(for selection: FamilyActivitySelection, config: TimeLimitConfig) async throws
     func deleteTimeLimit(id: UUID) async throws
 
+    /// Stops DeviceActivity monitoring for a rule and flips `isEnabled = false`,
+    /// preserving the rule record so it can be re-enabled later. Distinct from
+    /// `deleteAppLimit`/`deleteTimeLimit`, which hard-delete the record.
+    func deactivateRule(id: UUID) async throws
+
     // MARK: - Lock Editing Gated Operations
     // These check isLockEditingEnabled and route to PendingChangeService when true.
     // Use these from ViewModels — not the raw set/delete methods above.
@@ -202,6 +207,33 @@ final class ScreenTimeRulesServiceImpl: ScreenTimeRulesService {
         ScreenTimeEvents.removeTriggeredRuleId(ruleId: id)
         repository.deleteTimeLimitRule(id: id)
         notificationSchedulingService.cancelTimeLimitWarning(for: id)
+        await reapplyActiveShields()
+    }
+
+    // MARK: - Deactivate (preserves record, stops monitoring)
+
+    func deactivateRule(id: UUID) async throws {
+        guard var rule = repository.getRule(id: id) else { return }
+
+        switch rule.type {
+        case .appLimit:
+            let name = DeviceActivityName("daily_\(id.uuidString)")
+            try await deviceActivityManager.stopMonitoring(names: [name])
+        case .timeLimit:
+            let name = DeviceActivityName("timeLimit_\(id.uuidString)")
+            try await deviceActivityManager.stopMonitoring(names: [name])
+            notificationSchedulingService.cancelTimeLimitWarning(for: id)
+        }
+
+        ScreenTimeEvents.removeRuleTokens(ruleId: id)
+        ScreenTimeEvents.removeTriggeredRuleId(ruleId: id)
+
+        rule.isEnabled = false
+        switch rule.type {
+        case .appLimit:  repository.setAppLimitRule(rule)
+        case .timeLimit: repository.setTimeLimitRule(rule)
+        }
+
         await reapplyActiveShields()
     }
 

@@ -131,7 +131,7 @@ final class PendingChangeServiceImpl: PendingChangeService {
         case .delete:
             try await applyDelete(ruleId: change.ruleId)
         case .disable:
-            try await applyDelete(ruleId: change.ruleId)
+            try await applyDisable(ruleId: change.ruleId)
         case .disableHardMode:
             applyFlagUpdate(ruleId: change.ruleId) { $0.isHardMode = false }
         case .disableLockEditing:
@@ -182,6 +182,10 @@ final class PendingChangeServiceImpl: PendingChangeService {
         case .appLimit:  try await screenTimeRulesService.deleteAppLimit(id: ruleId)
         case .timeLimit: try await screenTimeRulesService.deleteTimeLimit(id: ruleId)
         }
+    }
+
+    private func applyDisable(ruleId: UUID) async throws {
+        try await screenTimeRulesService.deactivateRule(id: ruleId)
     }
 
     private func applyFlagUpdate(ruleId: UUID, update: (inout ScreenTimeRule) -> Void) {

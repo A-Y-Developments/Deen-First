@@ -55,6 +55,7 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
 
     var isHardMode: Bool = false
     var isLockEditingEnabled: Bool = false
+    var isEnabled: Bool = true
 
     var createdAt: Date
 
@@ -76,6 +77,7 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
         durationOptions: [Int]? = nil,
         isHardMode: Bool = false,
         isLockEditingEnabled: Bool = false,
+        isEnabled: Bool = true,
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -95,6 +97,7 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
         self.durationOptions = durationOptions
         self.isHardMode = isHardMode
         self.isLockEditingEnabled = isLockEditingEnabled
+        self.isEnabled = isEnabled
         self.createdAt = createdAt
     }
 
@@ -116,6 +119,7 @@ struct ScreenTimeRule: Codable, Identifiable, Hashable {
         self.durationOptions = try container.decodeIfPresent([Int].self, forKey: .durationOptions)
         self.isHardMode = try container.decodeIfPresent(Bool.self, forKey: .isHardMode) ?? false
         self.isLockEditingEnabled = try container.decodeIfPresent(Bool.self, forKey: .isLockEditingEnabled) ?? false
+        self.isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
         self.createdAt = try container.decode(Date.self, forKey: .createdAt)
     }
 

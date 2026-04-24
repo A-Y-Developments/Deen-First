@@ -95,7 +95,6 @@ extension ScreenTimeRulesServiceImpl {
     }
 
     // MARK: - Disable Rule (Gated)
-    // Disable has the same effect as delete in the current data model (no isEnabled flag on ScreenTimeRule).
 
     func disableRule(id: UUID) async throws {
         guard let rule = repository.getRule(id: id) else { return }
@@ -107,10 +106,7 @@ extension ScreenTimeRulesServiceImpl {
             }
             await pending.createPendingChange(for: rule, changeType: PendingChangeType.disable.rawValue, pendingData: nil)
         } else {
-            switch rule.type {
-            case .appLimit:  try await deleteAppLimit(id: id)
-            case .timeLimit: try await deleteTimeLimit(id: id)
-            }
+            try await deactivateRule(id: id)
         }
     }
 
