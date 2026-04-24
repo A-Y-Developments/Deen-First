@@ -14,7 +14,7 @@
 ## Key Enums
 
 - `UnblockTier`: `tier1` (5 min) · `tier2` (10 min) · `tier3` (15 min)
-- `PendingChangeType`: `editRule` · `disableLockEditing` (others TBD)
+- `PendingChangeType`: `edit` · `delete` · `disable` · `disableHardMode` · `disableLockEditing`
 - Recitation threshold: `0.70` normal · `0.85` hard mode
 
 ## Business Rules
