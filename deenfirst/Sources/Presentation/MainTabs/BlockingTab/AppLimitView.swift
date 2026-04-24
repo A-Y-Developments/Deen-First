@@ -59,12 +59,13 @@ struct AppLimitView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .alert(
-            "Lock Editing Enabled",
-            isPresented: $viewModel.showLockEditingEnabledConfirmation
+            "Enable Hard Mode?",
+            isPresented: $viewModel.showHardModeConfirmation
         ) {
-            Button("OK") { dismiss() }
+            Button("Cancel", role: .cancel) { viewModel.cancelEnableHardMode() }
+            Button("Enable") { viewModel.confirmEnableHardMode() }
         } message: {
-            Text("Lock Editing has been enabled for this rule.")
+            Text("Hard Mode requires 85% recitation accuracy. Enabling it will also turn on Lock Editing for this rule — you'll need to wait 24 hours to disable either one.")
         }
         .alert("Delete Block?", isPresented: $viewModel.showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -247,10 +248,10 @@ struct AppLimitView: View {
 
             VStack(spacing: 8) {
                 difficultyOption(label: "Normal", isSelected: !viewModel.isHardMode) {
-                    viewModel.isHardMode = false
+                    viewModel.disableHardMode()
                 }
                 difficultyOption(label: "Hard Mode", isSelected: viewModel.isHardMode) {
-                    viewModel.isHardMode = true
+                    viewModel.requestEnableHardMode()
                 }
             }
 

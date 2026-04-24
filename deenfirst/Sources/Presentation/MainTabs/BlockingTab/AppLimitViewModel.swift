@@ -27,7 +27,7 @@ final class AppLimitViewModel: ObservableObject {
     @Published var showDeleteConfirmation: Bool = false
     @Published var isHardMode: Bool = false
     @Published var isLockEditingEnabled: Bool = false
-    @Published var showLockEditingEnabledConfirmation: Bool = false
+    @Published var showHardModeConfirmation: Bool = false
     @Published var showPendingChangeSheet: Bool = false
 
     // MARK: - Edit Mode
@@ -150,6 +150,35 @@ final class AppLimitViewModel: ObservableObject {
         activeDays = isAllDay ? Set(0...6) : []
     }
 
+    // MARK: - Hard Mode
+
+    /// Called when the user taps the "Hard Mode" option. If Hard Mode is already
+    /// on this is a no-op; otherwise a confirmation dialog is shown disclosing
+    /// that Lock Editing will auto-enable. The flags flip only after explicit
+    /// confirmation via `confirmEnableHardMode`.
+    func requestEnableHardMode() {
+        guard !isHardMode else { return }
+        showHardModeConfirmation = true
+    }
+
+    func confirmEnableHardMode() {
+        isHardMode = true
+        isLockEditingEnabled = true
+        showHardModeConfirmation = false
+    }
+
+    func cancelEnableHardMode() {
+        showHardModeConfirmation = false
+    }
+
+    /// Toggles Hard Mode off without touching Lock Editing. The two flags
+    /// are coupled on enable (via the confirmation) but decoupled on disable:
+    /// users can leave Lock Editing on after turning Hard Mode off, or toggle
+    /// it separately via the Lock Editing control.
+    func disableHardMode() {
+        isHardMode = false
+    }
+
     // MARK: - Lock Editing
 
     func handleLockEditingToggle(to newValue: Bool) {
@@ -238,11 +267,7 @@ final class AppLimitViewModel: ObservableObject {
             } else {
                 try await screenTimeRulesService.setAppLimitBlock(for: selection, config: config)
             }
-            if isHardMode {
-                showLockEditingEnabledConfirmation = true
-            } else {
-                hasSetupCompleted = true
-            }
+            hasSetupCompleted = true
         } catch {
             errorMessage = error.localizedDescription
         }

@@ -24,7 +24,7 @@ final class TimeLimitViewModel: ObservableObject {
     @Published var expandedPicker: PickerType? = nil
     @Published var isHardMode: Bool = false
     @Published var isLockEditingEnabled: Bool = false
-    @Published var showLockEditingEnabledConfirmation: Bool = false
+    @Published var showHardModeConfirmation: Bool = false
     @Published var showPendingChangeSheet: Bool = false
 
     enum PickerType { case start, end }
@@ -203,6 +203,29 @@ final class TimeLimitViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Hard Mode
+
+    /// See `AppLimitViewModel.requestEnableHardMode` for rationale — shows
+    /// a pre-save confirmation dialog disclosing Lock Editing will auto-enable.
+    func requestEnableHardMode() {
+        guard !isHardMode else { return }
+        showHardModeConfirmation = true
+    }
+
+    func confirmEnableHardMode() {
+        isHardMode = true
+        isLockEditingEnabled = true
+        showHardModeConfirmation = false
+    }
+
+    func cancelEnableHardMode() {
+        showHardModeConfirmation = false
+    }
+
+    func disableHardMode() {
+        isHardMode = false
+    }
+
     // MARK: - Lock Editing
 
     func handleLockEditingToggle(to newValue: Bool) {
@@ -301,11 +324,7 @@ final class TimeLimitViewModel: ObservableObject {
             } else {
                 try await screenTimeRulesService.setTimeLimitBlock(for: selection, config: config)
             }
-            if isHardMode {
-                showLockEditingEnabledConfirmation = true
-            } else {
-                hasSetupCompleted = true
-            }
+            hasSetupCompleted = true
         } catch {
             errorMessage = error.localizedDescription
         }
