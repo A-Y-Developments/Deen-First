@@ -56,15 +56,11 @@ let project = Project(
                 .target(name: "ScreenTimeMonitor"),
                 .target(name: "Shield"),
                 .target(name: "DeenFirstActivityReport"),
-                // ShieldAction removed — secondary button deleted from shield,
-                // recite to unblock is now triggered from BlockingTabView directly.
+                .sdk(name: "FamilyControls", type: .framework),
+                .sdk(name: "DeviceActivity", type: .framework),
+                .sdk(name: "ManagedSettings", type: .framework),
             ],
             settings: .settings(
-                base: [
-                    "OTHER_LDFLAGS": .string(
-                        "$(inherited) -framework FamilyControls -framework DeviceActivity -framework ManagedSettings"
-                    )
-                ],
                 configurations: [
                     .debug(
                         name: "Debug",
