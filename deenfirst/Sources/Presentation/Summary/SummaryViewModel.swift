@@ -8,9 +8,9 @@ final class SummaryViewModel: ObservableObject {
     @Published var percentage: Int = 0
     @Published var isCalculating: Bool = true
     @Published var ellipsisCount: Int = 0
-    private var ellipsisTimer: Timer?
 
     private var progressBarWidth: CGFloat = 0
+    private var ellipsisTask: Task<Void, Never>?
 
     // Exact range label from user selection
     var selectedRangeLabel: String {
@@ -41,7 +41,7 @@ final class SummaryViewModel: ObservableObject {
         if names.count == 2 { return "\(names[0]) and \(names[1])" }
 
         let allButLast = names.dropLast().joined(separator: ", ")
-        let last = names.last!
+        guard let last = names.last else { return allButLast }
         return "\(allButLast), and \(last)"
     }
 
@@ -100,42 +100,36 @@ final class SummaryViewModel: ObservableObject {
     }
 
     // MARK: - Calculation Animation
-    func startCalculation(screenWidth: CGFloat, onComplete: @escaping () -> Void) {
+
+    /// Runs the 5-second calculation animation: progress bar, percentage count, ellipsis cycle.
+    /// Completes when the 100% mark is reached; caller navigates after await.
+    func startCalculation(screenWidth: CGFloat) async {
         progressBarWidth = screenWidth - 144
         isCalculating = true
         progress = 0
         percentage = 0
 
-        // Ellipsis animation
-        ellipsisTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
-            self.ellipsisCount = (self.ellipsisCount + 1) % 4
-        }
-
-        // Animate progress bar
         withAnimation(.linear(duration: 5)) {
             progress = progressBarWidth
         }
 
-        // Animate percentage from 1 to 100
-        animatePercentage(to: 100, duration: 5)
-
-        // Navigate after 5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            self.ellipsisTimer?.invalidate()
-            self.ellipsisTimer = nil
-            self.isCalculating = false
-            onComplete()
-        }
-    }
-
-    private func animatePercentage(to target: Int, duration: TimeInterval) {
-        let steps = 100
-        let delay = duration / Double(steps)
-
-        for i in 1...steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + (delay * Double(i))) {
-                self.percentage = i
+        ellipsisTask?.cancel()
+        ellipsisTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(500))
+                guard let self, !Task.isCancelled else { return }
+                self.ellipsisCount = (self.ellipsisCount + 1) % 4
             }
         }
+
+        for i in 1...100 {
+            try? await Task.sleep(for: .milliseconds(50))
+            if Task.isCancelled { break }
+            percentage = i
+        }
+
+        ellipsisTask?.cancel()
+        ellipsisTask = nil
+        isCalculating = false
     }
 }
