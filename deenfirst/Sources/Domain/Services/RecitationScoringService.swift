@@ -9,16 +9,6 @@ struct RecitationScore: Equatable {
     let transcript: String
 }
 
-// MARK: - Transcriber seam
-//
-// Temporary protocol that lets `RecitationScoringService` take a dependency
-// on transcription without binding to the Whisper implementation details.
-// Step 2 of Track A replaces the inline impl with `WhisperAPIDataSource`.
-
-protocol Transcriber {
-    func transcribe(audioURL: URL, apiKey: String) async throws -> String
-}
-
 // MARK: - Errors
 
 enum RecitationScoringError: LocalizedError {
@@ -51,14 +41,14 @@ enum RecitationThreshold {
 // MARK: - Implementation
 
 final class RecitationScoringServiceImpl: RecitationScoringService {
-    private let transcriber: Transcriber
+    private let whisperAPI: WhisperAPIDataSource
     private let apiKeyProvider: () -> String?
 
     init(
-        transcriber: Transcriber,
+        whisperAPI: WhisperAPIDataSource,
         apiKeyProvider: @escaping () -> String? = { Bundle.main.openAIApiKey.isEmpty ? nil : Bundle.main.openAIApiKey }
     ) {
-        self.transcriber = transcriber
+        self.whisperAPI = whisperAPI
         self.apiKeyProvider = apiKeyProvider
     }
 
@@ -69,7 +59,7 @@ final class RecitationScoringServiceImpl: RecitationScoringService {
 
         let transcript: String
         do {
-            transcript = try await transcriber.transcribe(audioURL: audioURL, apiKey: apiKey)
+            transcript = try await whisperAPI.transcribe(audioURL: audioURL, apiKey: apiKey)
         } catch {
             throw RecitationScoringError.transcriptionFailed(error.localizedDescription)
         }
