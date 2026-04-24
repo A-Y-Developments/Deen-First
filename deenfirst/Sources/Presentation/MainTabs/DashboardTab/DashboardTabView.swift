@@ -6,8 +6,9 @@ import SwiftUI
 /// Each section is rendered by its own `DeviceActivityReport` host view, one per
 /// scene registered by `DeenFirstActivityReportExtension`. A single shared host
 /// cannot drive multiple scenes, so sections must be instantiated individually.
-/// The fallback placeholder sits behind each report so the user always sees a
-/// message instead of an empty frame when the extension is unavailable.
+/// The fallback placeholder is shown until the report view mounts, after which
+/// it is swapped out — `DeviceActivityReport` is opaque and would otherwise
+/// occlude the placeholder if both were stacked.
 struct DashboardTabView: View {
     private enum DateRange: String, CaseIterable, Identifiable {
         case today
@@ -86,13 +87,13 @@ struct DashboardTabView: View {
         filter: DeviceActivityFilter,
         minHeight: CGFloat
     ) -> some View {
-        ZStack {
-            fallbackPlaceholder
-            DeviceActivityReport(context, filter: filter)
-                .id(refreshNonce)
-        }
-        .frame(minHeight: minHeight)
-        .padding(.horizontal)
+        DashboardReportSection(
+            context: context,
+            filter: filter,
+            refreshNonce: refreshNonce,
+            minHeight: minHeight,
+            fallback: fallbackPlaceholder
+        )
     }
 
     private var fallbackPlaceholder: some View {
@@ -147,5 +148,38 @@ struct DashboardTabView: View {
             users: .all,
             devices: .init([.iPhone])
         )
+    }
+}
+
+/// Shows `fallback` until the `DeviceActivityReport` host view has had time to
+/// mount the extension UI, then swaps in the report. Avoids the ZStack
+/// occlusion bug where an opaque-but-empty report would hide the fallback.
+private struct DashboardReportSection<Fallback: View>: View {
+    let context: DeviceActivityReport.Context
+    let filter: DeviceActivityFilter
+    let refreshNonce: Int
+    let minHeight: CGFloat
+    let fallback: Fallback
+
+    @State private var reportReady = false
+
+    var body: some View {
+        Group {
+            if reportReady {
+                DeviceActivityReport(context, filter: filter)
+                    .id(refreshNonce)
+            } else {
+                fallback
+            }
+        }
+        .frame(minHeight: minHeight)
+        .padding(.horizontal)
+        .task {
+            // Apple's DeviceActivityReport has no load/error callback. A brief
+            // pause lets the extension register before we swap in the report
+            // so the placeholder is the baseline state, not an afterthought.
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            reportReady = true
+        }
     }
 }

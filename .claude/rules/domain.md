@@ -42,8 +42,16 @@
 - In Normal Mode: pool is optional; system uses standard ayah selection if pool empty
 
 ### Deen Score
-- Formula: `clamp(50 + positives - negatives, 0, 100)`
-- Positives: Quran session time, session count, recitation completions, streak days
-- Negatives: screen time over daily limit (per app), emergency unblocks used
-- Calculated daily; written to App Group by `DashboardDataWriter`
-- Rendered by `DeenFirstActivityReport` extension (read-only from App Group)
+- Computed by `calculateDeenScore(_: DeenScoreInput)` in `Shared/DeenScoreCalculator.swift`.
+- Inputs (`DeenScoreInput`): `quranSeconds`, `focusSessions`, `recitationsPassed`, `streakDays`, `screenTimeOverLimitSeconds`, `emergencyUnblocksThisWeek`.
+- Shape: tiered step-function starting at base `50`, clamped to `[0, 100]`. See `ScoreWeights` for exact thresholds and point awards.
+- Tiers (positives):
+  - Quran seconds → 0 / 5 / 10 / 15 / 20 pts at `<10m / <20m / <30m / ≥30m` (see `quranTier*`)
+  - Focus sessions → 0 / 10 / 15 pts at `0 / 1 / 2+` sessions
+  - Recitations passed → 0 / 5 / 10 pts at `0 / 1–2 / 3+`
+  - Streak days → 0 / 5 / 10 pts at `0 / 1–6 / 7+`
+- Tiers (negatives):
+  - Screen time over daily limit → 0 / -10 / -20 / -30 at `<30m / <60m / <90m / ≥90m`
+  - Emergency unblocks this week → 0 / -5 / -10 at `0 / 1 / 2+`
+- Calculated on read (pure function, no caching). Per-day inputs are written to App Group by `DashboardDataWriter`.
+- Rendered by `DeenFirstActivityReport` extension (read-only from App Group) and by the main app's Home summary card.
