@@ -37,9 +37,15 @@
 - User can cancel a pending change before it applies
 
 ### Custom Ayah Pool
-- Max 20 `AyahPoolItem`s per user
-- In Hard Mode: recitation draws from pool exclusively (if non-empty)
-- In Normal Mode: pool is optional; system uses standard ayah selection if pool empty
+- Max 20 `AyahPoolItem`s per user. Canonical constant: `AyahPoolService.maxPoolSize`.
+- Add-time eligibility: `wordCount >= 5` (enforced in `AyahPoolService.addAyah`). Short ayahs are rejected with `AyahPoolError.ayahTooShort`.
+- **Normal Mode:**
+  - If pool is non-empty → recitation draws from pool (no word-count filter).
+  - If pool is empty → system falls back to standard (random) ayah selection. No nudge is shown.
+- **Hard Mode:**
+  - If pool is non-empty → recitation draws from pool, filtered to `wordCount >= 5`.
+  - If the filtered pool is empty (pool empty or all short) → a once-per-day nudge is shown prompting the user to add eligible ayahs; the flow falls back to random selection of ayahs that match Hard Mode's `wordCount >= 5` filter.
+- Nudge gate: `AppGroupConstants.poolNudgeDateKey` tracks last-shown day. The stamp is cleared after a successful add so the nudge can re-trigger if the pool is emptied later.
 
 ### Deen Score
 - Computed by `calculateDeenScore(_: DeenScoreInput)` in `Shared/DeenScoreCalculator.swift`.
