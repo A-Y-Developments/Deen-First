@@ -49,10 +49,20 @@ deenfirst/Sources/
 │   ├── UnblockDurationSelection/       ← NEW V2
 │   └── Components/                     ← 23 shared components
 │
-├── Shared/                             ← shared with extensions
+├── Shared/                             ← shared with extensions (DeenFirstActivityReport pulls only this)
 │   ├── AppGroupConstants.swift
-│   ├── ScreenTimeEvents.swift
-│   └── DeenScoreCalculator.swift       ← NEW V2 (pure function)
+│   ├── DeenScoreCalculator.swift       ← NEW V2 (pure function)
+│   ├── DashboardDateKeys.swift
+│   ├── DeenScoreReport.swift
+│   ├── QuranEngagementReport.swift
+│   ├── QuranVsScreenTimeReport.swift
+│   ├── ScreenTimeOverviewReport.swift
+│   ├── UnblockCountdownCalculator.swift
+│   └── ...
+│
+├── Domain/ScreenTime/                  ← extension-safe types pulled by ScreenTimeMonitor only
+│   └── ScreenTimeEvents.swift          ← needs FamilyControls/ManagedSettings; stays out of Shared/
+│                                          to avoid pulling those frameworks into ActivityReport.
 │
 └── Utils/
 
@@ -70,6 +80,6 @@ Extensions/
 ## Key rules
 
 - New V2 features go under their own folder in `Presentation/`
-- Shared code used by extensions MUST live in `Shared/` — not in `Domain/` or `Presentation/`
-- Extensions never import SwiftData — only `Shared/` files
+- Code shared by **all** extensions (especially `DeenFirstActivityReport`) MUST live in `Shared/`. Code shared only by `ScreenTimeMonitor` (and that needs FamilyControls / ManagedSettings) may live in `Domain/ScreenTime/` and be pulled in via that target's `sources` — see `ScreenTimeEvents.swift`. Never put extension-pulled code under `Presentation/`.
+- Extensions never import SwiftData
 - `DeenScoreCalculator` is a pure function — no dependencies on SwiftData or network

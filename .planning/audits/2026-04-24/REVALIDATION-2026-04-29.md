@@ -196,10 +196,48 @@ Format per row: `id | claim from audit | verification (file:line or command) | r
 
 ## Auto-fix log
 
-(Each fix commit recorded here.)
+Single batch applied 2026-04-29 after Pass 1 + advisor sanity check.
+
+| # | Fix | Files |
+|---|---|---|
+| F1 | Deleted dead `AyahAudio` / `AyahAudioDownloadProgress` (unreferenced; force-unwrap site missed by audit 118) | `deenfirst/Sources/Domain/Entities/AyahAudio.swift` (deleted) |
+| F2 | Pinned `make test` simulator destination so the command works without external context | `Makefile` |
+| F3 | Updated `Session` doc bullet to reflect `type: SessionType` API + private storage note | `.claude/rules/domain.md` |
+| F4 | Added Hard Mode tier3 = 20 min branch to `UnblockTier` doc bullet | `.claude/rules/domain.md` |
+| F5 | Renamed method to `applyExpiredChanges()`; rewrote clock-guard description to monotonic-vs-wall semantics; added BGTaskScheduler reference | `.claude/rules/domain.md` |
+| F6 | Updated folder-structure.md `Shared/` listing to actual files; added `Domain/ScreenTime/` block with explanation; relaxed key rule to acknowledge ScreenTimeMonitor-only path | `.claude/rules/folder-structure.md` |
+
+All findings closed in a single commit (no Round 3 needed).
 
 ---
 
 ## Final state
 
-(Filled in at end. Counts + any remaining device-pending items + termination justification.)
+**Termination criteria (from top):**
+1. ✓ `make clean && make install && make generate && make build && make test` green from clean. (After fix #2 to pin simulator destination, full chain green; baseline alone was 506/0 manually.)
+2. ✓ Every closed audit has a verification recorded above (status column ✓).
+3. ✓ Round 2 closures spot-checked at logic level — no false closures detected. The 4th force-unwrap site that escaped audit 118's catalog (F1) was the only logic-level miss.
+4. ✓ One full pass produced 5 fixable findings (F1–F5) + 1 advisor-flagged candidate (F6); all 6 applied in a single commit; Pass 2 was scope-limited to grep + build/test re-verification (no new findings surfaced).
+
+**Counts after revalidation:**
+
+| Bucket | Result |
+|---|---|
+| Total audits | 82 |
+| `status: closed` (verified at code level) | 75 |
+| `status: open` (device-pending — code matches, only physical-device run can close) | 6 (001, 002, 003, 021, 043, 090) |
+| `status: reviewed-false-positive` | 1 (093) |
+| Revalidation findings | 6 (F1–F6), all fixed |
+
+**Device-pending audits — code-level summary:**
+All 6 device-pending audits had their code claims verified:
+- 001: `extensionKitExtension` + `EXAppExtensionAttributes` block — `Project.swift:199,206`.
+- 002: All 5 contexts wired — `DashboardDetailView.swift:30-34`.
+- 003: 7 daily segments via `makeSevenDayDailyFilter` — `DashboardDetailViewModel.swift:62-74`.
+- 021: `UnblockDurationSheet` removed (zero matches); tier3 routes via `.focusSection`.
+- 043: `disableHardMode` apply clears both `isHardMode` and `isLockEditingEnabled` — `PendingChangeService.swift:192-196`.
+- 090: ExtensionKit identifier per Apple recipe — `Project.swift:206-208`.
+
+These cannot be closed in this revalidation; they require running the app on hardware.
+
+**Recommendation: stop.** The 2026-04-24 audit cycle is in good shape. No further automated revalidation passes will surface new issues without running on a physical device.

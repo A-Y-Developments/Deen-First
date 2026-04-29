@@ -97,7 +97,7 @@ test:
 	@set -a; \
 	. ./.env; \
 	set +a; \
-	xcodebuild -workspace "$(WORKSPACE)" -scheme "$(SCHEME)" -destination 'platform=iOS Simulator' test
+	xcodebuild -workspace "$(WORKSPACE)" -scheme "$(SCHEME)" -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' test
 	@echo "$(GREEN)✓ Unit tests completed successfully$(NC)"
 
 # Show help

@@ -4,7 +4,7 @@
 
 ### V1
 - `User` — id, isPremium, hasCompletedOnboarding, streakStartDate, currentStreak
-- `Session` — id, surahIds, ayahIds, duration, completedAt, isUnblockSession (V2)
+- `Session` — id, userId, modality (`reading`|`listening`), surahNumbers, reciterId, durationSeconds, isCompleted, `type: SessionType` (`.normal` | `.unblock(ruleId:)`) (V2). Internal storage retains `isUnblockSession: Bool` + `unlockRuleId: UUID?` for SwiftData backward compatibility — read/write through `type` only.
 
 ### V2 New
 - `PendingRuleChange` — id, ruleId, changeType, pendingData, requestedAt, appliesAt, isCancelled, isApplied
@@ -19,7 +19,7 @@
 
 ## Key Enums
 
-- `UnblockTier`: `tier1` (5 min) · `tier2` (10 min) · `tier3` (15 min)
+- `UnblockTier`: `tier1` (5 min) · `tier2` (10 min) · `tier3` (15 min Normal / 20 min Hard Mode). Read minutes via `tier.minutes(isHardMode:)` — never inline.
 - `PendingChangeType`: `edit` · `delete` · `disable` · `disableHardMode` · `disableLockEditing`
 - Recitation threshold: `0.70` normal · `0.85` hard mode
 
@@ -38,8 +38,8 @@
 
 ### Lock Editing
 - When `isLockEditingEnabled = true`: rule edits are queued as `PendingRuleChange` with `appliesAt = requestedAt + 24h`
-- `PendingChangeService.applyDuePendingChanges()` called on app foreground
-- Clock manipulation guard: skip apply if `Date() - lastKnownDate > 2 hours`
+- `PendingChangeService.applyExpiredChanges()` called on app foreground (and via `BGTaskScheduler` background refresh, identifier `com.aydev.deenfirst.pending-apply`)
+- Clock manipulation guard: `applyExpiredChanges` compares wall-clock delta to monotonic uptime delta (`CLOCK_MONOTONIC`). If wall-clock advanced materially further than monotonic (or rolled backward) beyond a 10-minute tolerance, treat as tamper, log at `.error`, and skip silently. Reboot is detected by negative monotonic delta and refreshes the baseline benignly.
 - User can cancel a pending change before it applies
 
 ### Custom Ayah Pool
