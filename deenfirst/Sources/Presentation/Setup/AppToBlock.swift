@@ -122,7 +122,6 @@ struct AppToBlock: View {
         .padding(.top, 40)
         .padding(.horizontal, 24)
         .mainBackground()
-        .ignoresSafeArea(.all, edges: .top)
         .alert("Required", isPresented: $showValidationError) {
             Button("OK", role: .cancel) {}
         } message: {

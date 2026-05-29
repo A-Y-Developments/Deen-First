@@ -5,28 +5,31 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeTabView(
-                onViewAllSurahs: {
-                    selectedTab = 1
-                },
-                onViewAllBlocks: {
-                    selectedTab = 2
-                }
-            )
-                .tabItem { Label("Home", systemImage: "house.fill") }
-                .tag(0)
+            Group {
+                HomeTabView(
+                    onViewAllSurahs: {
+                        selectedTab = 1
+                    },
+                    onViewAllBlocks: {
+                        selectedTab = 2
+                    }
+                )
+                    .tabItem { Label("Home", systemImage: "house.fill") }
+                    .tag(0)
 
-            QuranTabView()
-                .tabItem { Label("Quran", systemImage: "book.fill") }
-                .tag(1)
-                
-            BlockingTabView()
-                .tabItem { Label("Blocking", systemImage: "nosign") }
-                .tag(2)
+                QuranTabView()
+                    .tabItem { Label("Quran", systemImage: "book.fill") }
+                    .tag(1)
 
-            SettingsTabView()
-                .tabItem { Label("Settings", systemImage: "gear") }
-                .tag(3)
+                BlockingTabView()
+                    .tabItem { Label("Blocking", systemImage: "nosign") }
+                    .tag(2)
+
+                SettingsTabView()
+                    .tabItem { Label("Settings", systemImage: "gear") }
+                    .tag(3)
+            }
+            .toolbarBackground(.hidden, for: .tabBar)
         }
         .accentColor(Color(hex: "ADA666"))
     }

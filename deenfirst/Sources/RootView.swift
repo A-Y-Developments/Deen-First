@@ -1,7 +1,15 @@
 import FamilyControls
 import SwiftUI
+import UIKit
 
 struct RootView: View {
+    init() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     @StateObject private var router = Router()
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var surveyViewModel = SurveyViewModel()
