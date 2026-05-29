@@ -382,6 +382,67 @@ final class PendingChangeServiceTests: XCTestCase {
         XCTAssertTrue(mockNotificationService.cancelledChangeIds.contains(expiredChange.id))
     }
 
+    // MARK: - applyExpiredChanges — UI refresh notification (DF-22)
+
+    // DF-22 criterion 3: when ≥1 expired change applies on foreground, the
+    // service posts `.pendingChangesApplied` so BlockingTabView refreshes a
+    // stale rule card on the same foreground.
+    func testApplyExpiredChanges_postsNotification_whenChangeApplies() async {
+        let ruleId = UUID()
+        var rule = makeRule(id: ruleId)
+        rule.isLockEditingEnabled = true
+        mockRulesRepository.rules[ruleId] = rule
+
+        let pastDate = Date().addingTimeInterval(-90_000)
+        let expiredChange = PendingRuleChange(
+            ruleId: ruleId, changeType: .disableLockEditing, requestedAt: pastDate)
+        try? localDataSource.insertPendingChange(expiredChange)
+
+        let postExpectation = XCTNSNotificationExpectation(name: .pendingChangesApplied)
+
+        await service.applyExpiredChanges()
+
+        await fulfillment(of: [postExpectation], timeout: 2)
+    }
+
+    // No eligible (expired, uncancelled, unapplied) change → nothing applies →
+    // no notification, so the Blocking tab is not needlessly reloaded.
+    func testApplyExpiredChanges_doesNotPostNotification_whenNoEligibleChanges() async {
+        let rule = makeRule()
+        await service.createPendingChange(for: rule, changeType: "disableLockEditing", pendingData: nil)
+
+        let noPostExpectation = XCTNSNotificationExpectation(name: .pendingChangesApplied)
+        noPostExpectation.isInverted = true
+
+        await service.applyExpiredChanges()
+
+        await fulfillment(of: [noPostExpectation], timeout: 0.5)
+    }
+
+    // A failed apply must NOT post: appliedCount only counts successes. An
+    // expired `.edit` with undecodable pendingData makes applyChange throw; it
+    // is caught, the change stays pending, and no notification fires.
+    func testApplyExpiredChanges_doesNotPostNotification_whenApplyFails() async {
+        let ruleId = UUID()
+        let pastDate = Date().addingTimeInterval(-90_000)
+        let badChange = PendingRuleChange(
+            ruleId: ruleId,
+            changeType: .edit,
+            pendingData: Data([0xFF, 0x00]),
+            requestedAt: pastDate)
+        try? localDataSource.insertPendingChange(badChange)
+
+        let noPostExpectation = XCTNSNotificationExpectation(name: .pendingChangesApplied)
+        noPostExpectation.isInverted = true
+
+        await service.applyExpiredChanges()
+
+        await fulfillment(of: [noPostExpectation], timeout: 0.5)
+
+        let all = try? localDataSource.fetchPendingChanges()
+        XCTAssertFalse(all?.first?.isApplied ?? true, "Failed apply must leave the change pending")
+    }
+
     // MARK: - Helpers
 
     private func makeRule(id: UUID = UUID(), type: RuleType = .appLimit) -> ScreenTimeRule {

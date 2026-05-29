@@ -109,6 +109,9 @@ struct BlockingTabView: View {
         .onReceive(
             NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
         ) { _ in refreshBlockingState() }
+        .onReceive(
+            NotificationCenter.default.publisher(for: .pendingChangesApplied)
+        ) { _ in refreshBlockingState() }
     }
 
     private func refreshBlockingState() {
