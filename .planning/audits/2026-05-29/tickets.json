@@ -1,0 +1,338 @@
+[
+  {
+    "id": "DF-1",
+    "title": "Add isHardMode + isLockEditingEnabled to ScreenTimeRule",
+    "milestone": "M0 — Foundation & Data Models",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add two new Bool fields to the `ScreenTimeRule` SwiftData model:\n\n```swift\nvar isHardMode: Bool = false\nvar isLockEditingEnabled: Bool = false\n```\n\nNo data migration needed — SwiftData applies defaults to existing records.\n\n**Acceptance criteria:**\n\n* Both fields exist on `ScreenTimeRule` with default `false`\n* Existing rules load without migration errors\n* Fields are persisted correctly through app restart\n\n**Blocks:** M1-1 (Duration Selection Screen), M2-1 (Hard Mode toggle), M3-4 (Lock Editing toggle), M2-4 (rule card badge)"
+  },
+  {
+    "id": "DF-2",
+    "title": "Create PendingRuleChange SwiftData entity",
+    "milestone": "M0 — Foundation & Data Models",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create the `PendingRuleChange` SwiftData model:\n\n```swift\n@Model class PendingRuleChange {\n    var id: UUID\n    var ruleId: UUID\n    var changeType: String  // \"edit\" | \"delete\" | \"disable\" | \"disableHardMode\" | \"disableLockEditing\"\n    var pendingData: Data?  // JSON-encoded ScreenTimeRule snapshot for \"edit\" type\n    var requestedAt: Date\n    var appliesAt: Date     // requestedAt + 86400 seconds\n    var isCancelled: Bool = false\n    var isApplied: Bool = false\n    var createdAt: Date\n}\n```\n\nRegister the model in `DIContainer` ModelContainer.\n\n**Acceptance criteria:**\n\n* Entity created and registered in SwiftData schema\n* Can create, fetch, and persist PendingRuleChange records\n* appliesAt = requestedAt + 86400 seconds enforced at init\n\n**Blocks:** M3-1 (PendingChangeService)"
+  },
+  {
+    "id": "DF-3",
+    "title": "Create AyahPoolItem SwiftData entity",
+    "milestone": "M0 — Foundation & Data Models",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create the `AyahPoolItem` SwiftData model:\n\n```swift\n@Model class AyahPoolItem {\n    var id: UUID\n    var surahNumber: Int\n    var ayahNumberInSurah: Int\n    var arabicText: String\n    var transliteration: String\n    var wordCount: Int   // pre-computed on add; Hard Mode filter requires >= 5\n    var addedAt: Date\n}\n```\n\nRegister in DIContainer ModelContainer.\n\n**Note:** wordCount must be pre-computed when the item is created — do not recompute at query time.\n\n**Acceptance criteria:**\n\n* Entity created and registered\n* wordCount is stored (not computed)\n* Can create, fetch, delete records\n\n**Blocks:** M4-1 (AyahPoolService)"
+  },
+  {
+    "id": "DF-4",
+    "title": "Extend AppGroupConstants with Dashboard V2 keys",
+    "milestone": "M0 — Foundation & Data Models",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add new App Group keys to `AppGroupConstants.swift` for Dashboard data sharing between main app and `DeenFirstActivityReport` extension.\n\n```swift\n// Date-keyed (yyyy-MM-dd)\nstatic func quranSecondsKey(_ date: String) -> String { \"deen.\\(date).quranSeconds\" }\nstatic func focusSessionsKey(_ date: String) -> String { \"deen.\\(date).focusSessions\" }\nstatic func recitationsPassedKey(_ date: String) -> String { \"deen.\\(date).recitations.passed\" }\nstatic func recitationsAttemptsKey(_ date: String) -> String { \"deen.\\(date).recitations.attempts\" }\n\n// ISO week-keyed (yyyy-Www)\nstatic func emergencyUnblocksKey(_ week: String) -> String { \"deen.\\(week).emergencyUnblocks\" }\n\n// Global\nstatic let streakCurrentKey = \"deen.streak.current\"\nstatic let streakLongestKey = \"deen.streak.longest\"\nstatic let dataLastUpdatedAtKey = \"deen.data.lastUpdatedAt\"\nstatic let lastKnownDateKey = \"lastKnownDate\"\n```\n\n**Acceptance criteria:**\n\n* All keys added with no typos\n* Date/week helper functions return correct format strings\n* No conflicts with existing keys\n\n**Blocks:** M5-1 (DashboardDataWriter), M5-3 (DeenScoreCalculator)"
+  },
+  {
+    "id": "DF-5",
+    "title": "Create DeenFirstActivityReport Xcode target",
+    "milestone": "M0 — Foundation & Data Models",
+    "labels": ["P1", "Agent-Infra", "Feature"],
+    "status": "Done",
+    "description": "Add a new `DeviceActivityReport` extension target to `Project.swift`.\n\n**Steps:**\n\n1. Add target `DeenFirstActivityReport` to `Project.swift` with bundle ID `$(BASE_BUNDLE_ID).ActivityReport`\n2. Add entitlements file with App Group (`group.com.aydev.deenfirst`)\n3. Add to App Group in Apple Developer Portal\n4. Add `DeenScoreCalculator.swift` and `AppGroupConstants.swift` to this target's membership\n5. Verify `NSExtension` info plist key with `com.apple.deviceactivity.report` extension point\n6. Verify builds cleanly (no source files yet — just the scaffold)\n\n**Hard constraints for this target:**\n\n* No network calls\n* No SwiftData / Core Data\n* Read-only App Group (cannot write)\n* RAM cap \\~100MB\n* Use `os_log` not `print()`\n* Test on physical device only (simulator unreliable)\n* Always include fallback UI\n\n**Acceptance criteria:**\n\n* Target builds without errors\n* Extension is in the same App Group as all other targets\n* `tuist generate` produces valid Xcode project with the new target\n\n**Blocks:** M5-4 (Dashboard extension UI)"
+  },
+  {
+    "id": "DF-6",
+    "title": "Duration Selection Screen — Unblock tier picker UI",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `UnblockDurationSelectionView` + `UnblockDurationSelectionViewModel` for route `unblockDurationSelection(ruleId: UUID)`.\n\n**Screen shows:**\n\n* App/rule name being unblocked (e.g. \"Unblocking: Instagram\")\n* Three tier cards stacked vertically:\n  * Tier 1: \"5 min — Recite 1 ayah\"\n  * Tier 2: \"10 min — Recite 2 ayahs\"\n  * Tier 3: \"15 min — Complete a 15-min Quran session\"\n* If `isHardMode = true` on the rule: show flame badge on each card + updated requirements\n* Cancel button at bottom\n\n**On select:** Navigate to Tier 1/2 → ReciteToUnblock with tier context. Tier 3 → ActiveSession with unblock flag.\n\n**Acceptance criteria:**\n\n* All three tiers visible with correct labels\n* Hard Mode variant shows updated tier requirements\n* Cancel dismisses without side effects\n* Correct navigation for each tier selection"
+  },
+  {
+    "id": "DF-7",
+    "title": "Tier 1 (5 min) — single ayah unblock flow",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `ReciteToUnblockViewModel` to support tier context. Tier 1 = existing V1 flow, now explicitly scoped as \"1 ayah → 5 minutes\".\n\n**Changes:**\n\n* `ReciteToUnblockViewModel` accepts a `UnblockTier` parameter\n* Tier 1 passes `minutes: 5` to `temporaryUnblock(minutes:)`\n* After successful recitation, show 5-min countdown on rule card\n* If active unblock already exists: replace only if new duration (5 min) > remaining time\n\n**Acceptance criteria:**\n\n* Selecting Tier 1 grants exactly 5 minutes of access on pass\n* Countdown timer appears on rule card\n* Shorter-wins logic: if 8 min remain, Tier 1 does not replace it"
+  },
+  {
+    "id": "DF-8",
+    "title": "Tier 2 (10 min) — sequential two-ayah recitation flow",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement two-ayah sequential flow in `ReciteToUnblockViewModel` for Tier 2.\n\n**Flow:**\n\n1. Load Ayah 1, show progress: \"Ayah 1 of 2\"\n2. User recites → if passes, load Ayah 2 (\"Ayah 2 of 2 ✓\")\n3. User recites Ayah 2 → if passes → grant 10 min access\n4. If Ayah 2 fails → retry Ayah 2 only (Ayah 1 result preserved)\n5. If Ayah 1 fails → retry Ayah 1 (unlimited retries in Normal Mode)\n\n**In Hard Mode (3 failures on same ayah):** offer Tier 1 downgrade.\n\n**Acceptance criteria:**\n\n* Two distinct ayahs shown sequentially\n* Ayah 1 pass state preserved if Ayah 2 fails\n* Retry targets only the failed ayah\n* 10-min access granted on both passing\n* Progress indicator visible (\"Ayah 1 of 2\")"
+  },
+  {
+    "id": "DF-9",
+    "title": "Tier 3 (15 min) — focus session → unblock trigger",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Wire Tier 3 unblock through `SessionService` and `ActiveSessionView`.\n\n**Flow:**\n\n1. User selects Tier 3 → `ActiveSessionView` launched with `isUnblockSession: Bool = true` + `unlockRuleId: UUID`\n2. Session plays for 15 min (Normal Mode) or 20 min (Hard Mode)\n3. If user ends session early → no access granted, return to Blocking tab\n4. If session completes → `SessionService` checks `isUnblockSession` flag → calls `temporaryUnblock(minutes: 15)` after saving session\n5. Session saved to history + streak updated normally\n\n**If audio fails to load (no internet):** Show error + offer Tier 1 or Tier 2 instead.\n\n**Acceptance criteria:**\n\n* No access if session ended early\n* 15-min access granted on full completion\n* Session appears in session history\n* Streak updated\n* Audio failure fallback offered"
+  },
+  {
+    "id": "DF-10",
+    "title": "Unblock timer replacement logic — longer wins",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `ScreenTimeRulesService+Unblock.swift` to implement \"longer wins\" logic when a temporary unblock is already active.\n\n**Logic:**\n\n* When `temporaryUnblock(minutes:)` is called:\n  * Check if an active unblock exists for this rule (via `unblockExpiryKey`)\n  * If existing expiry > (now + newDuration): do nothing, notify user \"Your current unblock has more time remaining\"\n  * If existing expiry <= (now + newDuration): replace with new expiry\n\n**Acceptance criteria:**\n\n* Tier 1 (5 min) does not replace an active 12-min unblock\n* Tier 3 (15 min) replaces an active 5-min unblock\n* User sees notification when new duration is shorter than current"
+  },
+  {
+    "id": "DF-11",
+    "title": "Add Dashboard tab (5th tab) and new router routes",
+    "milestone": "M1 — Tiered Unblock System",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `MainTabView` and `Router.swift` to add V2 navigation.\n\n**Tab bar change:** Home → Quran → Blocking → **Dashboard (new)** → Settings\n\n**New routes in** `Router.swift`:\n\n```swift\ncase dashboard\ncase ayahPool\ncase unblockDurationSelection(ruleId: UUID)\n```\n\n**Dashboard tab:** Renders a placeholder `DashboardTabView` for now (will be wired in M5). Just show \"Dashboard — coming soon\" stub so tab doesn't crash.\n\n**Acceptance criteria:**\n\n* 5 tabs visible with correct icons and labels\n* Tab order: Home, Quran, Blocking, Dashboard, Settings\n* All 3 new routes compile and navigate without crash\n* Existing 4 tabs and all existing routes unaffected"
+  },
+  {
+    "id": "DF-12",
+    "title": "Hard Mode toggle in AppLimitView + TimeLimitView",
+    "milestone": "M2 — Hard Mode",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add \"Unblock Difficulty\" section to both `AppLimitView` and `TimeLimitView` rule editors.\n\n**UI:**\n\n```\nUnblock Difficulty\n○ Normal  ● Hard Mode\n```\n\nWhen Hard Mode is selected, show inline explanation: \"You won't be able to refresh ayahs. A higher recitation score is required. Editing this rule requires a 24-hour delay.\"\n\n**On save with Hard Mode ON:** Auto-set `rule.isLockEditingEnabled = true` (see DF-16).\n\n**Reversibility:** Hard Mode is freely togglable at rule creation/first save. Once rule is saved with Lock Editing active, turning Hard Mode OFF requires the 24-hour delay flow.\n\n**Acceptance criteria:**\n\n* Toggle visible in both AppLimitView and TimeLimitView\n* Inline explanation shown when Hard Mode selected\n* `rule.isHardMode` persisted correctly on save\n* Toggle state reflects current `rule.isHardMode` when editing existing rule"
+  },
+  {
+    "id": "DF-13",
+    "title": "ReciteToUnblockViewModel — Hard Mode logic",
+    "milestone": "M2 — Hard Mode",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `ReciteToUnblockViewModel` with full Hard Mode awareness.\n\n**Changes when** `currentRule.isHardMode == true`:\n\n* `similarityThreshold` = 0.85 (instead of 0.70)\n* `canRefreshAyah` = false (hide Refresh button)\n* First ayah shown is locked in — no re-roll\n* Ayah selection: filter to `wordCount >= 5`\n* Ayah source: draw from `AyahPoolService` first; fall back to filtered-random only if pool empty\n* Show pool nudge if pool is empty (max once/day via UserDefaults flag)\n\n**Computed properties to add:**\n\n```swift\nvar similarityThreshold: Double { rule?.isHardMode == true ? 0.85 : 0.70 }\nvar canRefreshAyah: Bool { rule?.isHardMode != true }\nvar minWordCount: Int? { rule?.isHardMode == true ? 5 : nil }\n```\n\n**Acceptance criteria:**\n\n* 85% threshold applied in Hard Mode\n* Refresh Ayah button hidden in Hard Mode\n* Ayahs < 5 words never shown in Hard Mode\n* Pool drawn first when available\n* Pool nudge shown max once/day"
+  },
+  {
+    "id": "DF-14",
+    "title": "Hard Mode tier shifting in Duration Selection Screen",
+    "milestone": "M2 — Hard Mode",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `UnblockDurationSelectionView` and `ReciteToUnblockViewModel` to shift tier requirements when `isHardMode = true`.\n\n**Hard Mode tier table:**\n\n| Tier | Normal | Hard Mode |\n| -- | -- | -- |\n| Tier 1 (5 min) | 1 ayah | 2 ayahs |\n| Tier 2 (10 min) | 2 ayahs | 3 ayahs |\n| Tier 3 (15 min) | 15-min session | 20-min session |\n\nTier requirements must be computed from `rule.isHardMode`, not hardcoded.\n\n```swift\nfunc ayahCount(for tier: UnblockTier, isHardMode: Bool) -> Int {\n    switch (tier, isHardMode) {\n    case (.tier1, true): return 2\n    case (.tier2, true): return 3\n    case (.tier1, false): return 1\n    case (.tier2, false): return 2\n    default: return 0\n    }\n}\n```\n\n**Acceptance criteria:**\n\n* Duration Selection Screen shows Hard Mode requirements when rule has Hard Mode ON\n* Flame indicator on each tier card in Hard Mode\n* ReciteToUnlock requests correct ayah count based on mode\n* Tier 3 session duration is 20 min in Hard Mode, 15 in Normal"
+  },
+  {
+    "id": "DF-15",
+    "title": "Rule card flame badge when isHardMode = true",
+    "milestone": "M2 — Hard Mode",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `BlockRuleCard` component to show a visual Hard Mode indicator when `rule.isHardMode == true`.\n\n**Indicator:** Small flame badge (🔥 or custom icon) next to the rule name.\n\n**Acceptance criteria:**\n\n* Flame badge visible on rule card when `isHardMode = true`\n* Badge not shown when `isHardMode = false`\n* Does not disrupt existing rule card layout\n* Works correctly for both App Limit and Time Limit rules"
+  },
+  {
+    "id": "DF-16",
+    "title": "Hard Mode auto-enables Lock Editing on rule save",
+    "milestone": "M2 — Hard Mode",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "When a rule is saved with `isHardMode = true`, automatically set `isLockEditingEnabled = true` on the same rule.\n\n**In** `AppLimitViewModel` and `TimeLimitViewModel` save logic:\n\n```swift\nif rule.isHardMode { rule.isLockEditingEnabled = true }\n```\n\nShow confirmation toast/alert: \"Lock Editing has been enabled for this rule.\"\n\n**When Hard Mode is turned OFF (after 24hr delay via PendingChangeService):** Lock Editing remains ON — it must be turned off separately by the user.\n\n**Acceptance criteria:**\n\n* Saving rule with Hard Mode ON sets isLockEditingEnabled = true\n* Confirmation shown to user\n* Lock Editing does NOT turn off automatically when Hard Mode is turned off\n* Works for both new rules and edits to existing rules"
+  },
+  {
+    "id": "DF-17",
+    "title": "PendingChangeService — create, cancel, apply, clock check",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `PendingChangeService.swift` in `Domain/Services/`.\n\n**Methods:**\n\n```swift\nfunc createPendingChange(for rule: ScreenTimeRule, changeType: String, pendingData: Data?) async\nfunc cancelPendingChange(for ruleId: UUID) async\nfunc applyExpiredChanges() async  // called on every foreground\nfunc hasPendingChange(for ruleId: UUID) -> Bool\nfunc pendingChange(for ruleId: UUID) -> PendingRuleChange?\n```\n\n**createPendingChange:**\n\n* If a pending change already exists for this rule: replace it (reset 24hr clock)\n* Set `appliesAt = requestedAt + 86400`\n\n**applyExpiredChanges:**\n\n* Fetch all non-cancelled, non-applied changes where `appliesAt <= Date.now`\n* Clock check: if `Date.now - lastKnownDate > 7200` seconds → log warning, skip, update lastKnownDate, return\n* For each expired change: apply via `ScreenTimeRulesService` directly (bypass lock gate)\n* Set `isApplied = true`, schedule push notification\n\n**Register in DIContainer.**\n\n**Acceptance criteria:**\n\n* New request replaces existing one for same rule\n* applyExpiredChanges applies only truly expired changes\n* Clock jump > 2 hours skips auto-apply\n* hasPendingChange returns correct state"
+  },
+  {
+    "id": "DF-18",
+    "title": "ScreenTimeRulesService — lock editing gate on edit/delete/disable",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add Lock Editing gate to `ScreenTimeRulesService` before any rule modification.\n\n**Gate logic — wrap all mutating operations:**\n\n```swift\nfunc editRule(_ rule: ScreenTimeRule, ...) async {\n    guard !rule.isLockEditingEnabled else {\n        await pendingChangeService.createPendingChange(for: rule, changeType: \"edit\", pendingData: encodedRule)\n        return\n    }\n    // existing logic\n}\n```\n\n**Applies to:** edit, delete, disable (`isEnabled = false`), disableHardMode, disableLockEditing.\n\n**Does NOT apply to:** `temporaryUnblock`, `emergencyUnblock`, creating new rules.\n\n**Acceptance criteria:**\n\n* All 5 gated operations route to PendingChangeService when isLockEditingEnabled = true\n* Unblocking and new rule creation unaffected\n* Changes applied directly when isLockEditingEnabled = false (existing behaviour preserved)"
+  },
+  {
+    "id": "DF-19",
+    "title": "Pending Change Sheet UI",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `PendingChangeSheet` bottom sheet shown when user attempts to edit/delete a locked rule.\n\n**Sheet content:**\n\n* Title: \"Change Requested\"\n* Body: \"Lock Editing is active. This change will apply in 24 hours.\"\n* Exact timestamp: \"Applies at: \\[formatted date\\]\"\n* What change is being requested (e.g. \"Delete rule: Instagram\")\n* Two buttons: **Confirm Request** (primary) and **Cancel** (secondary)\n\n**If a pending change already exists for this rule:**\n\n* Show existing pending change info\n* Offer \"Cancel Pending Change\" button instead\n* On cancel: call `PendingChangeService.cancelPendingChange(for:)`, dismiss sheet\n\n**Triggered from:** `BlockingTabViewModel` when edit/delete attempted on locked rule.\n\n**Acceptance criteria:**\n\n* Sheet appears instead of editor when rule is locked\n* Exact apply timestamp shown\n* Confirm creates pending change, Cancel dismisses with no action\n* Existing pending change can be cancelled from sheet"
+  },
+  {
+    "id": "DF-20",
+    "title": "Lock Editing toggle in AppLimitView + TimeLimitView",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add \"Editing Protection\" section to both rule editors, below \"Unblock Difficulty\".\n\n**UI:**\n\n```\nEditing Protection\n○ Off  ● Lock Editing\n```\n\n**Behaviour:**\n\n* Defaults to OFF for new rules\n* Can be toggled freely when creating a new rule\n* If rule already exists and Lock Editing is currently ON: toggling it OFF shows Pending Change Sheet (the disable request itself requires 24hr delay)\n* Hard Mode ON always forces this to ON (see DF-16)\n\n**Acceptance criteria:**\n\n* Toggle visible in both editors\n* State reflects current `rule.isLockEditingEnabled`\n* Turning OFF an active lock goes through Pending Change Sheet\n* New rules default to OFF"
+  },
+  {
+    "id": "DF-21",
+    "title": "Rule card pending change indicator (clock icon)",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update `BlockRuleCard` to show a pending change indicator when `PendingChangeService.hasPendingChange(for: rule.id) == true`.\n\n**Indicator:** Small clock icon (⏳ or SF Symbol `clock.badge`) next to rule name.\n\n**Acceptance criteria:**\n\n* Clock indicator visible on rule card when a pending change exists\n* Indicator hidden when no pending change\n* Indicator disappears after pending change is applied or cancelled\n* Works alongside Hard Mode flame badge (both can show simultaneously)"
+  },
+  {
+    "id": "DF-22",
+    "title": "Auto-apply expired pending changes on foreground",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Trigger `PendingChangeService.applyExpiredChanges()` every time the app comes to foreground.\n\n**Integration point:** `DeenFirstApp.swift` or `RootView.swift` — observe `scenePhase` changes.\n\n```swift\n.onChange(of: scenePhase) { phase in\n    if phase == .active {\n        Task { await pendingChangeService.applyExpiredChanges() }\n    }\n}\n```\n\nAlso call on app launch.\n\n**Acceptance criteria:**\n\n* `applyExpiredChanges()` called every time app becomes active\n* Expired changes applied automatically without user action\n* Applied changes reflected immediately in UI (rule card updates)\n* No duplicate application (isApplied flag prevents re-applying)"
+  },
+  {
+    "id": "DF-23",
+    "title": "Push notification — pendingChangeApplied type",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add `pendingChangeApplied` notification type to `NotificationSchedulingService`.\n\n**When a pending change is created:** Schedule a local notification at `pendingChange.appliesAt`.\n\n```swift\nfunc schedulePendingChangeNotification(for change: PendingRuleChange, ruleName: String)\nfunc cancelPendingChangeNotification(for changeId: UUID)\n```\n\n**Notification payload:**\n\n* Title: \"Rule Change Applied\"\n* Body: \"Your rule change for \\[ruleName\\] has been applied.\"\n* Scheduled at: `change.appliesAt`\n\n**Cancel notification** when: pending change is cancelled by user, or change already applied during foreground check.\n\n**Acceptance criteria:**\n\n* Notification scheduled when pending change created\n* Notification cancelled when pending change cancelled\n* Notification fires at exact appliesAt time\n* Notification body includes rule name"
+  },
+  {
+    "id": "DF-24",
+    "title": "Clock manipulation mitigation in PendingChangeService",
+    "milestone": "M3 — Lock Editing",
+    "labels": ["P0", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement best-effort clock manipulation mitigation inside `PendingChangeService.applyExpiredChanges()`.\n\n**Logic:**\n\n```swift\nlet now = Date.now\nlet lastKnown = UserDefaults.standard.object(forKey: AppGroupConstants.lastKnownDateKey) as? Date ?? now\n\nif now.timeIntervalSince(lastKnown) > 7200 {  // > 2 hour jump\n    os_log(.fault, \"Clock manipulation suspected: jumped %.0f seconds\", now.timeIntervalSince(lastKnown))\n    UserDefaults.standard.set(now, forKey: AppGroupConstants.lastKnownDateKey)\n    return  // skip auto-apply this cycle\n}\n\nUserDefaults.standard.set(now, forKey: AppGroupConstants.lastKnownDateKey)\n// proceed with applying expired changes\n```\n\n**Note:** This is best-effort only. Sophisticated bypasses (small incremental jumps) are out of scope for V2. Full mitigation requires server-side timestamps (V3).\n\n**Acceptance criteria:**\n\n* System time jump > 2 hours → changes not auto-applied in that cycle\n* lastKnownDate updated on every foreground check\n* Warning logged via os_log (not print)\n* Normal time progression (< 2hr) unaffected"
+  },
+  {
+    "id": "DF-25",
+    "title": "AyahPoolService — CRUD, max-20 enforcement, word count filter",
+    "milestone": "M4 — Custom Ayah Pool",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `AyahPoolService.swift` in `Domain/Services/`.\n\n**Methods:**\n\n```swift\nfunc fetchPool() async -> [AyahPoolItem]\nfunc addAyah(surahNumber: Int, ayahNumber: Int, arabicText: String, transliteration: String) async throws\nfunc removeAyah(id: UUID) async\nfunc poolCount() async -> Int\nfunc nextAyah(excludeShort: Bool) -> AyahPoolItem?  // excludeShort=true filters wordCount >= 5\nfunc isEmpty() async -> Bool\n```\n\n**addAyah:**\n\n* Pre-compute `wordCount` from `arabicText.components(separatedBy: .whitespaces).filter { !$0.isEmpty }.count`\n* Enforce max 20 at service layer: throw `AyahPoolError.poolFull` if count >= 20\n* Prevent duplicates: throw `AyahPoolError.alreadyInPool` if same surah+ayah exists\n\n**nextAyah:** Sequential or random selection (TBD by implementer). If `excludeShort=true`, filter to `wordCount >= 5`.\n\n**Register in DIContainer.**\n\n**Acceptance criteria:**\n\n* addAyah throws when pool is at 20\n* wordCount pre-computed and stored (not recomputed)\n* nextAyah respects excludeShort filter\n* No duplicates allowed"
+  },
+  {
+    "id": "DF-26",
+    "title": "Ayah Pool management screen UI",
+    "milestone": "M4 — Custom Ayah Pool",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `AyahPoolView` + `AyahPoolViewModel` for route `ayahPool`.\n\n**Screen layout:**\n\n```\nMy Ayah Pool\n─────────────────────\n3 / 20 ayahs selected\n\n[+ Add Ayahs]\n\nAl-Fatiha 1:2   الحمد لله رب العالمين\nAl-Baqarah 2:255  ...\n...\n[Swipe left → Remove]\n─────────────────────\n```\n\n**Empty state:** \"Your pool is empty. Recite to Unblock will use random ayahs.\"\n**Full state (20/20):** Show \"You've reached the 20 ayah limit. Remove an ayah to add a new one.\" when trying to add.\n\n**Remove:** Swipe left → \"Remove\" destructive button. No confirmation dialog needed.\n\n**Acceptance criteria:**\n\n* Count displayed as \"N / 20\"\n* Empty state shown when pool is empty\n* Swipe to remove works\n* List updates immediately after add/remove\n* \"+ Add Ayahs\" navigates to surah picker (DF-27)"
+  },
+  {
+    "id": "DF-27",
+    "title": "Surah picker with ayah checkboxes for pool",
+    "milestone": "M4 — Custom Ayah Pool",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `AyahPoolSurahPickerView` — presented from \"+ Add Ayahs\" in `AyahPoolView`.\n\n**Flow:**\n\n1. Shows the existing searchable surah list (reuse `SelectSurahView` pattern or `QuranService.fetchSurahs()`)\n2. User taps a surah → ayah list for that surah appears\n3. Each ayah row shows: ayah number, Arabic text preview, checkbox\n4. Already-in-pool ayahs show as checked and disabled\n5. User checks new ayahs → taps \"Add Selected\"\n6. `AyahPoolService.addAyah()` called for each new selection\n7. If pool limit reached mid-selection: stop at 20, show limit message\n\n**Acceptance criteria:**\n\n* Surah list is searchable\n* Already-pooled ayahs are pre-checked and non-removable from this flow\n* Multiple ayahs selectable in one go\n* Pool limit enforced (can't add beyond 20)\n* Returns to pool management screen after adding"
+  },
+  {
+    "id": "DF-28",
+    "title": "Quran tab — My Ayah Pool entry card",
+    "milestone": "M4 — Custom Ayah Pool",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Add a \"My Ayah Pool\" entry card to `QuranTabView`, above the surah search bar.\n\n**Card content:**\n\n* Label: \"My Ayah Pool\"\n* Count badge: \"3/20 ayahs\" (or \"Empty\" if pool is 0)\n* Chevron indicating tappable\n\n**On tap:** Navigate to `ayahPool` route → `AyahPoolView`.\n\n**Acceptance criteria:**\n\n* Card visible at top of Quran tab, above search bar\n* Count updates reactively when pool changes\n* Tapping navigates to Ayah Pool screen\n* Existing Quran tab content (surah list, search) unaffected"
+  },
+  {
+    "id": "DF-29",
+    "title": "ReciteToUnblockViewModel — draw from Ayah Pool when available",
+    "milestone": "M4 — Custom Ayah Pool",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Update ayah selection logic in `ReciteToUnblockViewModel` to use `AyahPoolService` when a pool is set up.\n\n**Ayah selection priority:**\n\n1. If pool is non-empty → draw from `AyahPoolService.nextAyah(excludeShort: isHardMode)`\n2. If pool is empty + Hard Mode ON → random ayah filtered to wordCount >= 5\n3. If pool is empty + Normal Mode → random ayah (existing V1 behaviour)\n\n**Pool nudge:** If pool is empty, show a subtle nudge at bottom of recitation screen: \"Practice the ayahs you're memorizing — set up your Ayah Pool in the Quran tab.\" Show max once per day (UserDefaults flag).\n\n**Acceptance criteria:**\n\n* Pool ayahs used when pool is non-empty\n* Correct fallback when pool is empty\n* Hard Mode word filter applied even in fallback\n* Nudge shown max once/day\n* Nudge not shown when pool is active"
+  },
+  {
+    "id": "DF-30",
+    "title": "DashboardDataWriter service — write Quran data to App Group",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `DashboardDataWriter.swift` in `Domain/Services/`. Writes Quran engagement data to the shared App Group container after every qualifying event.\n\n**Methods:**\n\n```swift\nfunc recordFocusSession(duration: TimeInterval)\nfunc recordQuranReading(duration: TimeInterval)\nfunc recordRecitationPassed()\nfunc recordRecitationAttempt()\nfunc recordEmergencyUnblock()\nfunc updateStreak(_ current: Int, longest: Int)\nfunc flush()  // safety sync — call on every app foreground\n```\n\n**Key format:** Date-keyed using `AppGroupConstants.quranSecondsKey(date:)` etc. Date string = ISO `yyyy-MM-dd`. Week string = ISO `yyyy-Www`.\n\n**All writes are additive** (+=), not overwrites, except streak (set directly).\n\n**Also write:** `dataLastUpdatedAt` = ISO8601 timestamp on every write (staleness check for extension).\n\n**Register in DIContainer.**\n\n**Acceptance criteria:**\n\n* All methods write to correct App Group keys\n* Additive writes accumulate correctly across calls\n* flush() syncs current streak + dataLastUpdatedAt\n* Extension can read written values (verify via shared defaults)"
+  },
+  {
+    "id": "DF-31",
+    "title": "Integrate DashboardDataWriter at all write points",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Wire `DashboardDataWriter` calls into all qualifying event locations.\n\n**Write points:**\n\n| Event | Method | Location |\n| -- | -- | -- |\n| Focus session completes | recordFocusSession(duration:) | SessionService.endSession() |\n| Quran reading view dismissed | recordQuranReading(duration:) | QuranReadingViewModel.onDisappear |\n| Recitation passes | recordRecitationPassed() | ReciteToUnblockViewModel (on pass) |\n| Recitation attempted | recordRecitationAttempt() | ReciteToUnblockViewModel (on submit) |\n| Emergency Unblock used | recordEmergencyUnblock() | ScreenTimeRulesService+EmergencyUnblock |\n| Streak updates | updateStreak(\\_:longest:) | SessionService (after streak calc) |\n| App comes to foreground | flush() | DeenFirstApp.swift scenePhase .active |\n\n**Acceptance criteria:**\n\n* All 7 write points covered\n* No duplicate writes for the same event\n* flush() called every time app becomes active (can be same handler as DF-22)"
+  },
+  {
+    "id": "DF-32",
+    "title": "DeenScoreCalculator — pure function in Shared/",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Create `DeenScoreCalculator.swift` in `deenfirst/Sources/Shared/`. Must be added to **both** the main app target and `DeenFirstActivityReport` extension target.\n\n**Input struct:**\n\n```swift\nstruct DeenScoreInput {\n    let quranSeconds: Int\n    let focusSessions: Int\n    let recitationsPassed: Int\n    let streakDays: Int\n    let screenTimeOverLimitSeconds: Int\n    let emergencyUnblocksThisWeek: Int\n}\n```\n\n**Formula (base 50):**\n\n```swift\nfunc calculateDeenScore(_ input: DeenScoreInput) -> Int  // pure, returns 0–100\n```\n\n**All weights as named constants in** `ScoreWeights` enum — no magic numbers.\n\nScore formula:\n\n* Quran time: <10min=+5, <20=+10, <30=+15, 30+=+20\n* Focus sessions: 1=+10, 2+=+15\n* Recitations: 1=+5, 3+=+10\n* Streak active: +5, streak>=7: +5 bonus\n* Over limit 30min: -10, 60min: -20, 90min: -30\n* Emergency unblock: 1=-5, 2=-10\n* Clamp to 0–100\n\n**Acceptance criteria:**\n\n* Pure function (no side effects, no external dependencies)\n* All weights named constants\n* Score clamped to 0–100\n* File compiles in both targets"
+  },
+  {
+    "id": "DF-33",
+    "title": "Dashboard extension UI — Deen Score section",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement the Deen Score section inside the `DeenFirstActivityReport` extension.\n\n**UI:** Large score number (0–100) with a circular arc/ring visual. Contextual message below based on score range:\n\n| Range | Message |\n| -- | -- |\n| 90–100 | \"Excellent day. Masha'Allah, keep this up.\" |\n| 80–89 | \"Strong day. Your consistency is showing.\" |\n| 70–79 | \"Good day! A bit more Quran tomorrow.\" |\n| 60–69 | \"Decent balance. Push for one more session.\" |\n| 50–59 | \"Average day. More Quran or less screen time.\" |\n| 40–49 | \"Tough balance. One focus session can turn this around.\" |\n| 30–39 | \"Heavy phone use. Reset with 10 minutes of Quran.\" |\n| 0–29 | \"Difficult day. Don't give up — tomorrow is a fresh start.\" |\n\n**Data:** Read Quran data from App Group. Get screen time from `DeviceActivityResults`. Compute score via `DeenScoreCalculator.calculateDeenScore()`.\n\n**Fallback:** If data unavailable → show \"Score loading...\" message, not a crash.\n\n**Constraints:** No print(), use os_log. RAM <= 100MB. No network.\n\n**Acceptance criteria:**\n\n* Score ring renders with correct value\n* Correct contextual message for each range\n* Graceful fallback if data not yet available\n* No crash on first launch"
+  },
+  {
+    "id": "DF-34",
+    "title": "Dashboard extension UI — Screen Time Overview section",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement Screen Time Overview section in the Dashboard extension.\n\n**Content:**\n\n* Total daily screen time (formatted: \"2h 34m\")\n* Pickup count + \"avg every X min\" (pickups / hours since midnight)\n* Top 3–5 apps by usage time — horizontal bar chart\n  * Only apps the user has granted token access to (via FamilyActivityPicker)\n\n**Data source:** `DeviceActivityResults` from the extension's report context.\n\n**Acceptance criteria:**\n\n* Total screen time shown in human-readable format\n* Pickup count and avg interval shown\n* Top apps listed with relative bar lengths\n* Only token-accessible apps shown (no crash if fewer than 3 apps)\n* Section gracefully empty if no data"
+  },
+  {
+    "id": "DF-35",
+    "title": "Dashboard extension UI — Quran Engagement Today section",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement Quran Engagement Today section in the Dashboard extension.\n\n**Content (all from App Group):**\n\n* Reading time today (minutes)\n* Focus session listening time + session count\n* Recitation attempts and passes (e.g. \"3 passed / 4 attempts\")\n* Current streak (days)\n\n**Data source:** App Group shared defaults, keyed by today's date string.\n\n**Acceptance criteria:**\n\n* All 4 data points shown\n* Values update when App Group data changes\n* Zero values shown as \"0\" not hidden\n* Section shows \"No data yet\" if lastUpdatedAt is absent"
+  },
+  {
+    "id": "DF-36",
+    "title": "Dashboard extension UI — Quran vs Screen Time comparison + Weekly Trend",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Implement the last two sections of the Dashboard extension.\n\n**Section 4 — Quran vs Screen Time Comparison:**\n\n* Side-by-side bar: Quran time (minutes) vs total screen time (minutes)\n* Visual contrast is the point — no complex chart library needed\n* Label each bar clearly\n\n**Section 5 — Weekly Trend:**\n\n* Last 7 days of Deen Score as a bar chart\n* Today's bar shown in a different color (in-progress state)\n* Previous days show actual computed scores\n* Data sourced from 7-day date-keyed App Group values + 7 DeviceActivity daily queries\n\n**Acceptance criteria:**\n\n* Both sections render without crash\n* Weekly chart shows 7 bars\n* Today's bar visually distinct\n* Missing data days show 0 (not crash)\n* RAM stays well under 100MB with chart rendering"
+  },
+  {
+    "id": "DF-37",
+    "title": "Dashboard tab host view — thin wrapper with date selector and fallback",
+    "milestone": "M5 — Dashboard & Deen Score",
+    "labels": ["P1", "Agent-iOS", "Feature"],
+    "status": "Done",
+    "description": "Replace the stub `DashboardTabView` (created in DF-11) with the real implementation.\n\n**This is a thin host view** — all content is rendered by the extension.\n\n**Contents:**\n\n* `DeviceActivityReport` view (extension renders inside it)\n* Date context passed to extension: \"Today\" or \"This Week\" picker\n* Loading state while extension initializes\n* Fallback message if extension fails: \"Score loading... Pull down to refresh.\" — never a blank/black screen\n\n**Critical:** The extension is known to crash silently showing a black screen. Always wrap in a container with the fallback message visible behind it.\n\n**Acceptance criteria:**\n\n* DeviceActivityReport extension renders inside the tab\n* Date selector visible and passes context to extension\n* Fallback message shown if extension fails (not blank/black)\n* Loading state shown during initialization\n* Tested on physical device (not simulator)"
+  },
+  {
+    "id": "DF-38",
+    "title": "Unit tests — DeenScoreCalculator",
+    "milestone": "M6 — QA & Ship",
+    "labels": ["P1", "Agent-QA"],
+    "status": "Done",
+    "description": "Write unit tests for `DeenScoreCalculator` covering all score formula branches.\n\n**Test cases:**\n\n* Base score = 50 with no activity\n* Max score: 30+ min Quran + 2 sessions + 3+ recitations + 7-day streak = 100 (clamped)\n* Min score: 90+ min over limit + 2 emergency unblocks + no Quran = 0 (clamped)\n* Each positive contribution in isolation\n* Each negative deduction in isolation\n* Boundary values (exactly 10min, 20min, 30min Quran; exactly 30min, 60min, 90min over limit)\n* Score never exceeds 100 or goes below 0\n\n**Acceptance criteria:**\n\n* All formula branches covered\n* Boundary values tested\n* Floor/ceiling clamping tested\n* Tests are pure (no mocks needed — pure function)"
+  },
+  {
+    "id": "DF-39",
+    "title": "Unit tests — PendingChangeService",
+    "milestone": "M6 — QA & Ship",
+    "labels": ["P0", "Agent-QA"],
+    "status": "Done",
+    "description": "Write unit tests for `PendingChangeService`.\n\n**Test cases:**\n\n* createPendingChange: creates record with appliesAt = requestedAt + 86400\n* createPendingChange: replaces existing pending change for same rule (resets clock)\n* cancelPendingChange: marks change as cancelled, hasPendingChange returns false\n* applyExpiredChanges: does not apply non-expired changes\n* applyExpiredChanges: applies expired changes and sets isApplied = true\n* Clock mitigation: time jump > 2 hours skips apply\n* Clock mitigation: normal progression (< 2 hours) applies correctly\n* hasPendingChange: returns false after apply\n* hasPendingChange: returns false after cancel\n\n**Acceptance criteria:**\n\n* All 9 test cases pass\n* Clock mitigation logic thoroughly covered\n* Tests use in-memory SwiftData store (not disk)"
+  },
+  {
+    "id": "DF-40",
+    "title": "Unit tests — AyahPoolService",
+    "milestone": "M6 — QA & Ship",
+    "labels": ["P1", "Agent-QA"],
+    "status": "Done",
+    "description": "Write unit tests for `AyahPoolService`.\n\n**Test cases:**\n\n* addAyah: adds item successfully when pool < 20\n* addAyah: throws poolFull when pool = 20\n* addAyah: throws alreadyInPool for duplicate surah+ayah\n* addAyah: wordCount pre-computed correctly from arabicText\n* removeAyah: removes item, poolCount decrements\n* nextAyah(excludeShort: false): returns any ayah from pool\n* nextAyah(excludeShort: true): only returns ayahs with wordCount >= 5\n* nextAyah on empty pool: returns nil\n* isEmpty: returns true when pool is empty\n\n**Acceptance criteria:**\n\n* All 9 test cases pass\n* wordCount computation tested with known Arabic strings\n* Tests use in-memory SwiftData store"
+  },
+  {
+    "id": "DF-41",
+    "title": "Integration tests — Tiered Unblock flows (T1, T2, T3)",
+    "milestone": "M6 — QA & Ship",
+    "labels": ["P0", "Agent-QA"],
+    "status": "Done",
+    "description": "Write integration tests covering the full Tiered Unblock flows.\n\n**Test scenarios:**\n\n**Tier 1:**\n\n* Pass: score >= 70% → 5-min unblock granted\n* Fail: score < 70% → retry offered, no access granted\n* Shorter-wins: Tier 1 does not replace active 8-min unblock\n\n**Tier 2:**\n\n* Pass both: Ayah 1 + Ayah 2 both pass → 10-min unblock\n* Fail Ayah 2: Ayah 1 preserved, Ayah 2 retry only\n* Fail Ayah 1: Full restart from Ayah 1\n\n**Tier 3:**\n\n* Complete 15-min session → 15-min unblock + session saved to history\n* End early → no unblock, return to Blocking tab\n* Audio failure → Tier 1/2 fallback offered\n\n**Acceptance criteria:**\n\n* All 8 scenarios covered\n* Unblock expiry times correct\n* Session history verified for Tier 3\n* Longer-wins logic verified"
+  },
+  {
+    "id": "DF-42",
+    "title": "Integration tests — Hard Mode + Lock Editing interaction",
+    "milestone": "M6 — QA & Ship",
+    "labels": ["P0", "Agent-QA"],
+    "status": "Done",
+    "description": "Write integration tests for Hard Mode and Lock Editing interaction.\n\n**Hard Mode tests:**\n\n* Enabling Hard Mode sets isLockEditingEnabled = true\n* 85% threshold enforced (75% fails)\n* Refresh Ayah button absent in Hard Mode\n* Ayahs < 5 words never shown in Hard Mode\n* Tier 1 requires 2 ayahs in Hard Mode\n\n**Lock Editing tests:**\n\n* Edit attempt on locked rule → PendingChangeSheet shown (no editor)\n* Delete attempt on locked rule → PendingChange created\n* Cancel pending change → change removed, hasPendingChange = false\n* After 24hr expiry (mocked time) → change applied\n* Turning Lock Editing OFF → goes through 24hr delay\n\n**Combined:**\n\n* Hard Mode ON → Lock Editing auto-ON\n* Hard Mode OFF attempt → blocked by Lock Editing delay\n\n**Acceptance criteria:**\n\n* All 11 scenarios covered\n* Time mocking used for expiry tests"
+  }
+]

@@ -3,8 +3,16 @@ id: 043
 title: applyChange(.disableHardMode) only clears isHardMode, leaves isLockEditingEnabled true
 severity: P1
 area: lock-editing
-status: open
+status: superseded
+superseded-by: ../2026-05-29/123-disable-hardmode-clears-lock-against-spec.md
 ---
+
+> **SUPERSEDED 2026-05-29 — REVERTED.** This finding's "fix" (also clearing
+> `isLockEditingEnabled` on `.disableHardMode`) was a symmetry/consistency guess
+> that **contradicts the DF-16 product spec** ("Lock Editing does NOT turn off
+> automatically when Hard Mode is turned off"). The Linear-conformance audit
+> (2026-05-29) caught the conflict; per user decision the code was reverted so the
+> lock persists. **Do not re-apply this finding.** See finding 123.
 
 ## Problem
 
