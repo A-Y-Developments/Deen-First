@@ -8,22 +8,21 @@ struct ScreenTimeOverviewSectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Screen Time")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+            DashboardSectionHeader(icon: "hourglass", title: "Screen Time")
 
             if report.isEmpty {
                 EmptyState()
             } else {
                 summary
                 if !report.topApps.isEmpty {
-                    Divider()
+                    Rectangle()
+                        .fill(Color.white.opacity(0.08))
+                        .frame(height: 1)
                     TopAppsList(apps: report.topApps)
                 }
             }
         }
-        .padding(.vertical, 20)
-        .padding(.horizontal)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -31,6 +30,7 @@ struct ScreenTimeOverviewSectionView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(ScreenTimeOverviewFormatter.formatDuration(seconds: report.totalScreenTimeSeconds))
                 .font(.system(size: 36, weight: .bold, design: .rounded))
+                .foregroundStyle(DashboardTheme.textPrimary)
                 .monospacedDigit()
                 .accessibilityLabel("Total screen time today")
                 .accessibilityValue(
@@ -40,14 +40,14 @@ struct ScreenTimeOverviewSectionView: View {
             HStack(spacing: 6) {
                 Text("\(report.pickupCount) pickups")
                     .font(.subheadline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(DashboardTheme.textPrimary)
                 if let interval = ScreenTimeOverviewFormatter.formatPickupInterval(
                     pickupCount: report.pickupCount,
                     hoursSinceMidnight: report.hoursSinceMidnight
                 ) {
                     Text("· \(interval)")
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DashboardTheme.textSecondary)
                 }
             }
             .accessibilityElement(children: .combine)
@@ -68,7 +68,7 @@ private struct TopAppsList: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Top apps")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DashboardTheme.textSecondary)
 
             ForEach(apps) { app in
                 TopAppRow(
@@ -89,20 +89,21 @@ private struct TopAppRow: View {
             HStack {
                 Text(app.displayName)
                     .font(.subheadline)
+                    .foregroundStyle(DashboardTheme.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer()
                 Text(ScreenTimeOverviewFormatter.formatDuration(seconds: app.durationSeconds))
                     .font(.caption)
                     .monospacedDigit()
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DashboardTheme.textSecondary)
             }
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color.secondary.opacity(0.15))
+                        .fill(DashboardTheme.track)
                     Capsule()
-                        .fill(Color.accentColor)
+                        .fill(DashboardTheme.accent)
                         .frame(width: proxy.size.width * max(0, min(1, fraction)))
                 }
             }
@@ -121,12 +122,12 @@ private struct TopAppRow: View {
 private struct EmptyState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("No screen time data yet")
+            Label("No screen time data yet", systemImage: "moon.zzz")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DashboardTheme.textSecondary)
             Text("Use your phone for a bit and pull to refresh.")
                 .font(.caption)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(DashboardTheme.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

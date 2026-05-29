@@ -15,6 +15,8 @@ struct QuranEngagementReport {
         let recitationsPassed: Int
         let recitationAttempts: Int
         let streakDays: Int
+        /// Longest streak ever achieved — shown as secondary text on the streak tile.
+        let bestStreakDays: Int
     }
 
     let metrics: Metrics?
@@ -59,7 +61,8 @@ enum QuranEngagementReportBuilder {
             focusSessionCount: defaults.integer(forKey: AppGroupConstants.focusSessionsKey(dayKey)),
             recitationsPassed: defaults.integer(forKey: AppGroupConstants.recitationsPassedKey(dayKey)),
             recitationAttempts: defaults.integer(forKey: AppGroupConstants.recitationsAttemptsKey(dayKey)),
-            streakDays: defaults.integer(forKey: AppGroupConstants.streakCurrentKey)
+            streakDays: defaults.integer(forKey: AppGroupConstants.streakCurrentKey),
+            bestStreakDays: defaults.integer(forKey: AppGroupConstants.streakLongestKey)
         )
 
         return QuranEngagementReport(metrics: metrics)

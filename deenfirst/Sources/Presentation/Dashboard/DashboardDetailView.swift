@@ -18,16 +18,11 @@ struct DashboardDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                Picker("Range", selection: $viewModel.dateRange) {
-                    ForEach(DashboardDetailViewModel.DateRange.allCases) { range in
-                        Text(range.label).tag(range)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
+            VStack(spacing: 16) {
+                DashboardRangeToggle(selection: $viewModel.dateRange)
+                    .padding(.horizontal)
 
-                section(context: deenScoreContext, filter: viewModel.filter, minHeight: 200)
+                section(context: deenScoreContext, filter: viewModel.filter, minHeight: 320)
                 section(context: screenTimeOverviewContext, filter: viewModel.filter, minHeight: 260)
                 section(context: quranEngagementContext, filter: viewModel.filter, minHeight: 200)
                 section(context: quranVsScreenTimeContext, filter: viewModel.filter, minHeight: 220)
@@ -53,58 +48,84 @@ struct DashboardDetailView: View {
             filter: filter,
             refreshNonce: viewModel.refreshNonce,
             minHeight: minHeight,
-            fallback: fallbackPlaceholder
+            loading: loadingPlaceholder
         )
     }
 
-    private var fallbackPlaceholder: some View {
+    /// Opaque cover held over a freshly-mounted report to mask the extension's
+    /// cold-start blank. Reads as "loading", not as an error. Each extension
+    /// section also renders its own in-process empty/loading message, so once the
+    /// report renders the user never sees a blank area (DF-37); this cover only
+    /// hides the brief window before the extension paints at all.
+    private var loadingPlaceholder: some View {
         VStack(spacing: 12) {
-            Image(systemName: "chart.bar.xaxis")
-                .font(.system(size: 36, weight: .light))
-                .foregroundStyle(.white.opacity(0.6))
-            Text("Dashboard unavailable")
+            ProgressView()
+                .controlSize(.large)
+                .tint(Color(hex: "AEF29B"))
+            Text("Score loading…")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
-            Text("Pull down to refresh.")
-                .font(.footnote)
                 .foregroundStyle(.white.opacity(0.7))
-                .multilineTextAlignment(.center)
+            Text("Pull down to refresh.")
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.5))
         }
         .padding()
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Dashboard unavailable. Pull down to refresh.")
+        .accessibilityLabel("Score loading. Pull down to refresh.")
     }
 }
 
-/// Shows `fallback` until the `DeviceActivityReport` host has had time to
-/// mount the extension UI, then swaps in the report. Avoids the ZStack
-/// occlusion bug where an opaque-but-empty report would hide the fallback.
-private struct DashboardReportSection<Fallback: View>: View {
+/// Mounts the `DeviceActivityReport` immediately and holds an opaque `loading`
+/// cover on top of it for a short, fixed window, then fades to the live report.
+///
+/// `DeviceActivityReport` exposes no "rendered" callback, so the cover is timed.
+/// Covering the freshly-mounted report — rather than delaying the mount — lets
+/// the extension cold-start *behind* the cover, hiding the blank gap the user
+/// would otherwise see. The cover is intentionally front-most and opaque, so
+/// there is no occlusion ambiguity with an empty report underneath.
+private struct DashboardReportSection<Loading: View>: View {
     let context: DeviceActivityReport.Context
     let filter: DeviceActivityFilter
     let refreshNonce: Int
     let minHeight: CGFloat
-    let fallback: Fallback
+    let loading: Loading
 
-    @State private var reportReady = false
+    /// How long to keep the cover up after each (re)mount. Tuned to outlast a
+    /// typical extension cold start; bump it if a blank still flashes on the
+    /// very first open after launch.
+    private static var coverDuration: Duration { .milliseconds(900) }
+
+    @State private var isLoading = true
 
     var body: some View {
-        Group {
-            if reportReady {
-                DeviceActivityReport(context, filter: filter)
-                    .id(refreshNonce)
-            } else {
-                fallback
+        ZStack {
+            DeviceActivityReport(context, filter: filter)
+                .id(refreshNonce)
+
+            if isLoading {
+                loading
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.primary900)
+                    .transition(.opacity)
             }
         }
-        .frame(minHeight: minHeight)
+        .frame(maxWidth: .infinity, minHeight: minHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            Color.primary900,
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+        )
         .padding(.horizontal)
-        .task {
-            // DeviceActivityReport exposes no load/error callback. A brief
-            // pause lets the extension register before swapping in the report
-            // so the placeholder is the baseline, not an afterthought.
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            reportReady = true
+        .task(id: refreshNonce) {
+            isLoading = true
+            try? await Task.sleep(for: Self.coverDuration)
+            withAnimation(.easeOut(duration: 0.3)) {
+                isLoading = false
+            }
         }
     }
 }

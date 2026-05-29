@@ -1,29 +1,30 @@
 import SwiftUI
 
 /// Deen Score section rendered inside the `DeenFirstActivityReport` extension.
-/// Shows a circular progress ring with the 0–100 score and a contextual message,
-/// or a loading fallback when data is not yet available.
+/// Shows a circular progress ring with the 0–100 score, a contextual message,
+/// and a streak chip — or a loading fallback when data is not yet available.
 struct DeenScoreSectionView: View {
     let report: DeenScoreReport
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Deen Score")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+            DashboardSectionHeader(icon: "rosette", title: "Deen Score")
 
             if let score = report.score {
                 DeenScoreRing(score: score)
                 Text(report.message)
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(DashboardTheme.textSecondary)
                     .padding(.horizontal)
+                if report.streakDays > 0 {
+                    StreakChip(days: report.streakDays)
+                }
             } else {
                 LoadingPlaceholder(message: report.message)
             }
         }
-        .padding(.vertical, 20)
+        .padding(20)
         .frame(maxWidth: .infinity)
     }
 }
@@ -37,25 +38,15 @@ private struct DeenScoreRing: View {
         max(0, min(1, Double(score) / 100.0))
     }
 
-    private var ringColor: Color {
-        switch score {
-        case 80...: return .green
-        case 60..<80: return .mint
-        case 40..<60: return .yellow
-        case 20..<40: return .orange
-        default: return .red
-        }
-    }
-
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 14)
+                .stroke(DashboardTheme.track, lineWidth: 14)
 
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    ringColor,
+                    DashboardTheme.ringColor(for: score),
                     style: StrokeStyle(lineWidth: 14, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
@@ -63,16 +54,40 @@ private struct DeenScoreRing: View {
             VStack(spacing: 2) {
                 Text("\(score)")
                     .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundStyle(DashboardTheme.textPrimary)
                     .monospacedDigit()
                 Text("/ 100")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DashboardTheme.textTertiary)
             }
         }
         .frame(width: 160, height: 160)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Deen Score")
         .accessibilityValue("\(score) out of 100")
+    }
+}
+
+// MARK: - Streak chip
+
+private struct StreakChip: View {
+    let days: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(DashboardTheme.accent)
+            Text("\(days)-day streak")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(DashboardTheme.textPrimary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(DashboardTheme.tileFill, in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(days) day streak")
     }
 }
 
@@ -84,15 +99,16 @@ private struct LoadingPlaceholder: View {
     var body: some View {
         VStack(spacing: 12) {
             Circle()
-                .stroke(Color.secondary.opacity(0.2), lineWidth: 14)
+                .stroke(DashboardTheme.track, lineWidth: 14)
                 .frame(width: 160, height: 160)
                 .overlay(
                     ProgressView()
                         .controlSize(.large)
+                        .tint(DashboardTheme.accent)
                 )
             Text(message)
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DashboardTheme.textSecondary)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Deen Score loading")

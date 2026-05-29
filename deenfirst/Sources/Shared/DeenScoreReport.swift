@@ -9,8 +9,10 @@ import os
 struct DeenScoreReport {
     let score: Int?
     let message: String
+    /// Current active streak in days. Surfaced on the hero card as a motivator.
+    let streakDays: Int
 
-    static let loading = DeenScoreReport(score: nil, message: "Score loading…")
+    static let loading = DeenScoreReport(score: nil, message: "Score loading…", streakDays: 0)
 }
 
 /// Reads the day's Deen inputs from the App Group and computes a Deen Score.
@@ -60,7 +62,11 @@ enum DeenScoreReportBuilder {
         )
 
         let score = calculateDeenScore(input)
-        return DeenScoreReport(score: score, message: DeenScoreMessage.message(for: score))
+        return DeenScoreReport(
+            score: score,
+            message: DeenScoreMessage.message(for: score),
+            streakDays: streakDays
+        )
     }
 
 }

@@ -12,9 +12,7 @@ struct QuranVsScreenTimeSectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Quran vs Screen Time")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+            DashboardSectionHeader(icon: "scalemass", title: "Quran vs Screen Time")
 
             if report.isEmpty {
                 EmptyState()
@@ -22,8 +20,7 @@ struct QuranVsScreenTimeSectionView: View {
                 chart
             }
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -37,13 +34,13 @@ struct QuranVsScreenTimeSectionView: View {
                 title: "Quran",
                 minutes: quranMinutes,
                 fraction: Double(quranMinutes) / Double(maxMinutes),
-                color: .green
+                color: DashboardTheme.accent
             )
             ComparisonBar(
                 title: "Screen Time",
                 minutes: screenMinutes,
                 fraction: Double(screenMinutes) / Double(maxMinutes),
-                color: .orange
+                color: DashboardTheme.mutedBar
             )
         }
         .frame(maxWidth: .infinity)
@@ -71,11 +68,11 @@ private struct ComparisonBar: View {
             Text("\(minutes)m")
                 .font(.subheadline.weight(.semibold))
                 .monospacedDigit()
-                .foregroundStyle(.primary)
+                .foregroundStyle(DashboardTheme.textPrimary)
 
             ZStack(alignment: .bottom) {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.secondary.opacity(0.15))
+                    .fill(DashboardTheme.track)
                     .frame(width: Self.barWidth, height: Self.barHeight)
 
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -88,7 +85,7 @@ private struct ComparisonBar: View {
 
             Text(title)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DashboardTheme.textSecondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
@@ -104,7 +101,7 @@ private struct EmptyState: View {
             Spacer()
             Text("No activity yet")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DashboardTheme.textSecondary)
             Spacer()
         }
         .padding(.vertical, 24)
