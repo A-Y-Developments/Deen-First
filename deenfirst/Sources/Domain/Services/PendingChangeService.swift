@@ -142,10 +142,12 @@ final class PendingChangeServiceImpl: PendingChangeService {
             !$0.isCancelled && !$0.isApplied && $0.appliesAt <= now
         }
 
+        var appliedCount = 0
         for change in expired {
             do {
                 try await applyChange(change)
                 change.isApplied = true
+                appliedCount += 1
                 do {
                     try localDataSource.savePendingChanges()
                 } catch {
@@ -155,6 +157,13 @@ final class PendingChangeServiceImpl: PendingChangeService {
             } catch {
                 logger.error("Failed to apply change \(change.id) for rule \(change.ruleId): \(error.localizedDescription)")
             }
+        }
+
+        // DF-22: notify observers (e.g. BlockingTabView) so a stale rule card
+        // refreshes on the same foreground the change applied on. Only fire when
+        // at least one change actually applied — failed applies stay pending.
+        if appliedCount > 0 {
+            NotificationCenter.default.post(name: .pendingChangesApplied, object: nil)
         }
     }
 
@@ -259,4 +268,15 @@ final class PendingChangeServiceImpl: PendingChangeService {
         }
     }
 
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Posted by `PendingChangeServiceImpl.applyExpiredChanges()` after ≥1
+    /// expired pending change is applied. Observed by `BlockingTabView` to
+    /// refresh stale rule cards on the same foreground. Declared here (not in
+    /// `RootView.swift`) to keep the poster and the name together and avoid
+    /// touching `RootView.swift`.
+    static let pendingChangesApplied = Notification.Name("pendingChangesApplied")
 }
