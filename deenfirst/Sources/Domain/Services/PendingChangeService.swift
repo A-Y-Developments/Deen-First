@@ -190,10 +190,9 @@ final class PendingChangeServiceImpl: PendingChangeService {
         case .disable:
             try await applyDisable(ruleId: change.ruleId)
         case .disableHardMode:
-            applyFlagUpdate(ruleId: change.ruleId) {
-                $0.isHardMode = false
-                $0.isLockEditingEnabled = false
-            }
+            // DF-16: disabling Hard Mode must NOT auto-clear Lock Editing —
+            // the user turns that off separately via .disableLockEditing.
+            applyFlagUpdate(ruleId: change.ruleId) { $0.isHardMode = false }
         case .disableLockEditing:
             applyFlagUpdate(ruleId: change.ruleId) { $0.isLockEditingEnabled = false }
         }

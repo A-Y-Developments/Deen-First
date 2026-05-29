@@ -322,9 +322,9 @@ final class HardModeLockEditingIntegrationTests: XCTestCase {
         await pendingChangeService.applyExpiredChanges()
 
         XCTAssertFalse(repository.rules[ruleId]?.isHardMode ?? true, "Hard Mode must be disabled once the delay elapses")
-        // DF-043: disableHardMode apply also clears Lock Editing so the user
-        // doesn't get stuck needing a second 24h delay to unlock editing.
-        XCTAssertFalse(repository.rules[ruleId]?.isLockEditingEnabled ?? true, "Lock Editing must also clear when Hard Mode disables")
+        // DF-16: disabling Hard Mode must NOT auto-clear Lock Editing — the user
+        // turns it off separately via .disableLockEditing (preserves accountability friction).
+        XCTAssertTrue(repository.rules[ruleId]?.isLockEditingEnabled ?? false, "Lock Editing must remain ON when only Hard Mode is disabled")
     }
 
     // MARK: - Helpers
